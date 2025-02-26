@@ -14,7 +14,18 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
+        public string? Description { get; set; }
+
+        public int MinPlayersCount { get; set; }
+
+        public int MaxPlayersCount { get; set; }
+
+        public int MinAge { get; set; }
+
+        [ForeignKey("Category")]
+        public int CategoryId { get; set; }
+        public Category? Category { get; set; }
     }
 }

@@ -9,6 +9,6 @@ namespace BoardGameGeekLike.Models
 
         public DbSet<BoardGame> BoardGames { get; set; }
 
-
+        public DbSet<Category> Categories { get; set; }
     }
 }
