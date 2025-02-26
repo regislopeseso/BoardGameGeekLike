@@ -21,6 +21,34 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> AddCategory(AdminsAddCategoryRequest? request)
+        {
+            var (content, message) = await this._adminsService.AddCategory(request);
+
+            var response = new Response<AdminsAddCategoryResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
+        {
+            var (content, message) = await this._adminsService.AddMechanic(request);
+
+            var response = new Response<AdminsAddMechanicResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
         public async Task<IActionResult> AddBoardGame(AdminsAddBoardGameRequest? request)
         {
             var (content, message) = await this._adminsService.AddBoardGame(request);
@@ -33,7 +61,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
+/*
         [HttpPut]
         public async Task<IActionResult> EditBoardGame(AdminsEditBoardGameRequest? request)
         {
@@ -61,6 +89,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
+*/
     }
 }

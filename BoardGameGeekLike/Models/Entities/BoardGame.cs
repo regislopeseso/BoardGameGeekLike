@@ -24,9 +24,16 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int MinAge { get; set; }
 
+
         [ForeignKey("Category")]
-        public int CategoryId { get; set; }
+        public int CategoryId { get; set; } = 1;
         public Category? Category { get; set; }
+        
+
+        [ForeignKey("Mechanic")]
+        public int MechanicId { get; set; } = 1;
+
+        public Mechanic? Mechanic { get; set; }
 
         public bool IsDeleted { get; set; } = false;
     }
