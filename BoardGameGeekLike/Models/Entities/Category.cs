@@ -17,5 +17,7 @@ namespace BoardGameGeekLike.Models.Entities
         public required string Name { get; set; }
 
         public List<BoardGame>? BoardGames { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
     }
 }
