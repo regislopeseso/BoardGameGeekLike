@@ -3,6 +3,7 @@ using BoardGameGeekLike.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250226162137_M4")]
+    partial class M4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,6 +44,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("MaxPlayersCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("MechanicId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MinAge")
                         .HasColumnType("int");
 
@@ -54,6 +60,8 @@ namespace BoardGameGeekLike.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("MechanicId");
 
                     b.ToTable("boardgames");
                 });
@@ -132,13 +140,21 @@ namespace BoardGameGeekLike.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BoardGameGeekLike.Models.Entities.Mechanic", "Mechanic")
+                        .WithMany()
+                        .HasForeignKey("MechanicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Category");
+
+                    b.Navigation("Mechanic");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGameMechanics", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.BoardGame", "BoardGame")
-                        .WithMany("BoardGameMechanics")
+                        .WithMany()
                         .HasForeignKey("BoardGameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -152,11 +168,6 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("BoardGame");
 
                     b.Navigation("Mechanic");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGame", b =>
-                {
-                    b.Navigation("BoardGameMechanics");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Category", b =>

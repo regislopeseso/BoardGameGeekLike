@@ -101,6 +101,8 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+            
+
             var newBoardGame = new BoardGame
             {
                 Name = request!.BoardGameName,
@@ -110,6 +112,18 @@ namespace BoardGameGeekLike.Services
                 MinAge = request.MinAge,
                 CategoryId = request.CategoryId
             };
+
+            var boardGameMechanics = new List<BoardGameMechanics>();
+            foreach (var gameMechanicId in request!.BoardGameMechanicIds)
+            {
+                boardGameMechanics.Add(new BoardGameMechanics
+                {
+                    BoardGameId = newBoardGame.Id,
+                    MechanicId = gameMechanicId
+                });
+            }
+
+            newBoardGame.BoardGameMechanics = boardGameMechanics;
 
             await _daoDbContext.BoardGames.AddAsync(newBoardGame);
 
@@ -148,6 +162,11 @@ namespace BoardGameGeekLike.Services
             if (request.CategoryId < 0)
             {
                 return (false, "Error: CategoryId is less than 1");
+            }
+
+            if(request.BoardGameMechanicIds == null || request.BoardGameMechanicIds.Count == 0)
+            {
+                return (false, "Error: BoardGameMechanics is null");
             }
 
             return (true, String.Empty);

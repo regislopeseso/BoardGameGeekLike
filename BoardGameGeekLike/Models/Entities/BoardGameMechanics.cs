@@ -18,9 +18,11 @@ namespace BoardGameGeekLike.Models.Entities
         public int BoardGameId { get; set; }
         public BoardGame BoardGame { get; set; }
 
+
         [ForeignKey("Mechanic")]
         public int MechanicId { get; set; }
         public Mechanic Mechanic { get; set; }
+
 
         public bool IsDeleted { get; set; } = false;
     }

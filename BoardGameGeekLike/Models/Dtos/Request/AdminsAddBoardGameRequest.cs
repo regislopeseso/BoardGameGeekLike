@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BoardGameGeekLike.Models.Entities;
 
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
@@ -19,5 +20,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
         
         public int CategoryId { get; set; }
 
+        public List<int> BoardGameMechanicIds { get; set; } = new List<int>();
     }
 }

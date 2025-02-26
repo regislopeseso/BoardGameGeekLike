@@ -28,12 +28,8 @@ namespace BoardGameGeekLike.Models.Entities
         [ForeignKey("Category")]
         public int CategoryId { get; set; } = 1;
         public Category? Category { get; set; }
-        
 
-        [ForeignKey("Mechanic")]
-        public int MechanicId { get; set; } = 1;
-
-        public Mechanic? Mechanic { get; set; }
+        public List<BoardGameMechanics> BoardGameMechanics { get; set; }
 
         public bool IsDeleted { get; set; } = false;
     }
