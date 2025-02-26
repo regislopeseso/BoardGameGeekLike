@@ -35,11 +35,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
+        public async Task<IActionResult> AddMechanic(AdminsAddCategoryRequest? request)
         {
-            var (content, message) = await this._adminsService.AddMechanic(request);
+            var (content, message) = await this._adminsService.AddCategory(request);
 
-            var response = new Response<AdminsAddMechanicResponse>
+            var response = new Response<AdminsAddCategoryResponse>
             {
                 Content = content,
                 Message = message
@@ -61,7 +61,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-/*
+
         [HttpPut]
         public async Task<IActionResult> EditBoardGame(AdminsEditBoardGameRequest? request)
         {
@@ -75,7 +75,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
+/*
         [HttpDelete]
         public async Task<IActionResult> DeleteBoardGame(AdminsDeleteBoardGameRequest? request)
         {
