@@ -65,4 +65,17 @@ Api de um site especializado em jogos de tabuleiro onde os usuários podem se re
 
 Migrations using VS Code:
 dotnet ef migrations add <MigrationTitle>
-dotnet ef database update     
+dotnet ef database update   
+
+Game Mechanics:
+Undetermined = 0,
+ActionPoints = 1, // Players have a limited number of actions to take each turn (e.g., Puerto Rico).
+AreaControl = 2, // Players vie for control of areas on a board (e.g., Risk).
+CardDrafting = 3, // Players select cards from a hand to play (e.g., 7 Wonders).
+CooperativePlay = 4, // Players work together to achieve a common goal (e.g., Pandemic).
+DeckBuilding = 5, // Players build a deck of cards to use during the game (e.g., Aeon's End).
+DiceRolling = 6, // Players roll dice to determine outcomes (e.g., Monopoly).
+RolePlaying = 7, // Players assume roles and act out scenarios (e.g., Dungeons & Dragons).
+SetCollection = 8, // Players gather specific sets of items for points (e.g., Ticket to Ride).
+TilePlacement = 9, // Players place tiles to form a board or pattern (e.g., Azul).
+WorkerPlacement = 10, // Players assign tokens to take specific actions (e.g., Agricola).
