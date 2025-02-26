@@ -193,6 +193,15 @@ namespace BoardGameGeekLike.Services
             if (!isValid)
             {
                 return (null, message);
+            }
+
+            var name_exists = await this._daoDbContext
+                                        .BoardGames
+                                        .Where(a => a.IsDeleted == false && a.Name == request!.BoardGameName.Trim())
+                                        .AnyAsync();
+            if(name_exists == true)
+            {
+                return(null, "Error: requested board game name already in use");
             }      
 
             var newBoardGame = new BoardGame
@@ -207,7 +216,7 @@ namespace BoardGameGeekLike.Services
 
             var boardGameMechanics = new List<BoardGameMechanics>();
             
-            if(request.BoardGameMechanicIds == null || request.BoardGameMechanicIds.Count == 0)
+            if(request.MechanicIds == null || request.MechanicIds.Count == 0)
             {
                 boardGameMechanics.Add(new BoardGameMechanics
                 {
@@ -217,12 +226,12 @@ namespace BoardGameGeekLike.Services
             }
             else
             {
-                foreach (var gameMechanicId in request!.BoardGameMechanicIds)
+                foreach (var mechanicId in request.MechanicIds)
                 {
                     boardGameMechanics.Add(new BoardGameMechanics
                     {
                         BoardGameId = newBoardGame.Id,
-                        MechanicId = gameMechanicId
+                        MechanicId = mechanicId
                     });
                 }
             }
@@ -263,14 +272,14 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: MinAge is less than 1");
             }
 
-            if (request.CategoryId < 0)
+            if (request.CategoryId.HasValue == false || request.CategoryId < 0)
             {
-                return (false, "Error: CategoryId is less than 1");
+                return (false, "Error: invalid CategoryId (is null or less than 1)");
             }
 
-            if(request.BoardGameMechanicIds == null || request.BoardGameMechanicIds.Count == 0)
+            if(request.MechanicIds == null || request.MechanicIds.Count == 0)
             {
-                return (false, "Error: BoardGameMechanics is null");
+                return (false, "Error: MechanicsIds is null");
             }
 
             return (true, String.Empty);

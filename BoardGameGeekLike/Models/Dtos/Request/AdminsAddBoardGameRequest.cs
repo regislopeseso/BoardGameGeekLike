@@ -20,6 +20,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
         
         public int? CategoryId { get; set; }
 
-        public List<int>? BoardGameMechanicIds { get; set; } = new List<int>();
+        public List<int>? MechanicIds { get; set; } = new List<int>();
     }
 }
