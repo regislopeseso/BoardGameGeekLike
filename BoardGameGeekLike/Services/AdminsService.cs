@@ -405,5 +405,52 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+    
+        public async Task<(AdminsDeleteBoardGameResponse?, string)> DeleteBoardGame(AdminsDeleteBoardGameRequest? request)
+        {
+            var (isValid, message) = DeleteBoardGame_Validation(request);
+            if(isValid == false)
+            {
+                return(null, message);
+            }
+
+            var boardGameDb = await this._daoDbContext
+                                        .BoardGames
+                                        .FirstOrDefaultAsync(a => a.Id == request!.BoardGameId);
+            
+            if(boardGameDb == null)
+            {
+                return (null, "Error: board game not found");
+            }
+
+            if(boardGameDb.IsDeleted == true)
+            {
+                return(null, "Error: board game was already deleted");
+            }
+            
+            boardGameDb.IsDeleted = true;
+        
+            await this._daoDbContext
+                      .BoardGames
+                      .Where(a => a.Id == request!.BoardGameId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+
+            return (null, "Board game deleted successfully");
+        }
+
+        private static (bool, string) DeleteBoardGame_Validation(AdminsDeleteBoardGameRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
     }
 }

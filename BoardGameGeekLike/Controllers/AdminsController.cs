@@ -75,7 +75,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-/*
+
         [HttpDelete]
         public async Task<IActionResult> DeleteBoardGame(AdminsDeleteBoardGameRequest? request)
         {
@@ -89,6 +89,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-*/
+
     }
 }
