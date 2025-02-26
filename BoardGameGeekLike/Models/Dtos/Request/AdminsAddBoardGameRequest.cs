@@ -10,16 +10,16 @@ namespace BoardGameGeekLike.Models.Dtos.Request
     {
         public required string BoardGameName { get; set; }
 
-        public string? BoardGameDescription { get; set; }
+        public required string BoardGameDescription { get; set; }
 
-        public int MinPlayersCount { get; set; }
+        public required int MinPlayersCount { get; set; }
 
-        public int MaxPlayersCount { get; set; }
+        public required int MaxPlayersCount { get; set; }
 
-        public int MinAge { get; set; }
+        public required int MinAge { get; set; }
         
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
-        public List<int> BoardGameMechanicIds { get; set; } = new List<int>();
+        public List<int>? BoardGameMechanicIds { get; set; } = new List<int>();
     }
 }

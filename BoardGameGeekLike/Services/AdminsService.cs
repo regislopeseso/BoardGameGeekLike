@@ -193,28 +193,38 @@ namespace BoardGameGeekLike.Services
             if (!isValid)
             {
                 return (null, message);
-            }
-
-            
+            }      
 
             var newBoardGame = new BoardGame
             {
                 Name = request!.BoardGameName,
-                Description = request.BoardGameDescription,
+                Description = request!.BoardGameDescription,
                 MinPlayersCount = request.MinPlayersCount,
                 MaxPlayersCount = request.MaxPlayersCount,
                 MinAge = request.MinAge,
-                CategoryId = request.CategoryId
+                CategoryId = request.CategoryId == null ? 1 : request.CategoryId.Value
             };
 
             var boardGameMechanics = new List<BoardGameMechanics>();
-            foreach (var gameMechanicId in request!.BoardGameMechanicIds)
+            
+            if(request.BoardGameMechanicIds == null || request.BoardGameMechanicIds.Count == 0)
             {
                 boardGameMechanics.Add(new BoardGameMechanics
                 {
                     BoardGameId = newBoardGame.Id,
-                    MechanicId = gameMechanicId
+                    MechanicId = 1
                 });
+            }
+            else
+            {
+                foreach (var gameMechanicId in request!.BoardGameMechanicIds)
+                {
+                    boardGameMechanics.Add(new BoardGameMechanics
+                    {
+                        BoardGameId = newBoardGame.Id,
+                        MechanicId = gameMechanicId
+                    });
+                }
             }
 
             newBoardGame.BoardGameMechanics = boardGameMechanics;

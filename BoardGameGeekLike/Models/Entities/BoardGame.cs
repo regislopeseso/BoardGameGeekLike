@@ -16,20 +16,20 @@ namespace BoardGameGeekLike.Models.Entities
 
         public required string Name { get; set; }
 
-        public string? Description { get; set; }
+        public required string Description { get; set; } = String.Empty;
 
-        public int MinPlayersCount { get; set; }
+        public required int MinPlayersCount { get; set; }
 
-        public int MaxPlayersCount { get; set; }
+        public required int MaxPlayersCount { get; set; }
 
-        public int MinAge { get; set; }
+        public required int MinAge { get; set; }
 
 
         [ForeignKey("Category")]
         public int CategoryId { get; set; } = 1;
         public Category? Category { get; set; }
 
-        public List<BoardGameMechanics> BoardGameMechanics { get; set; }
+        public List<BoardGameMechanics>? BoardGameMechanics { get; set; }
 
         public bool IsDeleted { get; set; } = false;
     }
