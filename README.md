@@ -62,3 +62,7 @@ Api de um site especializado em jogos de tabuleiro onde os usuários podem se re
     - 3 categorias que os jogos tem as melhores notas
     - 3 categorias dos jogos mais demorados
     - 3 categorias dos jogos mais curtos
+
+Migrations using VS Code:
+dotnet ef migrations add <MigrationTitle>
+dotnet ef database update     
