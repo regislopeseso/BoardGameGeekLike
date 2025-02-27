@@ -45,5 +45,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteProfile(UsersDeleteProfileRequest request)
+        {
+            var (content, message) = await this._usersService.DeleteProfile(request);
+
+            var response = new Response<UsersDeleteProfileResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
     }
 }

@@ -208,6 +208,51 @@ namespace BoardGameGeekLike.Services
             return(true, string.Empty);
         }
 
-        
+        public async Task<(UsersDeleteProfileResponse?, string)> DeleteProfile(UsersDeleteProfileRequest request)
+        {
+            var (isValid, message) = DeleteProfile_Validation(request);
+            
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var userDB = await this._daoDbContext
+                                   .Users
+                                   .FindAsync(request.UserId);
+
+            if(userDB == null)
+            {
+                return (null, "Error: user not found");
+            }
+
+            if(userDB.IsDeleted == true)
+            {
+                return (null, "Error: this user's profile was already deleted");
+            }
+
+            await this._daoDbContext
+                      .Users
+                      .Where(a => a.Id == request.UserId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));            
+
+            return (null, "User's profile deleted successfully");
+        }
+
+        private static (bool, string) DeleteProfile_Validation(UsersDeleteProfileRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.UserId < 1)
+            {
+                return (false, "Error: invalid CategoryId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
+
     }
 }
