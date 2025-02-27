@@ -120,7 +120,7 @@ namespace BoardGameGeekLike.Services
             var userNickName_exists = await this._daoDbContext
                                                 .Users
                                                 .AsNoTracking()
-                                                .AnyAsync(a => a.Id != request.UserId &&
+                                                .AnyAsync(a => a.Id != request!.UserId &&
                                                                a.Nickname == request!.UserNickname &&
                                                                a.IsDeleted == false);
 
@@ -131,7 +131,7 @@ namespace BoardGameGeekLike.Services
 
             var userDB = await this._daoDbContext
                                    .Users
-                                   .FindAsync(request.UserId);
+                                   .FindAsync(request!.UserId);
 
             if(userDB == null)
             {
@@ -208,7 +208,7 @@ namespace BoardGameGeekLike.Services
             return(true, string.Empty);
         }
 
-        public async Task<(UsersDeleteProfileResponse?, string)> DeleteProfile(UsersDeleteProfileRequest request)
+        public async Task<(UsersDeleteProfileResponse?, string)> DeleteProfile(UsersDeleteProfileRequest? request)
         {
             var (isValid, message) = DeleteProfile_Validation(request);
             
@@ -219,7 +219,7 @@ namespace BoardGameGeekLike.Services
 
             var userDB = await this._daoDbContext
                                    .Users
-                                   .FindAsync(request.UserId);
+                                   .FindAsync(request!.UserId);
 
             if(userDB == null)
             {
@@ -239,7 +239,7 @@ namespace BoardGameGeekLike.Services
             return (null, "User's profile deleted successfully");
         }
 
-        private static (bool, string) DeleteProfile_Validation(UsersDeleteProfileRequest request)
+        private static (bool, string) DeleteProfile_Validation(UsersDeleteProfileRequest? request)
         {
             if (request == null)
             {
@@ -254,5 +254,111 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
+        public async Task<(UsersRateBoardGameResponse?, string)> RateBoardGame(UsersRateBoardGameRequest? request)
+        {
+            var (isValid, message) = RateBoardGame_Validation(request);
+            
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var user_exists = await this._daoDbContext
+                                        .Users
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.Id == request!.UserId && a.IsDeleted == false);
+
+            if(user_exists == false)
+            {
+                return (null, "Error: user not found");
+            }
+
+            var boardgameDB = await this._daoDbContext
+                                             .BoardGames
+                                             .FindAsync(request!.BoardGameId);
+            
+            if(boardgameDB == null)
+            {
+                return (null, "Error: board game not found");
+            }
+
+            if(boardgameDB.IsDeleted == true)
+            {
+                return (null, "Error: board game is deleted");
+            }
+
+            var rate_exists = await this._daoDbContext
+                                        .BoardGameRatings
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.UserId == request.UserId && a.BoardGameId == request.BoardGameId);
+
+            if(rate_exists == true)
+            {
+                return (null, "Error: the request board game was already rated by this user");
+            }
+
+            var newRate = new BoardGameRatings
+            {
+                Rate = request.Rate!.Value,
+                UserId = request.UserId!.Value,
+                BoardGameId = request.BoardGameId!.Value
+            };
+
+            await this._daoDbContext.BoardGameRatings.AddAsync(newRate);
+
+            var newAverageRating = (int)Math.Ceiling((double)
+            (
+                (boardgameDB.AverageRating + newRate.Rate) / (boardgameDB.RatingsCount + 1)
+            ));         
+            
+            await this._daoDbContext
+                      .BoardGames
+                      .Where(a => a.Id == request.BoardGameId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.AverageRating, newAverageRating)
+                                                .SetProperty(b => b.RatingsCount, b => b.RatingsCount + 1));
+            await this._daoDbContext.SaveChangesAsync();         
+
+            return (null, $"Board game rated successfully, its new average rating is: {newAverageRating}");
+        }
+
+        private static (bool, string) RateBoardGame_Validation(UsersRateBoardGameRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if(request.Rate.HasValue == false)
+            {
+                 return (false, "Error: rate is null");
+            }
+
+            if(request.Rate != null && (request.Rate < 0 || request.Rate > 5))
+            {
+                 return (false, "Error: invalid rate. It must be a value between 0 and 5");
+            }
+
+            if(request.UserId.HasValue == false)
+            {
+                return (false, "Error: UserId is null");
+            }
+            
+            if (request.UserId < 1)
+            {
+                return (false, "Error: invalid UserId (is less than 1)");
+            }
+
+             if(request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is null");
+            }
+
+            if (request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
     }
 }

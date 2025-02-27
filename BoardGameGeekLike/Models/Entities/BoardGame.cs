@@ -27,6 +27,10 @@ namespace BoardGameGeekLike.Models.Entities
 
         public List<BoardGameMechanics>? BoardGameMechanics { get; set; }
 
+        public int AverageRating {get; set;}
+
+        public int RatingsCount {get; set;}
+
         public bool IsDeleted { get; set; } = false;
     }
 }

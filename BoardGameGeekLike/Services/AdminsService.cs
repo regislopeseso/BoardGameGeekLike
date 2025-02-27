@@ -326,7 +326,7 @@ namespace BoardGameGeekLike.Services
             var boardGameName_exists = await this._daoDbContext
                                                  .BoardGames
                                                  .AsNoTracking()
-                                                 .AnyAsync(a => a.Id != request.BoardGameId && 
+                                                 .AnyAsync(a => a.Id != request!.BoardGameId && 
                                                                 a.IsDeleted == false && 
                                                                 a.Name == request.BoardGameName.Trim());
                                                  

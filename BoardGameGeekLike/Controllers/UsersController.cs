@@ -17,7 +17,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SignUp(UsersSignUpRequest request)
+        public async Task<IActionResult> SignUp(UsersSignUpRequest? request)
         {
             var (content, message) = await this._usersService.SignUp(request);
 
@@ -32,7 +32,7 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpPut]
-        public async Task<IActionResult> EditProfile(UsersEditProfileRequest request)
+        public async Task<IActionResult> EditProfile(UsersEditProfileRequest? request)
         {
             var (content, message) = await this._usersService.EditProfile(request);
 
@@ -47,11 +47,26 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteProfile(UsersDeleteProfileRequest request)
+        public async Task<IActionResult> DeleteProfile(UsersDeleteProfileRequest? request)
         {
             var (content, message) = await this._usersService.DeleteProfile(request);
 
             var response = new Response<UsersDeleteProfileResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> RateBoardGame(UsersRateBoardGameRequest? request)
+        {
+            var (content, message) = await this._usersService.RateBoardGame(request);
+
+            var response = new Response<UsersRateBoardGameResponse>
             {
                 Content = content,
                 Message = message
