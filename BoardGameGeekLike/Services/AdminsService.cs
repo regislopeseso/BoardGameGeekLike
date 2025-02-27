@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
@@ -16,14 +12,14 @@ namespace BoardGameGeekLike.Services
 
         public AdminsService(ApplicationDbContext daoDbContext)
         {
-            _daoDbContext = daoDbContext;
+            this._daoDbContext = daoDbContext;
         }
 
         public async Task<(AdminsAddCategoryResponse?, string)> AddCategory(AdminsAddCategoryRequest? request)
         {
             var (isValid, message) = AddCategory_Validation(request);
 
-            if (!isValid)
+            if (isValid == false)
             {
                 return (null, message);
             }
@@ -33,9 +29,9 @@ namespace BoardGameGeekLike.Services
                 Name = request!.CategoryName
             };
 
-            await _daoDbContext.Categories.AddAsync(newCategory);
+            await this._daoDbContext.Categories.AddAsync(newCategory);
 
-            await _daoDbContext.SaveChangesAsync();
+            await this._daoDbContext.SaveChangesAsync();
 
             return (null, "Category added successfully");
         }
@@ -59,7 +55,7 @@ namespace BoardGameGeekLike.Services
         {
             var (isValid, message) = EditCategory_Validation(request);
 
-            if (!isValid)
+            if (isValid == false)
             {
                 return (null, message);
             }
@@ -108,7 +104,7 @@ namespace BoardGameGeekLike.Services
         public async Task<(AdminsDeleteCategoryResponse?, string)> DeleteCategory(AdminsDeleteCategoryRequest? request)
         {
             var (isValid, message) = DeleteCategory_Validation(request);
-            if (!isValid)
+            if (isValid == false)
             {
                 return (null, message);
             }
@@ -154,7 +150,7 @@ namespace BoardGameGeekLike.Services
         {
             var (isValid, message) = AddMechanic_Validation(request);
 
-            if (!isValid)
+            if (isValid == false)
             {
                 return (null, message);
             }
@@ -164,9 +160,9 @@ namespace BoardGameGeekLike.Services
                 Name = request!.MechanicName
             };
 
-            await _daoDbContext.Mechanics.AddAsync(newMechanic);
+            await this._daoDbContext.Mechanics.AddAsync(newMechanic);
 
-            await _daoDbContext.SaveChangesAsync();
+            await this._daoDbContext.SaveChangesAsync();
 
             return (null, "Category added successfully");
         }
@@ -190,7 +186,7 @@ namespace BoardGameGeekLike.Services
         {
             var (isValid, message) = AddBoardGame_Validation(request);
             
-            if (!isValid)
+            if (isValid == false)
             {
                 return (null, message);
             }
@@ -238,9 +234,9 @@ namespace BoardGameGeekLike.Services
 
             newBoardGame.BoardGameMechanics = boardGameMechanics;
 
-            await _daoDbContext.BoardGames.AddAsync(newBoardGame);
+            await this._daoDbContext.BoardGames.AddAsync(newBoardGame);
 
-            await _daoDbContext.SaveChangesAsync();
+            await this._daoDbContext.SaveChangesAsync();
 
             return (null, "Board game added successfully");
         }
@@ -288,7 +284,8 @@ namespace BoardGameGeekLike.Services
         public async Task<(AdminsEditBoardGameResponse?, string)> EditBoardGame(AdminsEditBoardGameRequest? request)
         {
             var (isValid, message) = EditBoardGame_Validation(request);
-            if (!isValid)
+            
+            if (isValid == false)
             {
                 return (null, message);
             }
@@ -308,18 +305,19 @@ namespace BoardGameGeekLike.Services
             }
 
             var boardGameName_exists = await this._daoDbContext
-                                                .BoardGames
-                                                .Where(a => a.Id != request.BoardGameId && a.IsDeleted == false && a.Name == request.BoardGameName.Trim())
-                                                .AnyAsync();
+                                                 .BoardGames
+                                                 .Where(a => a.Id != request.BoardGameId && a.IsDeleted == false && a.Name == request.BoardGameName.Trim())
+                                                 .AnyAsync();
+
             if(boardGameName_exists == true)
             {
                 return(null, "Error: board game name already in use");
             }
 
             var categoryIdsDB = await this._daoDbContext
-                                         .Categories
-                                         .Select(a => a.Id)
-                                         .ToListAsync();
+                                          .Categories
+                                          .Select(a => a.Id)
+                                          .ToListAsync();
 
             if(categoryIdsDB == null || categoryIdsDB.Count == 0)
             {

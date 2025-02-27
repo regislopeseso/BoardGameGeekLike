@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BoardGameGeekLike.Models.Entities;
-
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class AdminsAddBoardGameRequest
