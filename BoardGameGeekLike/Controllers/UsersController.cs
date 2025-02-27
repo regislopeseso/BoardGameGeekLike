@@ -75,5 +75,18 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> LogPlay(UsersLogPlayRequest? request)
+        {
+            var (content, message) = await this._usersService.LogPlay(request);
+
+            var response = new Response<UsersLogPlayResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
     }
 }

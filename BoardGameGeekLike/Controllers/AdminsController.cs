@@ -85,6 +85,5 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
     }
 }

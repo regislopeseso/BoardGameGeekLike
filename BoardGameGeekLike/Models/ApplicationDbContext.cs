@@ -18,5 +18,7 @@ namespace BoardGameGeekLike.Models
         public DbSet<User> Users { get; set; }
     
         public DbSet<BoardGameRatings> BoardGameRatings  { get; set; }
+
+        public DbSet<PlayLog> PlayLogs {get; set;}
     }
 }
