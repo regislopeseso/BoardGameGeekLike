@@ -25,7 +25,7 @@ namespace BoardGameGeekLike.Models.Entities
         public int CategoryId { get; set; } = 1;
         public Category? Category { get; set; }
 
-        public List<BoardGameMechanics>? BoardGameMechanics { get; set; }
+        public List<Mechanic>? BoardGameMechanics { get; set; }
 
         public int AverageRating {get; set;}
 

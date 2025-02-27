@@ -3,6 +3,7 @@ using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 
 namespace BoardGameGeekLike.Services
 {
@@ -27,7 +28,7 @@ namespace BoardGameGeekLike.Services
             var name_exists = await this._daoDbContext
                                         .Categories
                                         .AsNoTracking()
-                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.CategoryName.Trim());
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.CategoryName!.Trim());
 
             if(name_exists == true)
             {
@@ -36,7 +37,7 @@ namespace BoardGameGeekLike.Services
 
             var newCategory = new Category
             {
-                Name = request!.CategoryName
+                Name = request!.CategoryName!
             };
 
             await this._daoDbContext.Categories.AddAsync(newCategory);
@@ -55,7 +56,7 @@ namespace BoardGameGeekLike.Services
 
             if (string.IsNullOrWhiteSpace(request.CategoryName))
             {
-                return (false, "Error: name is null or empty");
+                return (false, "Error: CategoryName is missing");
             }
 
             return (true, String.Empty);
@@ -75,14 +76,15 @@ namespace BoardGameGeekLike.Services
                                         .AsNoTracking()
                                         .AnyAsync(a => a.Id != request!.CategoryId && 
                                                        a.IsDeleted == false && 
-                                                       a.Name == request!.CategoryName.Trim());
+                                                       a.Name == request!.CategoryName!.Trim());
                                         
             if(name_exists == true)
             {
                 return(null, "Error: requested category name is already in use");
             } 
 
-            var categoryDB = await this._daoDbContext.Categories
+            var categoryDB = await this._daoDbContext
+                                       .Categories
                                        .FindAsync(request!.CategoryId);
 
             if (categoryDB == null)
@@ -110,6 +112,11 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
+            if(request.CategoryId == null)
+            {
+                return (false, "Error: CategoryId is missing");
+            }
+
             if (request.CategoryId < 1)
             {
                 return (false, "Error: invalid CategoryId (is less than 1)");
@@ -117,7 +124,7 @@ namespace BoardGameGeekLike.Services
 
             if (string.IsNullOrWhiteSpace(request.CategoryName))
             {
-                return (false, "Error: name is null or empty");
+                return (false, "Error: Category name is missing");
             }
 
             return (true, String.Empty);
@@ -160,6 +167,11 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
+            if(request.CategoryId == null)
+            {
+                return(false, "Error: CategoryId is missing");
+            }
+
             if (request.CategoryId < 1)
             {
                 return (false, "Error: invalid CategoryId (is less than 1)");
@@ -180,7 +192,7 @@ namespace BoardGameGeekLike.Services
             var name_exists = await this._daoDbContext
                                         .Mechanics
                                         .AsNoTracking()
-                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.MechanicName.Trim());
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.MechanicName!.Trim());
                                         
             if(name_exists == true)
             {
@@ -189,7 +201,7 @@ namespace BoardGameGeekLike.Services
 
             var newMechanic = new Mechanic
             {
-                Name = request!.MechanicName
+                Name = request!.MechanicName!
             };
 
             await this._daoDbContext.Mechanics.AddAsync(newMechanic);
@@ -208,7 +220,7 @@ namespace BoardGameGeekLike.Services
 
             if (string.IsNullOrWhiteSpace(request.MechanicName))
             {
-                return (false, "Error: name is null or empty");
+                return (false, "Error: MechanicName is missing");
             }
 
             return (true, String.Empty);
@@ -226,7 +238,7 @@ namespace BoardGameGeekLike.Services
             var name_exists = await this._daoDbContext
                                         .BoardGames
                                         .AsNoTracking()
-                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.BoardGameName.Trim());
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.BoardGameName!.Trim());
 
             if(name_exists == true)
             {
@@ -235,33 +247,54 @@ namespace BoardGameGeekLike.Services
 
             var newBoardGame = new BoardGame
             {
-                Name = request!.BoardGameName,
-                Description = request!.BoardGameDescription,
-                MinPlayersCount = request.MinPlayersCount,
-                MaxPlayersCount = request.MaxPlayersCount,
-                MinAge = request.MinAge,
+                Name = request!.BoardGameName!,
+                Description = request.BoardGameDescription!,
+                MinPlayersCount = request.MinPlayersCount!.Value,
+                MaxPlayersCount = request.MaxPlayersCount!.Value,
+                MinAge = request.MinAge!.Value,
                 CategoryId = request.CategoryId == null ? 1 : request.CategoryId.Value
             };
 
-            var boardGameMechanics = new List<BoardGameMechanics>();
+            var boardGameMechanics = new List<Mechanic>();
             
             if(request.MechanicIds == null || request.MechanicIds.Count == 0)
             {
-                boardGameMechanics.Add(new BoardGameMechanics
-                {
-                    BoardGameId = newBoardGame.Id,
-                    MechanicId = 1
-                });
+                var mechnicNotDetermined = await this._daoDbContext
+                                                     .Mechanics
+                                                     .FindAsync(1);
+
+                boardGameMechanics.Add(mechnicNotDetermined!);            
             }
             else
             {
-                foreach (var mechanicId in request.MechanicIds)
+                var mechanicIdsDB = await this._daoDbContext
+                                                 .Mechanics
+                                                 .Where(a => a.IsDeleted == false)
+                                                 .Select(a => a.Id)
+                                                 .ToListAsync();
+
+                var invalidMechanicIds = request.MechanicIds.Except(mechanicIdsDB).ToList();
+
+                if(invalidMechanicIds != null && invalidMechanicIds.Count > 0)
                 {
-                    boardGameMechanics.Add(new BoardGameMechanics
-                    {
-                        BoardGameId = newBoardGame.Id,
-                        MechanicId = mechanicId
-                    });
+                    message = "Error: requested MechnicId";
+                    message += invalidMechanicIds.Count == 1 ?
+                              $": {invalidMechanicIds[0]} was" :
+                              $"s: {string.Join(", ",invalidMechanicIds)} were ";
+
+                    message += "not found";
+
+                    return (null, message);
+                }
+
+                var mechanics = await this._daoDbContext
+                                          .Mechanics
+                                          .Where(a => request.MechanicIds.Contains(a.Id))
+                                          .ToListAsync();
+
+                foreach (var mechanic in mechanics)
+                {
+                    boardGameMechanics.Add(mechanic);
                 }
             }
 
@@ -281,9 +314,14 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.BoardGameName))
+            if (string.IsNullOrWhiteSpace(request.BoardGameName) == true)
             {
-                return (false, "Error: name is null or empty");
+                return (false, "Error: BoarGameName is missing");
+            }
+
+            if(request.MinPlayersCount.HasValue == false)
+            {
+                return (false, "Error: MinPlayersCount is missing");
             }
 
             if (request.MinPlayersCount < 1)
@@ -291,9 +329,19 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: MinPlayersCount is less than 1");
             }
 
+            if(request.MaxPlayersCount.HasValue == false)
+            {
+                return (false, "Error: MaxPlayersCount is missing");
+            }
+
             if (request.MaxPlayersCount < 1)
             {
                 return (false, "Error: MaxPlayersCount is less than 1");
+            }
+
+            if(request.MinAge.HasValue == false)
+            {
+                return (false, "Error: MinAge is missing");
             }
 
             if (request.MinAge < 1)
@@ -301,14 +349,15 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: MinAge is less than 1");
             }
 
-            if (request.CategoryId.HasValue == false || request.CategoryId < 0)
+            if (request.CategoryId.HasValue == false) 
             {
-                return (false, "Error: invalid CategoryId (is null or less than 1)");
+                return (false, "Error: CategoryId is missing)");
             }
 
-            if(request.MechanicIds == null || request.MechanicIds.Count == 0)
+            if(request.CategoryId < 1)
             {
-                return (false, "Error: MechanicsIds is null");
+                return (false, "Error: invalid CategoryId (is less than 1)");
+
             }
 
             return (true, String.Empty);
@@ -328,7 +377,7 @@ namespace BoardGameGeekLike.Services
                                                  .AsNoTracking()
                                                  .AnyAsync(a => a.Id != request!.BoardGameId && 
                                                                 a.IsDeleted == false && 
-                                                                a.Name == request.BoardGameName.Trim());
+                                                                a.Name == request.BoardGameName!.Trim());
                                                  
 
             if(boardGameName_exists == true)
@@ -360,53 +409,68 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: no categories found");
             }
 
-            var CategoryId_exists = categoryIdsDB.Contains(request.CategoryId);
+            var CategoryId_exists = categoryIdsDB.Contains(request.CategoryId!.Value);
 
             if(CategoryId_exists == false)
             {
                 return (null, $"Error: the requested categoryId ({request.CategoryId}) does not exist");
             }
 
-            var mechanicIdsDB = await this._daoDbContext
+
+            var boardGameMechanics = new List<Mechanic>();
+            
+            if(request.MechanicIds == null || request.MechanicIds.Count == 0)
+            {
+                var mechnicNotDetermined = await this._daoDbContext
+                                                     .Mechanics
+                                                     .FindAsync(1);
+
+                boardGameMechanics.Add(mechnicNotDetermined!);            
+            }
+            else
+            {
+                var mechanicIdsDB = await this._daoDbContext
+                                                 .Mechanics
+                                                 .Where(a => a.IsDeleted == false)
+                                                 .Select(a => a.Id)
+                                                 .ToListAsync();
+
+                if(mechanicIdsDB == null || mechanicIdsDB.Count == 0)
+                {
+                    return (null, "Error: no board game mechanic was found");
+                }
+
+                var invalidMechanicIds = request.MechanicIds.Except(mechanicIdsDB).ToList();
+
+                if(invalidMechanicIds != null && invalidMechanicIds.Count > 0)
+                {
+                    message = "Error: requested MechnicId";
+                    message += invalidMechanicIds.Count == 1 ?
+                              $": {invalidMechanicIds[0]} was" :
+                              $"s: {string.Join(", ",invalidMechanicIds)} were ";
+
+                    message += "not found";
+
+                    return (null, message);
+                }
+
+                var mechanics = await this._daoDbContext
                                           .Mechanics
-                                          .Select(a => a.Id)
+                                          .Where(a => request.MechanicIds.Contains(a.Id))
                                           .ToListAsync();
 
-            if(mechanicIdsDB == null || mechanicIdsDB.Count == 0)
-            {
-                return (null, "Error: no board game mechaniscs found");
-            }
-
-            var invalidMechanicIds = request.MechanicIds.Except(mechanicIdsDB).ToList();
-
-            if(invalidMechanicIds.Count != 0)
-            {
-                message = "Error: the requested ";
-                
-                message += invalidMechanicIds.Count == 1 ? 
-                    $"mechanicId (id = {invalidMechanicIds[0]}) does not exist" :
-                    $"mechanicIds (id = {string.Join(", ",invalidMechanicIds)}) do not exist" ;
-
-                return (null, message);
-            }
-
-            var boardGameMechanics = new List<BoardGameMechanics>();
-
-            foreach(var mechanicId in request.MechanicIds!)
-            {
-                boardGameMechanics.Add(new BoardGameMechanics
+                foreach (var mechanic in mechanics)
                 {
-                    BoardGameId = boardGameDB.Id,
-                    MechanicId = mechanicId
-                });
+                    boardGameMechanics.Add(mechanic);
+                }
             }
 
-            boardGameDB.Name = request.BoardGameName;
-            boardGameDB.Description = request.BoardGameDescription;
-            boardGameDB.MinPlayersCount = request.MinPlayersCount;
-            boardGameDB.MaxPlayersCount = request.MaxPlayersCount;
-            boardGameDB.MinAge = request.MinAge;
-            boardGameDB.CategoryId = request.CategoryId;
+            boardGameDB.Name = request.BoardGameName!;
+            boardGameDB.Description = request.BoardGameDescription == null ? String.Empty : request.BoardGameDescription;
+            boardGameDB.MinPlayersCount = request.MinPlayersCount!.Value;
+            boardGameDB.MaxPlayersCount = request.MaxPlayersCount!.Value;
+            boardGameDB.MinAge = request.MinAge!.Value;
+            boardGameDB.CategoryId = request.CategoryId!.Value;
             boardGameDB.BoardGameMechanics = boardGameMechanics;
 
             await this._daoDbContext.SaveChangesAsync();     
@@ -416,44 +480,55 @@ namespace BoardGameGeekLike.Services
 
         private static (bool, string) EditBoardGame_Validation(AdminsEditBoardGameRequest? request)
         {
-            if (request == null)
+             if (request == null)
             {
                 return (false, "Error: request is null");
             }
 
-            if (request.BoardGameId < 1)
+            if (string.IsNullOrWhiteSpace(request.BoardGameName) == true)
             {
-                return (false, "Error: invalid BoardGameId (is less than 1)");
+                return (false, "Error: BoarGameName is missing");
             }
 
-            if (string.IsNullOrWhiteSpace(request.BoardGameName))
+            if(request.MinPlayersCount.HasValue == false)
             {
-                return (false, "Error: name is null or empty");
+                return (false, "Error: MinPlayersCount is missing");
             }
 
             if (request.MinPlayersCount < 1)
             {
-                return (false, "Error: invalid MinPlayersCount (is less than 1");
+                return (false, "Error: MinPlayersCount is less than 1");
+            }
+
+            if(request.MaxPlayersCount.HasValue == false)
+            {
+                return (false, "Error: MaxPlayersCount is missing");
             }
 
             if (request.MaxPlayersCount < 1)
             {
-                return (false, "Error: invalid MaxPlayersCount (is less than 1)");
+                return (false, "Error: MaxPlayersCount is less than 1");
+            }
+
+            if(request.MinAge.HasValue == false)
+            {
+                return (false, "Error: MinAge is missing");
             }
 
             if (request.MinAge < 1)
             {
-                return (false, "Error: invalid MinAge (is less than 1)");
+                return (false, "Error: MinAge is less than 1");
             }
 
-            if (request.CategoryId < 1)
+            if (request.CategoryId.HasValue == false) 
+            {
+                return (false, "Error: CategoryId is missing)");
+            }
+
+            if(request.CategoryId < 1)
             {
                 return (false, "Error: invalid CategoryId (is less than 1)");
-            }
 
-            if(request.MechanicIds == null || request.MechanicIds.Count == 0)
-            {
-                return (false, "Error: MechanicsIds is null");
             }
 
             return (true, String.Empty);
@@ -496,6 +571,11 @@ namespace BoardGameGeekLike.Services
             if (request == null)
             {
                 return (false, "Error: request is null");
+            }
+
+            if(request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is missing");
             }
 
             if (request.BoardGameId < 1)

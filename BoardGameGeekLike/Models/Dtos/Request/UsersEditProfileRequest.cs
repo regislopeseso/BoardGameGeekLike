@@ -7,9 +7,9 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersEditProfileRequest
     {
-        public int UserId {get; set;}
-        public required string UserNickname { get; set; }
-        public required string UserEmail { get; set; }
-        public required string UserBirthDate { get; set; }
+        public int? UserId {get; set;}
+        public required string? UserNickname { get; set; }
+        public required string? UserEmail { get; set; }
+        public required string? UserBirthDate { get; set; }
     }
 }

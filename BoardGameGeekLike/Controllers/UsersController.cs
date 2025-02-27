@@ -76,11 +76,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> LogPlay(UsersLogPlayRequest? request)
+        public async Task<IActionResult> LogSession(UsersLogSessionRequest? request)
         {
-            var (content, message) = await this._usersService.LogPlay(request);
+            var (content, message) = await this._usersService.LogSession(request);
 
-            var response = new Response<UsersLogPlayResponse>
+            var response = new Response<UsersLogSessionResponse>
             {
                 Content = content,
                 Message = message

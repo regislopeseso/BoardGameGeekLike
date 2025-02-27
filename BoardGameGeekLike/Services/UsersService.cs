@@ -67,11 +67,21 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: username is null or empty");
             }
 
+            if (string.IsNullOrWhiteSpace(request.UserEmail))
+            {
+                return (false, "Error: UserEmail is missing");
+            }
+
             string emailPattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
 
             if (Regex.IsMatch(request.UserEmail, emailPattern) == false)
             {
                 return (false, "Error: invalid email format");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.UserBirthDate))
+            {
+                return (false, "Error: UserBirthDate is missing");
             }
 
             string birthDatePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
@@ -143,7 +153,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: user is deleted");
             }
 
-            var parsedDate = DateOnly.ParseExact(request!.UserBirthDate, "dd/MM/yyyy");           
+            var parsedDate = DateOnly.ParseExact(request.UserBirthDate!, "dd/MM/yyyy");           
 
             await this._daoDbContext
                       .Users
@@ -162,9 +172,19 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
+            if(request.UserId.HasValue == false)
+            {
+                return (false, "Error: UserId is missing");
+            }
+
             if (string.IsNullOrWhiteSpace(request.UserNickname))
             {
-                return (false, "Error: username is null or empty");
+                return (false, "Error: UserNickName is missing");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.UserEmail))
+            {
+                return (false, "Error: UserEmail is missing");
             }
 
             string emailPattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
@@ -172,6 +192,11 @@ namespace BoardGameGeekLike.Services
             if (Regex.IsMatch(request.UserEmail, emailPattern) == false)
             {
                 return (false, "Error: invalid email format");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.UserBirthDate))
+            {
+                return (false, "Error: UserBirthDate is missing");
             }
 
             string birthDatePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
@@ -244,6 +269,11 @@ namespace BoardGameGeekLike.Services
             if (request == null)
             {
                 return (false, "Error: request is null");
+            }
+
+            if(request.UserId.HasValue == false)
+            {
+                return (false, "Error: UserId is missing");
             }
 
             if (request.UserId < 1)
@@ -333,7 +363,7 @@ namespace BoardGameGeekLike.Services
                  return (false, "Error: Rate is missing");
             }
 
-            if(request.Rate != null && (request.Rate < 0 || request.Rate > 5))
+            if(request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5))
             {
                  return (false, "Error: invalid rate. It must be a value between 0 and 5");
             }
@@ -361,9 +391,9 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
    
-        public async Task<(UsersLogPlayResponse?, string)> LogPlay(UsersLogPlayRequest? request)
+        public async Task<(UsersLogSessionResponse?, string)> LogSession(UsersLogSessionRequest? request)
         {
-            var (isValid, message) = LogPlay_Validation(request);
+            var (isValid, message) = LogSession_Validation(request);
             
             if (isValid == false)
             {
@@ -396,7 +426,7 @@ namespace BoardGameGeekLike.Services
 
            
 
-            var newPlayLog = new PlayLog
+            var newSession = new BoardGameSession
             {
                 UserId = request.UserId!.Value,
                 BoardGameId = request.BoardGameId!.Value,
@@ -406,17 +436,17 @@ namespace BoardGameGeekLike.Services
 
             if(request.Date != null)
             {
-                newPlayLog.Date = DateOnly.ParseExact(request.Date!, "dd/MM/yyyy");
+                newSession.Date = DateOnly.ParseExact(request.Date!, "dd/MM/yyyy");
             }
 
-            await this._daoDbContext.PlayLogs.AddAsync(newPlayLog);
+            await this._daoDbContext.BoardGameSessions.AddAsync(newSession);
 
             await this._daoDbContext.SaveChangesAsync();
 
             return (null, "Play logged successfully");
         }
 
-        private static (bool, string) LogPlay_Validation(UsersLogPlayRequest? request)
+        private static (bool, string) LogSession_Validation(UsersLogSessionRequest? request)
         {
             if (request == null)
             {
@@ -443,7 +473,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid BoarGameId (is less than 1)");
             }
 
-            if(request.Date != null)
+            if(String.IsNullOrWhiteSpace(request.Date) == false)
             {
                 string datePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
 

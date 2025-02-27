@@ -13,12 +13,10 @@ namespace BoardGameGeekLike.Models
         
         public DbSet<BoardGame> BoardGames { get; set; }
 
-        public DbSet<BoardGameMechanics> BoardGameMechanics { get; set; }
-
         public DbSet<User> Users { get; set; }
     
         public DbSet<BoardGameRatings> BoardGameRatings  { get; set; }
 
-        public DbSet<PlayLog> PlayLogs {get; set;}
+        public DbSet<BoardGameSession> BoardGameSessions {get; set;}
     }
 }

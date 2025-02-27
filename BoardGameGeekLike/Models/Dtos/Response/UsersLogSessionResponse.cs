@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersLogPlayResponse
+    public class UsersLogSessionResponse
     {
 
     }
