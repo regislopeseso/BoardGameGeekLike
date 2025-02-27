@@ -24,6 +24,16 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+            var name_exists = await this._daoDbContext
+                                        .Categories
+                                        .Where(a => a.IsDeleted == false && a.Name == request!.CategoryName.Trim())
+                                        .AnyAsync();
+
+            if(name_exists == true)
+            {
+                return(null, "Error: requested category name is already in use");
+            } 
+
             var newCategory = new Category
             {
                 Name = request!.CategoryName
@@ -59,6 +69,18 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }
+
+            var name_exists = await this._daoDbContext
+                                        .Categories
+                                        .Where(a => a.Id != request!.CategoryId && 
+                                                    a.IsDeleted == false && 
+                                                    a.Name == request!.CategoryName.Trim())
+                                        .AnyAsync();
+
+            if(name_exists == true)
+            {
+                return(null, "Error: requested category name is already in use");
+            } 
 
             var categoryDB = await this._daoDbContext.Categories
                                        .FindAsync(request!.CategoryId);
@@ -154,6 +176,15 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }
+             var name_exists = await this._daoDbContext
+                                        .Mechanics
+                                        .Where(a => a.IsDeleted == false && a.Name == request!.MechanicName.Trim())
+                                        .AnyAsync();
+
+            if(name_exists == true)
+            {
+                return(null, "Error: requested mechanic name is already in use");
+            } 
 
             var newMechanic = new Mechanic
             {
@@ -195,9 +226,10 @@ namespace BoardGameGeekLike.Services
                                         .BoardGames
                                         .Where(a => a.IsDeleted == false && a.Name == request!.BoardGameName.Trim())
                                         .AnyAsync();
+
             if(name_exists == true)
             {
-                return(null, "Error: requested board game name already in use");
+                return(null, "Error: requested board game name is already in use");
             }      
 
             var newBoardGame = new BoardGame
@@ -306,12 +338,14 @@ namespace BoardGameGeekLike.Services
 
             var boardGameName_exists = await this._daoDbContext
                                                  .BoardGames
-                                                 .Where(a => a.Id != request.BoardGameId && a.IsDeleted == false && a.Name == request.BoardGameName.Trim())
+                                                 .Where(a => a.Id != request.BoardGameId && 
+                                                             a.IsDeleted == false && 
+                                                             a.Name == request.BoardGameName.Trim())
                                                  .AnyAsync();
 
             if(boardGameName_exists == true)
             {
-                return(null, "Error: board game name already in use");
+                return(null, "Error: board game name is already in use");
             }
 
             var categoryIdsDB = await this._daoDbContext

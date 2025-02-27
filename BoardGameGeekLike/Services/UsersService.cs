@@ -27,10 +27,9 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }     
 
-            if (DateOnly.TryParseExact(request!.UserBirthDate, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
-            {
-                return (null, "Error: invalid birth date");
-            }       
+            var name_exists
+
+            var parsedDate = DateOnly.ParseExact(request!.UserBirthDate, "dd/MM/yyyy");   
 
             var user = new User
             {
