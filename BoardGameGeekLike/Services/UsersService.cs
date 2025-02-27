@@ -7,6 +7,7 @@ using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BoardGameGeekLike.Services
 {
@@ -27,7 +28,15 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }     
 
-            var name_exists
+            var userNickName_exists = await this._daoDbContext
+                                        .Users
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.Nickname == request!.UserNickname && a.IsDeleted == false);
+
+            if(userNickName_exists == true)
+            {
+                return (null, "Error: requested UserNickName is already in use");
+            }
 
             var parsedDate = DateOnly.ParseExact(request!.UserBirthDate, "dd/MM/yyyy");   
 

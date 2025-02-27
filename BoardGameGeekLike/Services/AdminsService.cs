@@ -26,12 +26,12 @@ namespace BoardGameGeekLike.Services
 
             var name_exists = await this._daoDbContext
                                         .Categories
-                                        .Where(a => a.IsDeleted == false && a.Name == request!.CategoryName.Trim())
-                                        .AnyAsync();
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.CategoryName.Trim());
 
             if(name_exists == true)
             {
-                return(null, "Error: requested category name is already in use");
+                return(null, "Error: requested CategoryName is already in use");
             } 
 
             var newCategory = new Category
@@ -72,11 +72,11 @@ namespace BoardGameGeekLike.Services
 
             var name_exists = await this._daoDbContext
                                         .Categories
-                                        .Where(a => a.Id != request!.CategoryId && 
-                                                    a.IsDeleted == false && 
-                                                    a.Name == request!.CategoryName.Trim())
-                                        .AnyAsync();
-
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.Id != request!.CategoryId && 
+                                                       a.IsDeleted == false && 
+                                                       a.Name == request!.CategoryName.Trim());
+                                        
             if(name_exists == true)
             {
                 return(null, "Error: requested category name is already in use");
@@ -176,11 +176,12 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }
-             var name_exists = await this._daoDbContext
-                                        .Mechanics
-                                        .Where(a => a.IsDeleted == false && a.Name == request!.MechanicName.Trim())
-                                        .AnyAsync();
 
+            var name_exists = await this._daoDbContext
+                                        .Mechanics
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.MechanicName.Trim());
+                                        
             if(name_exists == true)
             {
                 return(null, "Error: requested mechanic name is already in use");
@@ -224,8 +225,8 @@ namespace BoardGameGeekLike.Services
 
             var name_exists = await this._daoDbContext
                                         .BoardGames
-                                        .Where(a => a.IsDeleted == false && a.Name == request!.BoardGameName.Trim())
-                                        .AnyAsync();
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.BoardGameName.Trim());
 
             if(name_exists == true)
             {
@@ -322,6 +323,19 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+            var boardGameName_exists = await this._daoDbContext
+                                                 .BoardGames
+                                                 .AsNoTracking()
+                                                 .AnyAsync(a => a.Id != request.BoardGameId && 
+                                                                a.IsDeleted == false && 
+                                                                a.Name == request.BoardGameName.Trim());
+                                                 
+
+            if(boardGameName_exists == true)
+            {
+                return(null, "Error: board game name is already in use");
+            }
+
             var boardGameDB = await this._daoDbContext
                                         .BoardGames
                                         .FindAsync(request!.BoardGameId);
@@ -334,19 +348,7 @@ namespace BoardGameGeekLike.Services
             if(boardGameDB.IsDeleted == true)
             {
                 return (null, "Error: board game is deleted");
-            }
-
-            var boardGameName_exists = await this._daoDbContext
-                                                 .BoardGames
-                                                 .Where(a => a.Id != request.BoardGameId && 
-                                                             a.IsDeleted == false && 
-                                                             a.Name == request.BoardGameName.Trim())
-                                                 .AnyAsync();
-
-            if(boardGameName_exists == true)
-            {
-                return(null, "Error: board game name is already in use");
-            }
+            }           
 
             var categoryIdsDB = await this._daoDbContext
                                           .Categories
