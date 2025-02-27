@@ -112,7 +112,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if(request.CategoryId == null)
+            if(request.CategoryId.HasValue == false)
             {
                 return (false, "Error: CategoryId is missing");
             }
@@ -122,7 +122,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid CategoryId (is less than 1)");
             }
 
-            if (string.IsNullOrWhiteSpace(request.CategoryName))
+            if (string.IsNullOrWhiteSpace(request.CategoryName) == true)
             {
                 return (false, "Error: Category name is missing");
             }
@@ -167,7 +167,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if(request.CategoryId == null)
+            if(request.CategoryId.HasValue == false)
             {
                 return(false, "Error: CategoryId is missing");
             }
@@ -218,7 +218,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.MechanicName))
+            if (string.IsNullOrWhiteSpace(request.MechanicName) == true)
             {
                 return (false, "Error: MechanicName is missing");
             }

@@ -62,12 +62,12 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserNickname))
+            if (string.IsNullOrWhiteSpace(request.UserNickname) == true)
             {
                 return (false, "Error: username is null or empty");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserEmail))
+            if (string.IsNullOrWhiteSpace(request.UserEmail)== true)
             {
                 return (false, "Error: UserEmail is missing");
             }
@@ -79,7 +79,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid email format");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserBirthDate))
+            if (string.IsNullOrWhiteSpace(request.UserBirthDate) == true)
             {
                 return (false, "Error: UserBirthDate is missing");
             }
@@ -177,12 +177,12 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: UserId is missing");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserNickname))
+            if (string.IsNullOrWhiteSpace(request.UserNickname) == true)
             {
                 return (false, "Error: UserNickName is missing");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserEmail))
+            if (string.IsNullOrWhiteSpace(request.UserEmail) == true)
             {
                 return (false, "Error: UserEmail is missing");
             }
@@ -194,7 +194,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid email format");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserBirthDate))
+            if (string.IsNullOrWhiteSpace(request.UserBirthDate) == true)
             {
                 return (false, "Error: UserBirthDate is missing");
             }
@@ -363,7 +363,7 @@ namespace BoardGameGeekLike.Services
                  return (false, "Error: Rate is missing");
             }
 
-            if(request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5))
+            if(request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5) == true)
             {
                  return (false, "Error: invalid rate. It must be a value between 0 and 5");
             }
