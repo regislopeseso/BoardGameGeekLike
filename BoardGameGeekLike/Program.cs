@@ -8,11 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+#region Code to force Json accept DateOnly in the DD/MM/YYYY format
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
     });
+#endregion
 
 builder.Services.AddOpenApi();
 

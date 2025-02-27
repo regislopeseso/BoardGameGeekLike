@@ -25,13 +25,18 @@ namespace BoardGameGeekLike.Services
             if (isValid == false)
             {
                 return (null, message);
-            }            
+            }     
+
+            if (DateOnly.TryParseExact(request!.UserBirthDate, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
+            {
+                return (null, "Error: invalid birth date");
+            }       
 
             var user = new User
             {
                 Nickname = request!.UserNickname,
                 Email = request.UserEmail,
-                BirthDate = request.UserBirthDate,
+                BirthDate = parsedDate,
             };
 
             await this._daoDbContext.Users.AddAsync(user);
@@ -60,26 +65,35 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid email format");
             }
 
-            string birthDatePattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
+            string birthDatePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
 
-            if (Regex.IsMatch(request.UserEmail, birthDatePattern) == false)
+            if (Regex.IsMatch(request.UserBirthDate, birthDatePattern) == false)
             {
-                return (false, "Error: invalid email format");
+                return (false, "Error: invalid birth date format. Expected format: DD/MM/YYYY");
             }
 
-            if(request.UserBirthDate.Year > DateTime.Now.Year)
+            // Convert string to DateOnly
+            if (DateOnly.TryParseExact(request.UserBirthDate, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
             {
-                return (false, "Error: birth date is in the future");
+                return (false, "Error: invalid birth date");
             }
 
-            if(DateTime.Now.Year - request.UserBirthDate.Year > 90)
+            int age = DateTime.Now.Year - parsedDate.Year;
+
+            if (parsedDate.Month > DateTime.Now.Month || 
+                    (parsedDate.Month == DateTime.Now.Month && parsedDate.Day > DateTime.Now.Day))
             {
-                return (false, "Error: birth date is too old");
+                age--;
             }
 
-            if(DateTime.Now.Year - request.UserBirthDate.Year < 12)
+            if (age < 12)
             {
                 return (false, "Error: the minimum age for signing up is 12");
+            }
+
+            if (age > 90)
+            {
+                return (false, "Error: birth date is too old");
             }
 
             return (true, "User signed up successfully");

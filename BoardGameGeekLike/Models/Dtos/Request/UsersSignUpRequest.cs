@@ -9,6 +9,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
     {
         public required string UserNickname { get; set; }
         public required string UserEmail { get; set; }
-        public DateOnly UserBirthDate { get; set; }
+        public required string UserBirthDate { get; set; }
     }
 }
