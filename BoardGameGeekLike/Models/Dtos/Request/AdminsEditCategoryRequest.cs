@@ -4,6 +4,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
     {
         public int CategoryId { get; set; }
 
-        public string CategoryName { get; set; }
+        public required string CategoryName { get; set; }
     }
 }
