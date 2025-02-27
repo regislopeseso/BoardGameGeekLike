@@ -1,11 +1,18 @@
 
 using BoardGameGeekLike.Models;
+using BoardGameGeekLike.Properties;
 using BoardGameGeekLike.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+    });
 
 builder.Services.AddOpenApi();
 
