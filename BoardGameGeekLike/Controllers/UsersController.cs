@@ -30,5 +30,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+
+        [HttpPut]
+        public async Task<IActionResult> EditProfile(UsersEditProfileRequest request)
+        {
+            var (content, message) = await this._usersService.EditProfile(request);
+
+            var response = new Response<UsersEditProfileResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
     }
 }
