@@ -7,6 +7,7 @@ using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
+using BoardGameGeekLike.Utility;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace BoardGameGeekLike.Services
@@ -47,14 +48,21 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext.BoardGames.AddRangeAsync(seededBoardGames);
 
             var seededUsers = UserSeeder(200);
-             if(seededUsers == null || seededUsers.Count != 200)
+            if(seededUsers == null || seededUsers.Count != 200)
             {
                 return (null, "Error: seeding USERS failed");
             }
             await this._daoDbContext.Users.AddRangeAsync(seededUsers);
 
-            
+            await this._daoDbContext.SaveChangesAsync();
 
+
+            var seededSessions = SessionSeeder(30, seededUsers, seededBoardGames);
+            if(seededSessions == null || seededSessions.Count !=  6000)
+            {
+                return (null, "Error: seeding SESSIONS failed");
+            }
+            await this._daoDbContext.Sessions.AddRangeAsync(seededSessions);
 
 
             await this._daoDbContext.SaveChangesAsync();
@@ -129,7 +137,7 @@ namespace BoardGameGeekLike.Services
                         Description = $"this is the board game number {bgCount}",
                         MinPlayersCount = minPlayersCount,
                         MaxPlayersCount = maxPlayersCount,
-                        MinAge = minAges[random.Next(0,minAges.Length)],
+                        MinAge = minAges[random.Next(0, minAges.Length)],
                         Category = seededCategories[random.Next(0, seededCategories.Count)],
                         BoardGameMechanics = boardGameMechanics,
                         AverageRating = random.Next(0,5),
@@ -145,32 +153,19 @@ namespace BoardGameGeekLike.Services
         {
             var newUsers = new List<User>(){};
 
-            var random = new Random();            
+            var random = new Random(); 
+
+            int currentYear = DateTime.Today.Year;           
 
             for (int usersCount = 1; usersCount <= n; usersCount ++)
-            {
-                var year = random.Next(1945,2014);
-
-                var month = random.Next(1,13);
-                
-                var day = month switch
-                {
-                    2 => random.Next(1, 29), // February (ignoring leap years for simplicity)
-                    4 or 6 or 9 or 11 => random.Next(1, 31), // April, June, September, November
-                    _ => random.Next(1, 32) // Months with 31 days
-                };
-
-                string date_string = $"{day:00}/{month:00}/{year}";
-
-                var parsedDate = DateOnly.ParseExact(date_string,"dd/MM/yyyy");
-
+            {               
                 newUsers.Add
                 (
                     new User
                     {
                         Nickname = $"user #{usersCount}",
                         Email = $"user{usersCount}@email.com",
-                        BirthDate = parsedDate,
+                        BirthDate = DateGenerator.GetRandomDate(currentYear-12),
                         IsDeleted = false                       
                     }
                 );
@@ -179,5 +174,63 @@ namespace BoardGameGeekLike.Services
             return newUsers;
         }
 
+        private static List<Session>? SessionSeeder(int n, List<User> seededUsers, List<BoardGame> seededBoardGames)
+        {
+            var newSessions = new List<Session>(){};
+
+            var random = new Random();
+
+            var countSessions = 0;
+
+            var randomDuration = new int[] {15, 30, 45, 60, 
+                                            75, 90, 105, 120, 
+                                            135, 150, 165, 180, 
+                                            195, 210, 225, 240,
+                                            255, 270, 285, 300};
+            
+            int currentYear = DateTime.UtcNow.Year; 
+            int currentMonth = DateTime.UtcNow.Month;
+            int currentDay = DateTime.UtcNow.Day;
+
+            foreach(var user in seededUsers)
+            {
+                while (countSessions < n)
+                {
+                    var randomBoardGame = seededBoardGames.OrderBy(a => random.Next()).First();                  
+                    
+                    var randomDate = DateGenerator.GetRandomDate(currentYear);
+
+                    if (randomDate.Year == currentYear)
+                    {
+                        if (randomDate.Month > currentMonth)
+                        {
+                            randomDate = randomDate.AddMonths(currentMonth - randomDate.Month);
+                        }
+
+                        if (randomDate.Month == currentMonth && randomDate.Day > currentDay)
+                        {
+                            randomDate = randomDate.AddDays(currentDay - randomDate.Day);
+                        }
+                    }
+                   
+                    newSessions.Add
+                    (
+                        new Session
+                        {
+                            UserId = user.Id,
+                            BoardGame = randomBoardGame,
+                            Date = randomDate,
+                            PlayersCount = random.Next(1,6),
+                            Durantion_minutes = randomDuration[random.Next(0, randomDuration.Length)],
+                            IsDeleted = false
+                        }
+                    );
+                    countSessions++;
+                }
+                countSessions = 0;
+            }
+
+            return newSessions;
+        }
     }
 }

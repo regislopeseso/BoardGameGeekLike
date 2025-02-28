@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250227205305_m1")]
+    [Migration("20250228204937_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -69,67 +69,6 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("boardgames");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGameRatings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BoardGameId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rate")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BoardGameId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("boardGameRatings");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGameSession", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BoardGameId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly?>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("Durantion_minutes")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("PlayersCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BoardGameId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("boardGameSessions");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -168,6 +107,67 @@ namespace BoardGameGeekLike.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("mechanics");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoardGameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rate")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardGameId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ratings");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Session", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoardGameId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Durantion_minutes")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("PlayersCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardGameId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("sessions");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
@@ -223,7 +223,7 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGameRatings", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.BoardGame", "BoardGame")
                         .WithMany()
@@ -242,7 +242,7 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGameSession", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Session", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.BoardGame", "BoardGame")
                         .WithMany()

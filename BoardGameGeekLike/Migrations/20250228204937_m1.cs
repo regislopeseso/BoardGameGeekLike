@@ -122,7 +122,7 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "boardGameRatings",
+                name: "ratings",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -133,15 +133,15 @@ namespace BoardGameGeekLike.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_boardGameRatings", x => x.Id);
+                    table.PrimaryKey("PK_ratings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_boardGameRatings_boardgames_BoardGameId",
+                        name: "FK_ratings_boardgames_BoardGameId",
                         column: x => x.BoardGameId,
                         principalTable: "boardgames",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_boardGameRatings_users_UserId",
+                        name: "FK_ratings_users_UserId",
                         column: x => x.UserId,
                         principalTable: "users",
                         principalColumn: "Id",
@@ -150,7 +150,7 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "boardGameSessions",
+                name: "sessions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -164,15 +164,15 @@ namespace BoardGameGeekLike.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_boardGameSessions", x => x.Id);
+                    table.PrimaryKey("PK_sessions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_boardGameSessions_boardgames_BoardGameId",
+                        name: "FK_sessions_boardgames_BoardGameId",
                         column: x => x.BoardGameId,
                         principalTable: "boardgames",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_boardGameSessions_users_UserId",
+                        name: "FK_sessions_users_UserId",
                         column: x => x.UserId,
                         principalTable: "users",
                         principalColumn: "Id",
@@ -186,28 +186,28 @@ namespace BoardGameGeekLike.Migrations
                 column: "BoardGamesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_boardGameRatings_BoardGameId",
-                table: "boardGameRatings",
-                column: "BoardGameId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_boardGameRatings_UserId",
-                table: "boardGameRatings",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_boardgames_CategoryId",
                 table: "boardgames",
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_boardGameSessions_BoardGameId",
-                table: "boardGameSessions",
+                name: "IX_ratings_BoardGameId",
+                table: "ratings",
                 column: "BoardGameId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_boardGameSessions_UserId",
-                table: "boardGameSessions",
+                name: "IX_ratings_UserId",
+                table: "ratings",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_sessions_BoardGameId",
+                table: "sessions",
+                column: "BoardGameId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_sessions_UserId",
+                table: "sessions",
                 column: "UserId");
         }
 
@@ -218,10 +218,10 @@ namespace BoardGameGeekLike.Migrations
                 name: "BoardGameMechanic");
 
             migrationBuilder.DropTable(
-                name: "boardGameRatings");
+                name: "ratings");
 
             migrationBuilder.DropTable(
-                name: "boardGameSessions");
+                name: "sessions");
 
             migrationBuilder.DropTable(
                 name: "mechanics");
