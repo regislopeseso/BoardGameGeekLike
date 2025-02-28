@@ -589,19 +589,40 @@ namespace BoardGameGeekLike.Services
         public async Task<(AdminsSeedResponse?, string)> Seed(AdminsSeedRequest? request)
         {
             var seededCategories = new List<Category>(){};
-            for (int catCount = 0; catCount < 10; catCount ++)
+            for (int catCount = 1; catCount <= 10; catCount ++)
             {
                 seededCategories.Add
                 (
                     new Category
                     {
-                        Name = $"category {catCount+1}"
+                        Name = $"category {catCount}"
                     }
                 );
             }
+            if(seededCategories == null || seededCategories.Count != 10)
+            {
+                return (null, "Error: seeding CATEGORIES failed");
+            }
             await this._daoDbContext.Categories.AddRangeAsync(seededCategories);
 
+            var seededMechanics = new List<Mechanic>(){};
+            for (int mecCount = 1; mecCount <= 10; mecCount ++)
+            {
+                seededMechanics.Add
+                (
+                    new Mechanic
+                    {
+                        Name = $"mechanic {mecCount}"
+                    }
+                );
+            }
+            if(seededMechanics == null || seededMechanics.Count != 10)
+            {
+                return (null, "Error: seeding MECHANICS failed");
+            }
+            await this._daoDbContext.Mechanics.AddRangeAsync(seededMechanics);
 
+            
 
 
             await this._daoDbContext.SaveChangesAsync();
