@@ -625,7 +625,7 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext.Mechanics.AddRangeAsync(seededMechanics);
 
             var seededBoardGames = new List<BoardGame>(){};
-            for(int bgCount = 1; bgCount < 10; bgCount++)
+            for(int bgCount = 1; bgCount <= 10; bgCount++)
             {
                 var minPlayersCount = random.Next(1,2);
                 var maxPlayersCount = minPlayersCount == 1 ? random.Next(1,4) : random.Next(2,5);
@@ -648,13 +648,9 @@ namespace BoardGameGeekLike.Services
                         MaxPlayersCount = maxPlayersCount,
                         MinAge = minAges[random.Next(0,minAges.Length)],
                         Category = seededCategories[random.Next(0, seededCategories.Count)],
-                        BoardGameMechanics.AddRange(boardGameMechanics),
+                        BoardGameMechanics = boardGameMechanics,
                         AverageRating = random.Next(0,5),
-                        RatingsCount = random.
-                    
-
-
-
+                        IsDeleted = false                                         
                     }
                 );
             }
