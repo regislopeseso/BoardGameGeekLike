@@ -588,6 +588,8 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(AdminsSeedResponse?, string)> Seed(AdminsSeedRequest? request)
         {
+            var random = new Random();
+
             var seededCategories = new List<Category>(){};
             for (int catCount = 1; catCount <= 10; catCount ++)
             {
@@ -622,7 +624,46 @@ namespace BoardGameGeekLike.Services
             }
             await this._daoDbContext.Mechanics.AddRangeAsync(seededMechanics);
 
-            
+            var seededBoardGames = new List<BoardGame>(){};
+            for(int bgCount = 1; bgCount < 10; bgCount++)
+            {
+                var minPlayersCount = random.Next(1,2);
+                var maxPlayersCount = minPlayersCount == 1 ? random.Next(1,4) : random.Next(2,5);
+                var minAges = new int[] {5, 8, 12, 18};
+
+                var mechanicsCount = random.Next(1,4);
+                var boardGameMechanics = new List<Mechanic>(){};
+                for(int i = 0; i < mechanicsCount; i++)
+                {
+                    boardGameMechanics.Add(seededMechanics[random.Next(0,seededMechanics.Count)]);
+                }
+
+                seededBoardGames.Add
+                (
+                    new BoardGame
+                    {
+                        Name = $"board game {bgCount}",
+                        Description = $"this is the board game number {bgCount}",
+                        MinPlayersCount = minPlayersCount,
+                        MaxPlayersCount = maxPlayersCount,
+                        MinAge = minAges[random.Next(0,minAges.Length)],
+                        Category = seededCategories[random.Next(0, seededCategories.Count)],
+                        BoardGameMechanics.AddRange(boardGameMechanics),
+                        AverageRating = random.Next(0,5),
+                        RatingsCount = random.
+                    
+
+
+
+                    }
+                );
+            }
+            if(seededBoardGames == null || seededBoardGames.Count != 10)
+            {
+                return (null, "Error: seeding BOARD GAMES failed");
+            }
+            await this._daoDbContext.BoardGames.AddRangeAsync(seededBoardGames);
+
 
 
             await this._daoDbContext.SaveChangesAsync();
