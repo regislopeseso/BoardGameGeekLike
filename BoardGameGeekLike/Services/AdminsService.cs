@@ -566,7 +566,7 @@ namespace BoardGameGeekLike.Services
             return (null, "Board game deleted successfully");
         }
 
-        private static (bool, string) DeleteBoardGame_Validation(AdminsDeleteBoardGameRequest? request)
+         private static (bool, string) DeleteBoardGame_Validation(AdminsDeleteBoardGameRequest? request)
         {
             if (request == null)
             {
@@ -584,87 +584,6 @@ namespace BoardGameGeekLike.Services
             }
 
             return (true, String.Empty);
-        }
-
-        public async Task<(AdminsSeedResponse?, string)> Seed(AdminsSeedRequest? request)
-        {
-            var random = new Random();
-
-            var seededCategories = new List<Category>(){};
-            for (int catCount = 1; catCount <= 10; catCount ++)
-            {
-                seededCategories.Add
-                (
-                    new Category
-                    {
-                        Name = $"category {catCount}"
-                    }
-                );
-            }
-            if(seededCategories == null || seededCategories.Count != 10)
-            {
-                return (null, "Error: seeding CATEGORIES failed");
-            }
-            await this._daoDbContext.Categories.AddRangeAsync(seededCategories);
-
-            var seededMechanics = new List<Mechanic>(){};
-            for (int mecCount = 1; mecCount <= 10; mecCount ++)
-            {
-                seededMechanics.Add
-                (
-                    new Mechanic
-                    {
-                        Name = $"mechanic {mecCount}"
-                    }
-                );
-            }
-            if(seededMechanics == null || seededMechanics.Count != 10)
-            {
-                return (null, "Error: seeding MECHANICS failed");
-            }
-            await this._daoDbContext.Mechanics.AddRangeAsync(seededMechanics);
-
-            var seededBoardGames = new List<BoardGame>(){};
-            for(int bgCount = 1; bgCount <= 10; bgCount++)
-            {
-                var minPlayersCount = random.Next(1,2);
-                var maxPlayersCount = minPlayersCount == 1 ? random.Next(1,4) : random.Next(2,5);
-                var minAges = new int[] {5, 8, 12, 18};
-
-                var mechanicsCount = random.Next(1,4);
-                var boardGameMechanics = new List<Mechanic>(){};
-                for(int i = 0; i < mechanicsCount; i++)
-                {
-                    boardGameMechanics.Add(seededMechanics[random.Next(0,seededMechanics.Count)]);
-                }
-
-                seededBoardGames.Add
-                (
-                    new BoardGame
-                    {
-                        Name = $"board game {bgCount}",
-                        Description = $"this is the board game number {bgCount}",
-                        MinPlayersCount = minPlayersCount,
-                        MaxPlayersCount = maxPlayersCount,
-                        MinAge = minAges[random.Next(0,minAges.Length)],
-                        Category = seededCategories[random.Next(0, seededCategories.Count)],
-                        BoardGameMechanics = boardGameMechanics,
-                        AverageRating = random.Next(0,5),
-                        IsDeleted = false                                         
-                    }
-                );
-            }
-            if(seededBoardGames == null || seededBoardGames.Count != 10)
-            {
-                return (null, "Error: seeding BOARD GAMES failed");
-            }
-            await this._daoDbContext.BoardGames.AddRangeAsync(seededBoardGames);
-
-
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            return(null, "Seeding was successful");
         }
     }
 }

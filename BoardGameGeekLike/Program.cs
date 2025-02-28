@@ -18,6 +18,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddScoped<DevsService>();
 builder.Services.AddScoped<AdminsService>();
 builder.Services.AddScoped<UsersService>();
 
