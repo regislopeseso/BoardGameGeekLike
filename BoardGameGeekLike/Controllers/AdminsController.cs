@@ -85,5 +85,19 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Seed(AdminsSeedRequest? request)
+        {
+            var (content, message) = await this._adminsService.Seed(request);
+
+            var response = new Response<AdminsSeedResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
     }
 }

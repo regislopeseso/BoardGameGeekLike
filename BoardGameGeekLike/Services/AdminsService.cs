@@ -585,5 +585,28 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+
+        public async Task<(AdminsSeedResponse?, string)> Seed(AdminsSeedRequest? request)
+        {
+            var seededCategories = new List<Category>(){};
+            for (int catCount = 0; catCount < 10; catCount ++)
+            {
+                seededCategories.Add
+                (
+                    new Category
+                    {
+                        Name = $"category {catCount+1}"
+                    }
+                );
+            }
+            await this._daoDbContext.Categories.AddRangeAsync(seededCategories);
+
+
+
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return(null, "Seeding was successful");
+        }
     }
 }
