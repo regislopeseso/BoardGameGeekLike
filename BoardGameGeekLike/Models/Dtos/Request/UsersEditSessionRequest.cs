@@ -7,6 +7,10 @@ namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersEditSessionRequest
     {
-        public int SessionId {get; set;}
+        public int? SessionId {get; set;}        
+        public int? BoardGameId {get; set;}        
+        public string? Date {get; set;}
+        public int? PlayersCount {get; set;}
+        public int? Duration_minutes {get; set;}
     }
 }

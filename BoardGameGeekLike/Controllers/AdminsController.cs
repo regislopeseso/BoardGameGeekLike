@@ -31,11 +31,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddMechanic(AdminsAddCategoryRequest? request)
+        public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
         {
-            var (content, message) = await this._adminsService.AddCategory(request);
+            var (content, message) = await this._adminsService.AddMechanic(request);
 
-            var response = new Response<AdminsAddCategoryResponse>
+            var response = new Response<AdminsAddMechanicResponse>
             {
                 Content = content,
                 Message = message

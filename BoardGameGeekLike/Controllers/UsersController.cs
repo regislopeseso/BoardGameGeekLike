@@ -88,5 +88,20 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+    
+        
+        [HttpPut]
+        public async Task<IActionResult> EditSession(UsersEditSessionRequest? request)
+        {
+            var (content, message) = await this._usersService.EditSession(request);
+
+            var response = new Response<UsersEditSessionResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }    
     }
 }
