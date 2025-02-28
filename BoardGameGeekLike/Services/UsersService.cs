@@ -442,7 +442,7 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, "Play logged successfully");
+            return (null, "Session logged successfully");
         }
 
         private static (bool, string) LogSession_Validation(UsersLogSessionRequest? request)
@@ -647,6 +647,55 @@ namespace BoardGameGeekLike.Services
             
         }
     
-        
+        public async Task<(UsersDeleteSessionResponse?, string)> DeleteSession(UsersDeleteSessionRequest? request)
+        {
+            var (isValid, message) = DeleteSession_Validation(request);
+
+            if(isValid == false)
+            {
+                return (null, message);
+            }
+
+            var sessionDB = await this._daoDbContext
+                                      .Sessions
+                                      .FindAsync(request!.SessionId);
+            
+            if(sessionDB == null)
+            {
+                return (null, "Error: session not found");
+            }
+
+            if(sessionDB.IsDeleted == true)
+            {
+                return (null, "Error: session was already deleted");
+            }
+
+            await this._daoDbContext
+                      .Sessions
+                      .Where(a => a.Id == request.SessionId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+
+            return (null, "Session deleted successfully");
+        }
+
+        private static (bool, string) DeleteSession_Validation(UsersDeleteSessionRequest? request)
+        {
+            if(request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if(request.SessionId.HasValue == false)
+            {
+                return (false, "Error: SessionId is missing");   
+            }
+
+            if(request.SessionId < 1)
+            {
+                return (false, "Error: invalid SessionId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
     }
 }

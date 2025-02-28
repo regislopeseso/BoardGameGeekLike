@@ -102,6 +102,20 @@ namespace BoardGameGeekLike.Controllers
             };
 
             return new JsonResult(response);
-        }    
+        }  
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteSession(UsersDeleteSessionRequest? request)
+        {
+            var (content, message) = await this._usersService.DeleteSession(request);
+
+            var response = new Response<UsersDeleteSessionResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }  
     }
 }

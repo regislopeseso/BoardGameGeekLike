@@ -544,7 +544,7 @@ namespace BoardGameGeekLike.Services
 
             var boardGameDb = await this._daoDbContext
                                         .BoardGames
-                                        .FirstOrDefaultAsync(a => a.Id == request!.BoardGameId);
+                                        .FindAsync(request!.BoardGameId);
             
             if(boardGameDb == null)
             {
