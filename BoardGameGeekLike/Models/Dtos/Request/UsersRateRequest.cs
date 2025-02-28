@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersRateBoardGameRequest
+    public class UsersRateRequest
     {
         public int? Rate {get; set;}
         public int? UserId {get; set;}

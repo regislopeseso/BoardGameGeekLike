@@ -284,9 +284,9 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
-        public async Task<(UsersRateBoardGameResponse?, string)> RateBoardGame(UsersRateBoardGameRequest? request)
+        public async Task<(UsersRateResponse?, string)> Rate(UsersRateRequest? request)
         {
-            var (isValid, message) = RateBoardGame_Validation(request);
+            var (isValid, message) = Rate_Validation(request);
             
             if (isValid == false)
             {
@@ -304,8 +304,8 @@ namespace BoardGameGeekLike.Services
             }
 
             var boardgameDB = await this._daoDbContext
-                                             .BoardGames
-                                             .FindAsync(request!.BoardGameId);
+                                        .BoardGames
+                                        .FindAsync(request!.BoardGameId);
             
             if(boardgameDB == null)
             {
@@ -318,7 +318,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var rate_exists = await this._daoDbContext
-                                        .BoardGameRatings
+                                        .Ratings
                                         .AsNoTracking()
                                         .AnyAsync(a => a.UserId == request.UserId && a.BoardGameId == request.BoardGameId);
 
@@ -327,14 +327,14 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: the request board game was already rated by this user");
             }
 
-            var newRate = new BoardGameRatings
+            var newRate = new Rating
             {
                 Rate = request.Rate!.Value,
                 UserId = request.UserId!.Value,
                 BoardGameId = request.BoardGameId!.Value
             };
 
-            await this._daoDbContext.BoardGameRatings.AddAsync(newRate);
+            await this._daoDbContext.Ratings.AddAsync(newRate);
 
             var newAverageRating = (int)Math.Ceiling((double)
             (
@@ -346,12 +346,13 @@ namespace BoardGameGeekLike.Services
                       .Where(a => a.Id == request.BoardGameId)
                       .ExecuteUpdateAsync(a => a.SetProperty(b => b.AverageRating, newAverageRating)
                                                 .SetProperty(b => b.RatingsCount, b => b.RatingsCount + 1));
+
             await this._daoDbContext.SaveChangesAsync();         
 
             return (null, $"Board game rated successfully, its new average rating is: {newAverageRating}");
         }
 
-        private static (bool, string) RateBoardGame_Validation(UsersRateBoardGameRequest? request)
+        private static (bool, string) Rate_Validation(UsersRateRequest? request)
         {
             if (request == null)
             {
@@ -426,7 +427,7 @@ namespace BoardGameGeekLike.Services
 
            
 
-            var newSession = new BoardGameSession
+            var newSession = new Session
             {
                 UserId = request.UserId!.Value,
                 BoardGameId = request.BoardGameId!.Value,
@@ -439,7 +440,7 @@ namespace BoardGameGeekLike.Services
                 newSession.Date = DateOnly.ParseExact(request.Date!, "dd/MM/yyyy");
             }
 
-            await this._daoDbContext.BoardGameSessions.AddAsync(newSession);
+            await this._daoDbContext.Sessions.AddAsync(newSession);
 
             await this._daoDbContext.SaveChangesAsync();
 
@@ -521,5 +522,6 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);           
         }
 
+        
     }
 }

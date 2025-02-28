@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("boardGameRatings")]
-    public class BoardGameRatings
+    [Table("ratings")]
+    public class Rating
+
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 

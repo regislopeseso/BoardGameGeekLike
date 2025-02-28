@@ -62,11 +62,11 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> RateBoardGame(UsersRateBoardGameRequest? request)
+        public async Task<IActionResult> Rate(UsersRateRequest? request)
         {
-            var (content, message) = await this._usersService.RateBoardGame(request);
+            var (content, message) = await this._usersService.Rate(request);
 
-            var response = new Response<UsersRateBoardGameResponse>
+            var response = new Response<UsersRateResponse>
             {
                 Content = content,
                 Message = message

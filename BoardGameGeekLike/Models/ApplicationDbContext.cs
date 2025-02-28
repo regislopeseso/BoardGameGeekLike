@@ -7,16 +7,16 @@ namespace BoardGameGeekLike.Models
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}
         
-        public DbSet<Category> Categories { get; set; }
-
-        public DbSet<Mechanic> Mechanics { get; set; }
-        
         public DbSet<BoardGame> BoardGames { get; set; }
+        
+        public DbSet<Category> Categories { get; set; }
+        
+        public DbSet<Mechanic> Mechanics { get; set; }
 
         public DbSet<User> Users { get; set; }
-    
-        public DbSet<BoardGameRatings> BoardGameRatings  { get; set; }
+        
+        public DbSet<Rating> Ratings  { get; set; }
 
-        public DbSet<BoardGameSession> BoardGameSessions {get; set;}
+        public DbSet<Session> Sessions {get; set;}
     }
 }
