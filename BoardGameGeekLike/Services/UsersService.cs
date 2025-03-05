@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BoardGameGeekLike.Models;
@@ -706,5 +707,175 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+    
+        public async Task<(List<UsersFindBoardGameResponse>?, string)> FindBoardGame(UsersFindBoardGameRequest? request)
+        {
+            var (isValid, message) = FindBoardGame_Validation(request);
+
+            if(isValid == false)
+            {
+                return (null, message);
+            }
+            
+            var contentQueriable = this._daoDbContext
+                                       .BoardGames
+                                       .Include(a => a.Category)
+                                       .Include(a => a.BoardGameMechanics)
+                                       .AsNoTracking()
+                                       .Where(a => a.IsDeleted == false);
+
+            if(contentQueriable == null)
+            {
+                return (null, "Error: no board games found");
+            }
+
+            if(request == null ||
+               (
+                string.IsNullOrWhiteSpace(request.BoardGameName) == true &&
+                request.MinPlayersCount.HasValue == false &&
+                request.MaxPlayersCount.HasValue == false &&
+                request.MinAge.HasValue == false &&
+                string.IsNullOrWhiteSpace(request.CategoryName) == true &&
+                string.IsNullOrWhiteSpace(request.MechanicName) == true &&
+                request.AverageRating.HasValue == false
+               ))
+            {
+                var content1 = await contentQueriable
+                                .Select(a => new UsersFindBoardGameResponse
+                                {
+                                    BoardGameId = a.Id,
+                                    BoarGameName = a.Name
+                                })
+                               .OrderBy(a => a.BoardGameId)
+                               .ToListAsync();
+                
+                return (content1, message);
+            }
+
+            message = "All board games listed successfully";
+
+            //Filtering by name
+            if(String.IsNullOrWhiteSpace(request!.BoardGameName) == false)
+            { 
+                contentQueriable = contentQueriable.Where(a => a.Name.ToLower().Contains(request.BoardGameName.ToLower()));
+            }
+
+            //Filtering by MinPlayersCount
+            if(request.MinPlayersCount.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.MinPlayersCount == request.MinPlayersCount);
+            }
+
+             //Filtering by MaxPlayersCount
+            if(request.MaxPlayersCount.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.MaxPlayersCount == request.MaxPlayersCount);
+            }
+
+             //Filtering by MinAge
+            if(request.MinAge.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.MinAge >= request.MinAge);
+            }
+
+            //Filtering by Category
+            if(String.IsNullOrWhiteSpace(request.CategoryName) == false)
+            {
+                contentQueriable = contentQueriable.Where(a => a.Category.Name.ToLower().Contains(request.CategoryName.ToLower()));
+            }
+
+            //Filtering by Mechanic
+            if(String.IsNullOrWhiteSpace(request.MechanicName) == false)
+            {
+                contentQueriable = contentQueriable.Where(a => a.BoardGameMechanics!
+                                                                .Select(a => a.Name.ToLower())
+                                                                .Contains(request.MechanicName.ToLower()));
+            }
+
+            //Filtering by Rating
+            if(request.AverageRating.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.AverageRating == request.AverageRating);
+            }
+
+            var content = await contentQueriable
+                                .Select(a => new UsersFindBoardGameResponse
+                                {
+                                    BoardGameId = a.Id,
+                                    BoarGameName = a.Name
+                                })
+                               .OrderBy(a => a.BoarGameName)
+                               .ToListAsync();
+
+            if(content == null || content.Count == 0)
+            {
+                return (null, "Error: nothing found");
+            }             
+
+            return (content, "Board Games listed found successfully");
+        }
+
+        private static (bool, string) FindBoardGame_Validation(UsersFindBoardGameRequest? request)
+        {
+            if(request == null)
+            {
+                return (true, string.Empty);
+            }
+            if(string.IsNullOrWhiteSpace(request!.BoardGameName) == false && request.BoardGameName.Length < 3)
+            {
+                return (false, "Error: filtering board games by name requires at least 3 characters.");
+            }
+
+            if(request.MinPlayersCount.HasValue == true && request.MinPlayersCount < 1)
+            {
+                return (false, "Error: invalid MinPlayersCount (is less than 1).");
+            }
+
+            if(request.MaxPlayersCount.HasValue == true && request.MaxPlayersCount < 1)
+            {
+                return (false, "Error: invalid MaxPlayersCount (is less than 1).");
+            }
+
+            if(request.MinAge.HasValue == true && request.MinAge < 1)
+            {
+                return (false, "Error: invalid MinAge (is less than 1).");
+            }
+
+            if( (request.MinPlayersCount.HasValue == true && request.MaxPlayersCount.HasValue == true) && 
+                 request.MaxPlayersCount < request.MinPlayersCount)
+            {
+                return (false, "Error: invalid PlayersCount (MaxPlayersCount greater than MinPlayersCount).");
+            }
+
+            if(String.IsNullOrWhiteSpace(request.CategoryName) == false && request.CategoryName.Length < 3)
+            {
+                return (false, "Error: filtering board games by category requires at least 3 characters.");
+            }
+
+            if(String.IsNullOrWhiteSpace(request.MechanicName) == false && request.MechanicName.Length < 3)
+            {
+                return (false, "Error: filtering board games by mechanic requires at least 3 characters.");
+            }
+
+            if(request.AverageRating.HasValue == true && request.AverageRating < 0)
+            {
+                return (false, "Error: invalid Rate (is less than 0).");
+            }
+
+            if(request.AverageRating.HasValue == true && request.AverageRating > 5)
+            {
+                return (false, "Error: invalid Rate (is greater than 5).");
+            }
+
+            return (true, string.Empty);            
+        }
+    
+    
+    
+    
+    
+    
+    
+    
     }
 }

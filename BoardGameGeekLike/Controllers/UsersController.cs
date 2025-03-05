@@ -117,5 +117,19 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }  
+
+        [HttpGet]
+          public async Task<IActionResult> FindBoardGame(UsersFindBoardGameRequest? request)
+        {
+            var (content, message) = await this._usersService.FindBoardGame(request);
+
+            var response = new Response<List<UsersFindBoardGameResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }  
     }
 }

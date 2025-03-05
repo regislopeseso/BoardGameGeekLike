@@ -140,7 +140,7 @@ namespace BoardGameGeekLike.Services
                         MinAge = minAges[random.Next(0, minAges.Length)],
                         Category = seededCategories[random.Next(0, seededCategories.Count)],
                         BoardGameMechanics = boardGameMechanics,
-                        AverageRating = random.Next(0,5),
+                        AverageRating = random.Next(0,6),
                         IsDeleted = false                                         
                     }
                 );
