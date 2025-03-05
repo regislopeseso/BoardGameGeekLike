@@ -8,8 +8,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     public class UsersEditProfileRequest
     {
         public int? UserId {get; set;}
-        public required string? UserNickname { get; set; }
-        public required string? UserEmail { get; set; }
-        public required string? UserBirthDate { get; set; }
+        public string? UserNickname { get; set; }
+        public string? UserEmail { get; set; }
+        public string? UserBirthDate { get; set; }
     }
 }

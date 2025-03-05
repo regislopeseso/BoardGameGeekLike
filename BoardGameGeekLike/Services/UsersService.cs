@@ -39,12 +39,12 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: requested UserNickName is already in use");
             }
 
-            var parsedDate = DateOnly.ParseExact(request!.UserBirthDate, "dd/MM/yyyy");   
+            var parsedDate = DateOnly.ParseExact(request!.UserBirthDate!, "dd/MM/yyyy");   
 
             var user = new User
             {
-                Nickname = request!.UserNickname,
-                Email = request.UserEmail,
+                Nickname = request.UserNickname!,
+                Email = request.UserEmail!,
                 BirthDate = parsedDate,
             };
 
@@ -517,6 +517,11 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid Duration_minutes (is negative)");
             }
 
+            if(request.Duration_minutes > 1440)
+            {
+                return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes)");
+            }
+
             return (true, String.Empty);           
         }
 
@@ -643,8 +648,12 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid Duration_minutes (is negative)");
             }
 
+            if(request.Duration_minutes > 1440)
+            {
+                return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes)");
+            }
+
             return (true, String.Empty);
-            
         }
     
         public async Task<(UsersDeleteSessionResponse?, string)> DeleteSession(UsersDeleteSessionRequest? request)
