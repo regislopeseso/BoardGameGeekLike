@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
@@ -720,7 +715,7 @@ namespace BoardGameGeekLike.Services
             var contentQueriable = this._daoDbContext
                                        .BoardGames
                                        .Include(a => a.Category)
-                                       .Include(a => a.BoardGameMechanics)
+                                       .Include(a => a.Mechanics)
                                        .AsNoTracking()
                                        .Where(a => a.IsDeleted == false);
 
@@ -781,13 +776,13 @@ namespace BoardGameGeekLike.Services
             //Filtering by Category
             if(String.IsNullOrWhiteSpace(request.CategoryName) == false)
             {
-                contentQueriable = contentQueriable.Where(a => a.Category.Name.ToLower().Contains(request.CategoryName.ToLower()));
+                contentQueriable = contentQueriable.Where(a => a.Category!.Name.ToLower().Contains(request.CategoryName.ToLower()));
             }
 
             //Filtering by Mechanic
             if(String.IsNullOrWhiteSpace(request.MechanicName) == false)
             {
-                contentQueriable = contentQueriable.Where(a => a.BoardGameMechanics!
+                contentQueriable = contentQueriable.Where(a => a.Mechanics!
                                                                 .Select(a => a.Name.ToLower())
                                                                 .Contains(request.MechanicName.ToLower()));
             }
@@ -870,11 +865,161 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);            
         }
     
-    
-    
-    
-    
-    
+        public async Task<(UsersShowBoardGameDetailsResponse?, string)> ShowBoardGameDetails(UsersShowBoardGameDetailsRequest? request)
+        {
+            var (isValid, message) = ShowBoardGameDetails_Validation(request);
+
+            if(isValid == false)
+            {
+                return (null, message);
+            }
+
+            var boardgameDB = await this._daoDbContext
+                                        .BoardGames
+                                        .Include(a => a.Mechanics)
+                                        .AsNoTracking()
+                                        .FirstOrDefaultAsync(a => a.Id == request!.BoardGameId);
+
+            if(boardgameDB == null)
+            {
+                return (null, "Error: request BoardGame not found");
+            }
+
+            if(boardgameDB.IsDeleted == true)
+            {
+                return (null, "Error: request BoardGame is deleted");
+            }
+
+
+
+            //FETCHING THE BG CATEGORY NAME
+            var categoryDB = await this._daoDbContext
+                                       .Categories                                       
+                                       .FindAsync(boardgameDB.CategoryId);
+
+            if(categoryDB == null)
+            {
+                return (null, "Error: no category found for the requested board game");
+            }
+            
+            var category = String.Empty;
+
+            if(categoryDB.IsDeleted == true)
+            {
+                category = "Error: the category of the requested board game has been deleted";
+            }
+            else
+            {
+                category = categoryDB.Name;
+            }
+            //
+
+
+
+            //FETCHING THE BG MECHANICS NAMES
+            var requestedMechanicIds = boardgameDB.Mechanics!.Select(a => a.Id).ToList();
+
+            if(requestedMechanicIds == null || requestedMechanicIds.Count == 0)
+            {
+                return (null, "Error: no mechanics found for the requested board game");
+            }
+
+            var mechanicsDB = await this._daoDbContext
+                                        .Mechanics
+                                        .Where(a => requestedMechanicIds.Contains(a.Id))
+                                        .ToListAsync();
+
+            var mechanics = mechanicsDB.Select(a => a.Name).ToList();
+            //
+
+
+
+            //FETCHING THE BG LAST 5 SESSIONS
+            var loggedSessionsDB = await this._daoDbContext
+                                             .Sessions
+                                             .Include(a => a.User)
+                                             .Where(a => a.BoardGameId == request!.BoardGameId)
+                                             .ToListAsync();
+
+            if(loggedSessionsDB == null || loggedSessionsDB.Count == 0)
+            {
+                return (null, "Error: no sessions found for this game board");
+            }
+
+            var loggedSessionsCount = 0;
+
+            var avgSessionDuration = 0;
+            
+            var lastFiveSessions = new List<UsersShowBoardGameDetailsResponse_sessions>(){};
+
+            if(loggedSessionsDB != null && loggedSessionsDB.Count > 0)
+            {
+                loggedSessionsCount = loggedSessionsDB.Count;
+                
+                avgSessionDuration = (int)Math.Ceiling(loggedSessionsDB.Average(a => a.Durantion_minutes));
+                
+                var n = 5;
+
+                if(loggedSessionsCount < 5)
+                {
+                    n = loggedSessionsCount;
+                }
+
+
+                loggedSessionsDB = loggedSessionsDB.OrderByDescending(a => a.Date).ToList();
+                
+                for(int i = 0; i < n; i ++)
+                {
+                    lastFiveSessions.Add(new UsersShowBoardGameDetailsResponse_sessions
+                    {
+                        UserNickName = loggedSessionsDB[i].User!.Nickname,
+                        Date = loggedSessionsDB[i].Date,
+                        PlayersCount = loggedSessionsDB[i].PlayersCount,
+                        Duration = loggedSessionsDB[i].Durantion_minutes
+                    });
+                }
+            }
+            //
+
+
+
+            var content = new UsersShowBoardGameDetailsResponse
+            {
+                BoardGameName = boardgameDB.Name,
+                BoardGameDescription = boardgameDB.Description,
+                Category = categoryDB.Name,
+                Mechanics = mechanics,
+                MinPlayersCount = boardgameDB.MinPlayersCount,
+                MaxPlayerCount = boardgameDB.MaxPlayersCount,
+                MinAge = boardgameDB.MinAge,
+                LoggedSessions = loggedSessionsCount,
+                AvgSessionDuration = avgSessionDuration,
+                AvgRating = boardgameDB.AverageRating,
+                LastFiveSessions = lastFiveSessions
+            };            
+
+            return (content, "Board game details shown sucessfully");
+        }   
+
+        private static (bool, string) ShowBoardGameDetails_Validation(UsersShowBoardGameDetailsRequest? request)
+        {
+            if(request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if(request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is missing");
+            }
+
+            if(request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        } 
     
     
     }

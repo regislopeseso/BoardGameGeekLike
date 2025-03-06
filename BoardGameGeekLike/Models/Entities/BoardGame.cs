@@ -21,11 +21,11 @@ namespace BoardGameGeekLike.Models.Entities
         public required int MinAge { get; set; }
 
 
-        [ForeignKey("Category")]
+        [ForeignKey("categories")]
         public int CategoryId { get; set; } = 1;
         public Category? Category { get; set; }
 
-        public List<Mechanic>? BoardGameMechanics { get; set; }
+        public List<Mechanic>? Mechanics { get; set; }
 
         public int AverageRating {get; set;}
 

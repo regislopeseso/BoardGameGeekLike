@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250228204937_m1")]
+    [Migration("20250306182151_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -199,15 +199,15 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameMechanic", b =>
                 {
-                    b.Property<int>("BoardGameMechanicsId")
-                        .HasColumnType("int");
-
                     b.Property<int>("BoardGamesId")
                         .HasColumnType("int");
 
-                    b.HasKey("BoardGameMechanicsId", "BoardGamesId");
+                    b.Property<int>("MechanicsId")
+                        .HasColumnType("int");
 
-                    b.HasIndex("BoardGamesId");
+                    b.HasKey("BoardGamesId", "MechanicsId");
+
+                    b.HasIndex("MechanicsId");
 
                     b.ToTable("BoardGameMechanic");
                 });
@@ -263,15 +263,15 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameMechanic", b =>
                 {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.Mechanic", null)
-                        .WithMany()
-                        .HasForeignKey("BoardGameMechanicsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("BoardGameGeekLike.Models.Entities.BoardGame", null)
                         .WithMany()
                         .HasForeignKey("BoardGamesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BoardGameGeekLike.Models.Entities.Mechanic", null)
+                        .WithMany()
+                        .HasForeignKey("MechanicsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

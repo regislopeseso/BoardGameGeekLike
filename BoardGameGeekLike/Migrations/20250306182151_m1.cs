@@ -100,12 +100,12 @@ namespace BoardGameGeekLike.Migrations
                 name: "BoardGameMechanic",
                 columns: table => new
                 {
-                    BoardGameMechanicsId = table.Column<int>(type: "int", nullable: false),
-                    BoardGamesId = table.Column<int>(type: "int", nullable: false)
+                    BoardGamesId = table.Column<int>(type: "int", nullable: false),
+                    MechanicsId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BoardGameMechanic", x => new { x.BoardGameMechanicsId, x.BoardGamesId });
+                    table.PrimaryKey("PK_BoardGameMechanic", x => new { x.BoardGamesId, x.MechanicsId });
                     table.ForeignKey(
                         name: "FK_BoardGameMechanic_boardgames_BoardGamesId",
                         column: x => x.BoardGamesId,
@@ -113,8 +113,8 @@ namespace BoardGameGeekLike.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BoardGameMechanic_mechanics_BoardGameMechanicsId",
-                        column: x => x.BoardGameMechanicsId,
+                        name: "FK_BoardGameMechanic_mechanics_MechanicsId",
+                        column: x => x.MechanicsId,
                         principalTable: "mechanics",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -181,9 +181,9 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BoardGameMechanic_BoardGamesId",
+                name: "IX_BoardGameMechanic_MechanicsId",
                 table: "BoardGameMechanic",
-                column: "BoardGamesId");
+                column: "MechanicsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_boardgames_CategoryId",

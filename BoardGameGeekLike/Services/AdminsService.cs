@@ -298,7 +298,7 @@ namespace BoardGameGeekLike.Services
                 }
             }
 
-            newBoardGame.BoardGameMechanics = boardGameMechanics;
+            newBoardGame.Mechanics = boardGameMechanics;
 
             await this._daoDbContext.BoardGames.AddAsync(newBoardGame);
 
@@ -471,7 +471,7 @@ namespace BoardGameGeekLike.Services
             boardGameDB.MaxPlayersCount = request.MaxPlayersCount!.Value;
             boardGameDB.MinAge = request.MinAge!.Value;
             boardGameDB.CategoryId = request.CategoryId!.Value;
-            boardGameDB.BoardGameMechanics = boardGameMechanics;
+            boardGameDB.Mechanics = boardGameMechanics;
 
             await this._daoDbContext.SaveChangesAsync();     
 
