@@ -24,7 +24,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public DateOnly? Date {get; set;}
         public int PlayersCount {get; set;}
-        public int Durantion_minutes {get; set;}
+        public int Duration_minutes {get; set;}
 
         public bool IsDeleted {get; set;}
     }

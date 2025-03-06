@@ -221,7 +221,7 @@ namespace BoardGameGeekLike.Services
                             BoardGame = randomBoardGame,
                             Date = randomDate,
                             PlayersCount = random.Next(1,6),
-                            Durantion_minutes = randomDuration[random.Next(0, randomDuration.Length)],
+                            Duration_minutes = randomDuration[random.Next(0, randomDuration.Length)],
                             IsDeleted = false
                         }
                     );

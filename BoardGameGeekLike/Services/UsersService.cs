@@ -426,7 +426,7 @@ namespace BoardGameGeekLike.Services
                 UserId = request.UserId!.Value,
                 BoardGameId = request.BoardGameId!.Value,
                 PlayersCount = request.PlayersCount!.Value,
-                Durantion_minutes = request.Duration_minutes!.Value
+                Duration_minutes = request.Duration_minutes!.Value
             };
 
             if(request.Date != null)
@@ -560,7 +560,7 @@ namespace BoardGameGeekLike.Services
 
             sessionDB.BoardGameId = request.BoardGameId!.Value;
             sessionDB.PlayersCount = request.PlayersCount!.Value;
-            sessionDB.Durantion_minutes = request.Duration_minutes!.Value;
+            sessionDB.Duration_minutes = request.Duration_minutes!.Value;
 
             if(request.Date != null)
             {
@@ -874,6 +874,7 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+            #region FETCHING THE REQUESTED BOARD GAME
             var boardgameDB = await this._daoDbContext
                                         .BoardGames
                                         .Include(a => a.Mechanics)
@@ -889,10 +890,9 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, "Error: request BoardGame is deleted");
             }
+            #endregion
 
-
-
-            //FETCHING THE BG CATEGORY NAME
+            #region FETCHING THE BG CATEGORY NAME
             var categoryDB = await this._daoDbContext
                                        .Categories                                       
                                        .FindAsync(boardgameDB.CategoryId);
@@ -912,11 +912,9 @@ namespace BoardGameGeekLike.Services
             {
                 category = categoryDB.Name;
             }
-            //
+            #endregion
 
-
-
-            //FETCHING THE BG MECHANICS NAMES
+            #region FETCHING THE BG MECHANICS NAMES
             var requestedMechanicIds = boardgameDB.Mechanics!.Select(a => a.Id).ToList();
 
             if(requestedMechanicIds == null || requestedMechanicIds.Count == 0)
@@ -930,11 +928,9 @@ namespace BoardGameGeekLike.Services
                                         .ToListAsync();
 
             var mechanics = mechanicsDB.Select(a => a.Name).ToList();
-            //
+            #endregion
 
-
-
-            //FETCHING THE BG LAST 5 SESSIONS
+            #region FETCHING THE BG LAST 5 SESSIONS
             var loggedSessionsDB = await this._daoDbContext
                                              .Sessions
                                              .Include(a => a.User)
@@ -956,7 +952,7 @@ namespace BoardGameGeekLike.Services
             {
                 loggedSessionsCount = loggedSessionsDB.Count;
                 
-                avgSessionDuration = (int)Math.Ceiling(loggedSessionsDB.Average(a => a.Durantion_minutes));
+                avgSessionDuration = (int)Math.Ceiling(loggedSessionsDB.Average(a => a.Duration_minutes));
                 
                 var n = 5;
 
@@ -975,13 +971,11 @@ namespace BoardGameGeekLike.Services
                         UserNickName = loggedSessionsDB[i].User!.Nickname,
                         Date = loggedSessionsDB[i].Date,
                         PlayersCount = loggedSessionsDB[i].PlayersCount,
-                        Duration = loggedSessionsDB[i].Durantion_minutes
+                        Duration = loggedSessionsDB[i].Duration_minutes
                     });
                 }
             }
-            //
-
-
+            #endregion
 
             var content = new UsersShowBoardGameDetailsResponse
             {
@@ -1021,6 +1015,106 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         } 
     
+        public async Task<(UsersBoardGamesRankingResponse?, string)> BoardGamesRanking(UsersBoardGamesRankingRequest? request)
+        {
+            var (isValid, message) = BoardGamesRanking_Validation(request);
+
+            if(isValid == false)
+            {
+                return (null, message);
+            }
+
+            #region SESSIONS QUERIES
+            var sessionsDB = await this._daoDbContext
+                                         .Sessions
+                                         .AsNoTracking()
+                                         .Include(a => a.BoardGame)
+                                         .ToListAsync();
+            
+            if(sessionsDB == null || sessionsDB.Count < 1)
+            {
+                return (null, "Error: no board games sessions found for the rankings");
+            }
+
+            var theMostPlayed = sessionsDB.GroupBy(a => a.BoardGameId)
+                                          .OrderByDescending(a => a.Count())
+                                          .Take(3)
+                                          .Select(a => a.First().BoardGame!.Name)
+                                          .ToList();
+
+            var theShortest = sessionsDB.GroupBy(a => a.BoardGameId)
+                                        .OrderBy(a => a.First().Duration_minutes)
+                                        .Take(3)
+                                        .Select(a => a.First().BoardGame!.Name)
+                                        .ToList();
+
+            var theLongest = sessionsDB.GroupBy(a => a.BoardGameId)
+                                       .OrderByDescending(a => a.Max(b => b.Duration_minutes))
+                                       .ThenByDescending(a => a.Count())
+                                       .ThenBy(a => a.Key)
+                                       .Take(3)
+                                       .Select(a => a.First().BoardGame!.Name)
+                                       .ToList();
+
+            var adultsFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge >= 18)
+                                            .GroupBy(a => a.BoardGameId)
+                                            .OrderByDescending(a => a.Count())
+                                            .Take(3)
+                                            .Select(a => a.First().BoardGame!.Name)
+                                            .ToList();
+
+            var teensFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge >= 18)
+                                           .GroupBy(a => a.BoardGameId)
+                                           .OrderByDescending(a => a.Count())
+                                           .Take(3)
+                                           .Select(a => a.First().BoardGame!.Name)
+                                           .ToList();
+            #endregion
+
+            #region BOARD GAMES QUERIES
+            var boardGamesDB = await this._daoDbContext
+                                         .BoardGames
+                                         .AsNoTracking()
+                                         .ToListAsync();
+
+            if(boardGamesDB == null || boardGamesDB.Count < 1)
+            {
+                return (null, "Error: no board games found for the ranking");
+            }
+            
+            var theBestRated = boardGamesDB.OrderByDescending(a => a.AverageRating)
+                                           .Take(3)
+                                           .Select(a => a.Name)
+                                           .ToList();         
+            #endregion
+
+            var content = new UsersBoardGamesRankingResponse 
+            {
+                TheMostPlayed = theMostPlayed,
+                TheBestRated = theBestRated,
+                TheShortest = theShortest,
+                TheLongest = theLongest,
+                AdultsFavorites = adultsFavorites,
+                TeensFavorites = teensFavorites
+            };
+
+            if(content == null)
+            {
+                return (null, "Error: ranking failed");
+            }
+
+            return (content, "Board games ranked successfully");
+        }
+
+        private static (bool, string) BoardGamesRanking_Validation(UsersBoardGamesRankingRequest? request)
+        {
+            if(request != null)
+            {
+                return (false, "Error: no parameter should be passed for the ranking of the board games");
+            }
+
+            return (true, String.Empty);
+        }
     
     }
 }
