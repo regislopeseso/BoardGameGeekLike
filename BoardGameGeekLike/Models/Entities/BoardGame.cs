@@ -21,7 +21,7 @@ namespace BoardGameGeekLike.Models.Entities
         public required int MinAge { get; set; }
 
 
-        [ForeignKey("categories")]
+        [ForeignKey("Category")]
         public int CategoryId { get; set; } = 1;
         public Category? Category { get; set; }
 
@@ -30,6 +30,9 @@ namespace BoardGameGeekLike.Models.Entities
         public int AverageRating {get; set;}
 
         public int RatingsCount {get; set;}
+
+        [InverseProperty("BoardGame")]
+        public List<Session>? Sessions {get; set;}
 
         public bool IsDeleted { get; set; } = false;
     }

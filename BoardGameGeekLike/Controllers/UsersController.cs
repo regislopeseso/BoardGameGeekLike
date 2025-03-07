@@ -161,6 +161,18 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         } 
 
+        [HttpGet]
+        public async Task<IActionResult> CategoriesRanking(UsersCategoriesRankingRequest? request)
+        {
+            var (content, message) = await this._usersService.CategoriesRanking(request);
 
+            var response = new Response<UsersCategoriesRankingResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        } 
     }
 }

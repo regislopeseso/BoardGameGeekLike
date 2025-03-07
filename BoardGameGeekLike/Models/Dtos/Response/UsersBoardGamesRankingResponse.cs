@@ -7,16 +7,16 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersBoardGamesRankingResponse
     {
-        public List<string>? TheMostPlayed {get; set;}
+        public List<string>? MostPlayedBoardGames {get; set;}
 
-        public List<string>? TheBestRated {get; set;}
+        public List<string>? BestRatedBoardGames {get; set;}
 
-        public List<string>? TheShortest {get; set;}
+        public List<string>? ShortestBoardGames {get; set;}
 
-        public List<string>? TheLongest {get; set;}
+        public List<string>? LongestBoardGames {get; set;}
 
-        public List<string>? AdultsFavorites {get; set;}
+        public List<string>? AdultsFavoritesBoardGames {get; set;}
 
-        public List<string>? TeensFavorites {get; set;}
+        public List<string>? TeensFavoritesBoardGames {get; set;}
     }
 }
