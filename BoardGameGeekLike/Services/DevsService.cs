@@ -8,6 +8,9 @@ using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Utility;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace BoardGameGeekLike.Services
@@ -63,7 +66,44 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: seeding SESSIONS failed");
             }
             await this._daoDbContext.Sessions.AddRangeAsync(seededSessions);
+  
+            var random = new Random();
 
+            var ratings = new List<Rating>(){};
+
+            foreach(var boardGame in seededBoardGames)
+            {
+                var users = seededSessions.Where(a => a.BoardGame == boardGame)
+                                          .Select(a => a.User)
+                                          .ToList(); 
+
+                var boardGameRatings = new List<int>(){};               
+
+                foreach(var user in users)
+                {;
+                    //var ratingValue = random.Next(0,6);
+                    
+                    var a = random.Next(1,5);
+                    
+                    int baseRating = random.Next(2, 5); // Give each board game a base quality rating
+                    int ratingValue = Math.Clamp(baseRating + random.Next(-1, 2), 0, 5);
+
+                    boardGameRatings.Add(ratingValue);
+
+                    ratings.Add(new Rating
+                    {
+                        Rate = ratingValue,
+                        BoardGame = boardGame,
+                        User = user
+
+                    });
+                }
+                
+                boardGame.AverageRating = boardGameRatings.Any() ? 
+                    (int)Math.Ceiling(boardGameRatings.Average()) : 0;
+            }
+
+            await this._daoDbContext.Ratings.AddRangeAsync(ratings);
 
             await this._daoDbContext.SaveChangesAsync();
 
@@ -140,7 +180,7 @@ namespace BoardGameGeekLike.Services
                         MinAge = minAges[random.Next(0, minAges.Length)],
                         Category = seededCategories[random.Next(0, seededCategories.Count)],
                         Mechanics = boardGameMechanics,
-                        AverageRating = random.Next(0,6),
+                        AverageRating = 0,
                         IsDeleted = false                                         
                     }
                 );

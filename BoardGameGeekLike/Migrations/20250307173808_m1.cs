@@ -159,7 +159,7 @@ namespace BoardGameGeekLike.Migrations
                     BoardGameId = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateOnly>(type: "date", nullable: true),
                     PlayersCount = table.Column<int>(type: "int", nullable: false),
-                    Durantion_minutes = table.Column<int>(type: "int", nullable: false),
+                    Duration_minutes = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250306182151_m1")]
+    [Migration("20250307173808_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -149,7 +149,7 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<DateOnly?>("Date")
                         .HasColumnType("date");
 
-                    b.Property<int>("Durantion_minutes")
+                    b.Property<int>("Duration_minutes")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
@@ -245,7 +245,7 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Session", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.BoardGame", "BoardGame")
-                        .WithMany()
+                        .WithMany("Sessions")
                         .HasForeignKey("BoardGameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -274,6 +274,11 @@ namespace BoardGameGeekLike.Migrations
                         .HasForeignKey("MechanicsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGame", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Category", b =>
