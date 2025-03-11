@@ -118,61 +118,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }  
 
-        [HttpGet]
-        public async Task<IActionResult> FindBoardGame(UsersFindBoardGameRequest? request)
-        {
-            var (content, message) = await this._usersService.FindBoardGame(request);
-
-            var response = new Response<List<UsersFindBoardGameResponse>>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }  
-
         
-        [HttpGet]
-        public async Task<IActionResult> ShowBoardGameDetails(UsersShowBoardGameDetailsRequest? request)
-        {
-            var (content, message) = await this._usersService.ShowBoardGameDetails(request);
-
-            var response = new Response<UsersShowBoardGameDetailsResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }        
-          
-        [HttpGet]
-        public async Task<IActionResult> BoardGamesRanking(UsersBoardGamesRankingRequest? request)
-        {
-            var (content, message) = await this._usersService.BoardGamesRanking(request);
-
-            var response = new Response<UsersBoardGamesRankingResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        } 
-
-        [HttpGet]
-        public async Task<IActionResult> CategoriesRanking(UsersCategoriesRankingRequest? request)
-        {
-            var (content, message) = await this._usersService.CategoriesRanking(request);
-
-            var response = new Response<UsersCategoriesRankingResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        } 
     }
 }

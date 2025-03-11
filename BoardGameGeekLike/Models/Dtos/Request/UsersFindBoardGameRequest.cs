@@ -7,6 +7,7 @@ namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersFindBoardGameRequest
     {
+        public int? BoardGameId { get; set; }
         public string? BoardGameName {get; set;}
         public int? MinPlayersCount {get; set;}
 

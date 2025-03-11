@@ -17,13 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="Models\Dtos\Response\" />
     <Folder Include="Models\Dtos\Request\" />
     <Folder Include="Models\Entities\" />
     <Folder Include="Models\Enums\" />
     <Folder Include="Utilities\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
