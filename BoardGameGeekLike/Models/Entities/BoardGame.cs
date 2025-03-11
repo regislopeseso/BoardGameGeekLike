@@ -22,7 +22,7 @@ namespace BoardGameGeekLike.Models.Entities
 
 
         [ForeignKey("Category")]
-        public int CategoryId { get; set; } = 1;
+        public int? CategoryId { get; set; }
         public Category? Category { get; set; }
 
         public List<Mechanic>? Mechanics { get; set; }

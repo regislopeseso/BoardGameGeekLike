@@ -431,7 +431,7 @@ namespace BoardGameGeekLike.Services
 
             if(request.Date != null)
             {
-                newSession.Date = DateOnly.ParseExact(request.Date!, "dd/MM/yyyy");
+                newSession.Date = DateOnly.ParseExact(request.Date!, "yyyy-MM-dd");
             }
 
             await this._daoDbContext.Sessions.AddAsync(newSession);
@@ -470,15 +470,15 @@ namespace BoardGameGeekLike.Services
 
             if(String.IsNullOrWhiteSpace(request.Date) == false)
             {
-                string datePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
+                string datePattern = @"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$";
 
                 if (Regex.IsMatch(request.Date, datePattern) == false)
                 {
-                    return (false, "Error: invalid date format. Expected format: DD/MM/YYYY");
+                    return (false, "Error: invalid date format. Expected format: yyyy-MM-dd");
                 }
 
                 // Convert string to DateOnly
-                if (DateOnly.TryParseExact(request.Date, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
+                if (DateOnly.TryParseExact(request.Date, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
                 {
                     return (false, "Error: invalid birth date");
                 }
@@ -515,7 +515,7 @@ namespace BoardGameGeekLike.Services
 
             if(request.Duration_minutes > 1440)
             {
-                return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes)");
+                return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes = 1 day)");
             }
 
             return (true, String.Empty);           

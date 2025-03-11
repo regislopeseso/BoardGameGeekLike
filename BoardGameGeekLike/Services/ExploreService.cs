@@ -13,7 +13,7 @@ namespace BoardGameGeekLike.Services
             this._daoDbContext = daoDbContext;
         }
 
-        public async Task<(List<UsersFindBoardGameResponse>?, string)> FindBoardGame(UsersFindBoardGameRequest? request)
+        public async Task<(List<ExploreFindBoardGameResponse>?, string)> FindBoardGame(ExploreFindBoardGameRequest? request)
         {
             var (isValid, message) = FindBoardGame_Validation(request);
 
@@ -46,7 +46,7 @@ namespace BoardGameGeekLike.Services
                ))
             {
                 var content1 = await contentQueryable
-                                .Select(a => new UsersFindBoardGameResponse
+                                .Select(a => new ExploreFindBoardGameResponse
                                 {
                                     BoardGameId = a.Id,
                                     BoarGameName = a.Name
@@ -110,7 +110,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var content = await contentQueryable
-                                .Select(a => new UsersFindBoardGameResponse
+                                .Select(a => new ExploreFindBoardGameResponse
                                 {
                                     BoardGameId = a.Id,
                                     BoarGameName = a.Name
@@ -126,7 +126,7 @@ namespace BoardGameGeekLike.Services
             return (content, "Board Games listed found successfully");
         }
 
-        private static (bool, string) FindBoardGame_Validation(UsersFindBoardGameRequest? request)
+        private static (bool, string) FindBoardGame_Validation(ExploreFindBoardGameRequest? request)
         {
             if (request == null)
             {
@@ -187,7 +187,7 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(UsersShowBoardGameDetailsResponse?, string)> ShowBoardGameDetails(UsersShowBoardGameDetailsRequest? request)
+        public async Task<(ExploreShowBoardGameDetailsResponse?, string)> ShowBoardGameDetails(ExploreShowBoardGameDetailsRequest? request)
         {
             var (isValid, message) = ShowBoardGameDetails_Validation(request);
 
@@ -219,14 +219,9 @@ namespace BoardGameGeekLike.Services
                                        .Categories
                                        .FindAsync(boardgameDB.CategoryId);
 
-            if (categoryDB == null)
-            {
-                return (null, "Error: no category found for the requested board game");
-            }
-
             var category = String.Empty;
 
-            if (categoryDB.IsDeleted == true)
+            if (categoryDB != null && categoryDB.IsDeleted == true)
             {
                 category = "Error: the category of the requested board game has been deleted";
             }
@@ -238,11 +233,6 @@ namespace BoardGameGeekLike.Services
 
             #region FETCHING THE BG MECHANICS NAMES
             var requestedMechanicIds = boardgameDB.Mechanics!.Select(a => a.Id).ToList();
-
-            if (requestedMechanicIds == null || requestedMechanicIds.Count == 0)
-            {
-                return (null, "Error: no mechanics found for the requested board game");
-            }
 
             var mechanicsDB = await this._daoDbContext
                                         .Mechanics
@@ -257,18 +247,13 @@ namespace BoardGameGeekLike.Services
                                              .Sessions
                                              .Include(a => a.User)
                                              .Where(a => a.BoardGameId == request!.BoardGameId)
-                                             .ToListAsync();
-
-            if (loggedSessionsDB == null || loggedSessionsDB.Count == 0)
-            {
-                return (null, "Error: no sessions found for this game board");
-            }
+                                             .ToListAsync();        
 
             var loggedSessionsCount = 0;
 
             var avgSessionDuration = 0;
 
-            var lastFiveSessions = new List<UsersShowBoardGameDetailsResponse_sessions>() { };
+            var lastFiveSessions = new List<ExploreShowBoardGameDetailsResponse_sessions>() { };
 
             if (loggedSessionsDB != null && loggedSessionsDB.Count > 0)
             {
@@ -288,8 +273,9 @@ namespace BoardGameGeekLike.Services
 
                 for (int i = 0; i < n; i++)
                 {
-                    lastFiveSessions.Add(new UsersShowBoardGameDetailsResponse_sessions
+                    lastFiveSessions.Add(new ExploreShowBoardGameDetailsResponse_sessions
                     {
+                        SessionId = loggedSessionsDB[i].Id,
                         UserNickName = loggedSessionsDB[i].User!.Nickname,
                         Date = loggedSessionsDB[i].Date,
                         PlayersCount = loggedSessionsDB[i].PlayersCount,
@@ -299,11 +285,11 @@ namespace BoardGameGeekLike.Services
             }
             #endregion
 
-            var content = new UsersShowBoardGameDetailsResponse
+            var content = new ExploreShowBoardGameDetailsResponse
             {
                 BoardGameName = boardgameDB.Name,
                 BoardGameDescription = boardgameDB.Description,
-                Category = categoryDB.Name,
+                Category = category,
                 Mechanics = mechanics,
                 MinPlayersCount = boardgameDB.MinPlayersCount,
                 MaxPlayerCount = boardgameDB.MaxPlayersCount,
@@ -317,7 +303,7 @@ namespace BoardGameGeekLike.Services
             return (content, "Board game details shown sucessfully");
         }
 
-        private static (bool, string) ShowBoardGameDetails_Validation(UsersShowBoardGameDetailsRequest? request)
+        private static (bool, string) ShowBoardGameDetails_Validation(ExploreShowBoardGameDetailsRequest? request)
         {
             if (request == null)
             {
@@ -331,13 +317,13 @@ namespace BoardGameGeekLike.Services
 
             if (request.BoardGameId < 1)
             {
-                return (false, "Error: invalid BoardGameId (is less than 1)");
+                return (false, "Error: invalid BoardGameId (requested BoardGameId is zero or a negative number)");
             }
 
             return (true, string.Empty);
         }
 
-        public async Task<(UsersBoardGamesRankingResponse?, string)> BoardGamesRanking(UsersBoardGamesRankingRequest? request)
+        public async Task<(ExploreBoardGamesRankingResponse?, string)> BoardGamesRanking(ExploreBoardGamesRankingRequest? request)
         {
             var (isValid, message) = BoardGamesRanking_Validation(request);
 
@@ -410,7 +396,7 @@ namespace BoardGameGeekLike.Services
                                            .ToList();
             #endregion
 
-            var content = new UsersBoardGamesRankingResponse
+            var content = new ExploreBoardGamesRankingResponse
             {
                 MostPlayedBoardGames = theMostPlayed,
                 BestRatedBoardGames = theBestRated,
@@ -428,7 +414,7 @@ namespace BoardGameGeekLike.Services
             return (content, "Board games ranked successfully");
         }
 
-        private static (bool, string) BoardGamesRanking_Validation(UsersBoardGamesRankingRequest? request)
+        private static (bool, string) BoardGamesRanking_Validation(ExploreBoardGamesRankingRequest? request)
         {
             if (request != null)
             {
@@ -438,7 +424,7 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
-        public async Task<(UsersCategoriesRankingResponse?, string)> CategoriesRanking(UsersCategoriesRankingRequest? request)
+        public async Task<(ExploreCategoriesRankingResponse?, string)> CategoriesRanking(ExploreCategoriesRankingRequest? request)
         {
             var (isValid, message) = CategoriesRanking_Validation(request);
 
@@ -488,7 +474,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: no categories found for the ranking");
             }
 
-            var theMostPlayed = categoriesDB.Select(a => new UsersCategoriesRankingResponse_mostPlayedOnes
+            var theMostPlayed = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_mostPlayedOnes
             {
                 CategoryName = a.Name,
                 SessionsCount = a.BoardGames!.Sum(b => b.Sessions!.Count)
@@ -497,7 +483,7 @@ namespace BoardGameGeekLike.Services
                                             .Take(3)
                                             .ToList();
 
-            var theMostPopular = categoriesDB.Select(a => new UsersCategoriesRankingResponse_mostPopularOnes
+            var theMostPopular = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_mostPopularOnes
             {
                 CategoryName = a.Name,
                 BoardGamesCount = a.BoardGames!.Count
@@ -506,7 +492,7 @@ namespace BoardGameGeekLike.Services
                                              .Take(3)
                                              .ToList();
 
-            var theBestRated = categoriesDB.Select(a => new UsersCategoriesRankingResponse_bestRatedOnes
+            var theBestRated = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_bestRatedOnes
             {
                 CategoryName = a.Name,
                 AvgRating = a.BoardGames!.Count != 0 ?
@@ -516,7 +502,7 @@ namespace BoardGameGeekLike.Services
                                            .Take(3)
                                            .ToList();
 
-            var theLongest = categoriesDB.Select(a => new UsersCategoriesRankingResponse_longestOnes
+            var theLongest = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_longestOnes
             {
                 CategoryName = a.Name,
                 Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
@@ -526,7 +512,7 @@ namespace BoardGameGeekLike.Services
                                          .Take(3)
                                          .ToList();
 
-            var theShortest = categoriesDB.Select(a => new UsersCategoriesRankingResponse_shortestOnes
+            var theShortest = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_shortestOnes
             {
                 CategoryName = a.Name,
                 Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
@@ -537,7 +523,7 @@ namespace BoardGameGeekLike.Services
                                           .Take(3)
                                           .ToList();
 
-            var content = new UsersCategoriesRankingResponse
+            var content = new ExploreCategoriesRankingResponse
             {
                 MostPlayedCategories = theMostPlayed,
                 MostPopularCategories = theMostPopular,
@@ -549,7 +535,7 @@ namespace BoardGameGeekLike.Services
             return (content, "Categories ranking successfully");
         }
 
-        private static (bool, string) CategoriesRanking_Validation(UsersCategoriesRankingRequest? request)
+        private static (bool, string) CategoriesRanking_Validation(ExploreCategoriesRankingRequest? request)
         {
             if (request != null)
             {

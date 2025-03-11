@@ -6,7 +6,7 @@ using BoardGameGeekLike.Models.Entities;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersShowBoardGameDetailsResponse
+    public class ExploreShowBoardGameDetailsResponse
     {
         public string? BoardGameName {get; set;}
 
@@ -28,6 +28,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? AvgRating {get; set;}
 
-        public List<UsersShowBoardGameDetailsResponse_sessions>? LastFiveSessions {get; set;}
+        public List<ExploreShowBoardGameDetailsResponse_sessions>? LastFiveSessions {get; set;}
     }
 }

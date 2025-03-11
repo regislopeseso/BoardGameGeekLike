@@ -18,11 +18,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FindBoardGame(UsersFindBoardGameRequest? request)
+        public async Task<IActionResult> FindBoardGame(ExploreFindBoardGameRequest? request)
         {
             var (content, message) = await this._exploreService.FindBoardGame(request);
 
-            var response = new Response<List<UsersFindBoardGameResponse>>
+            var response = new Response<List<ExploreFindBoardGameResponse>>
             {
                 Content = content,
                 Message = message
@@ -33,11 +33,11 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> ShowBoardGameDetails(UsersShowBoardGameDetailsRequest? request)
+        public async Task<IActionResult> ShowBoardGameDetails(ExploreShowBoardGameDetailsRequest? request)
         {
             var (content, message) = await this._exploreService.ShowBoardGameDetails(request);
 
-            var response = new Response<UsersShowBoardGameDetailsResponse>
+            var response = new Response<ExploreShowBoardGameDetailsResponse>
             {
                 Content = content,
                 Message = message
@@ -47,11 +47,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> BoardGamesRanking(UsersBoardGamesRankingRequest? request)
+        public async Task<IActionResult> BoardGamesRanking(ExploreBoardGamesRankingRequest? request)
         {
             var (content, message) = await this._exploreService.BoardGamesRanking(request);
 
-            var response = new Response<UsersBoardGamesRankingResponse>
+            var response = new Response<ExploreBoardGamesRankingResponse>
             {
                 Content = content,
                 Message = message
@@ -61,11 +61,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CategoriesRanking(UsersCategoriesRankingRequest? request)
+        public async Task<IActionResult> CategoriesRanking(ExploreCategoriesRankingRequest? request)
         {
             var (content, message) = await this._exploreService.CategoriesRanking(request);
 
-            var response = new Response<UsersCategoriesRankingResponse>
+            var response = new Response<ExploreCategoriesRankingResponse>
             {
                 Content = content,
                 Message = message

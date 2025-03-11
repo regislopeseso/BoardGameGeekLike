@@ -277,7 +277,7 @@ namespace BoardGameGeekLike.Services
             {
                 message = "Error: requested MechnicId";
                 message += invalidMechanicIds.Count == 1 ?
-                          $": {invalidMechanicIds[0]} was" :
+                          $": {invalidMechanicIds[0]} was " :
                           $"s: {string.Join(", ", invalidMechanicIds)} were ";
 
                 message += "not found";

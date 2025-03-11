@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersShowBoardGameDetailsResponse_sessions
+    public class ExploreShowBoardGameDetailsResponse_sessions
     {
+        public int? SessionId { get; set; }
+
         public string? UserNickName {get; set;}
 
         public DateOnly? Date {get; set;}

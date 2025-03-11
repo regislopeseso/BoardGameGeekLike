@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersCategoriesRankingResponse_shortestOnes
+    public class ExploreFindBoardGameResponse
     {
-        public string? CategoryName {get; set;}
-
-        public int? Duration {get; set;}
+        public required int BoardGameId {get; set;}
+        public required string BoarGameName {get; set;}
     }
 }
