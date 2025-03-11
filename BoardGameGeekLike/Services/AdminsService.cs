@@ -251,24 +251,22 @@ namespace BoardGameGeekLike.Services
                 .Categories
                 .FindAsync(request!.CategoryId);
 
-            if(categoryDB == null)
+            if (categoryDB == null)
             {
                 return (null, "Error: requested category not found");
             }
 
-            if(categoryDB.IsDeleted == true)
+            if (categoryDB.IsDeleted == true)
             {
                 return (null, "Error: requested category was deleted");
             }           
-
-            var boardGameMechanics = new List<Mechanic>();
 
             var mechanicIdsDB = await this._daoDbContext
                 .Mechanics
                 .Select(a => a.Id)
                 .ToListAsync();
 
-            if(mechanicIdsDB == null || mechanicIdsDB.Count < 1)
+            if (mechanicIdsDB == null || mechanicIdsDB.Count < 1)
             {
                 return (null, "Error: no mechanic found");
             }
@@ -288,35 +286,36 @@ namespace BoardGameGeekLike.Services
             }
 
             var mechanicsDB = await this._daoDbContext
-                                      .Mechanics
-                                      .Where(a => request.MechanicIds!.Contains(a.Id))
-                                      .ToListAsync();
+                .Mechanics
+                .Where(a => request.MechanicIds!.Contains(a.Id))
+                .ToListAsync();
 
             var deletedMechanics = new List<Mechanic>() { };
 
+            var boardGameMechanics = new List<Mechanic>();
+
             foreach (var mechanic in mechanicsDB)
             {
-                if(mechanic.IsDeleted == true)
+                if (mechanic.IsDeleted == true)
                 {
                     deletedMechanics.Add(mechanic);
                 }
+
                 boardGameMechanics.Add(mechanic);
             }
 
-            if(deletedMechanics != null && deletedMechanics.Count > 0)
+            if (deletedMechanics != null && deletedMechanics.Count > 0)
             {
                 message = "Error: the requested mechanic";
                 message += deletedMechanics.Count == 1 ? $" (MechanicId: {deletedMechanics[0].Id + " - " + deletedMechanics[0].Name}) was deleted" :
                                                          $"s (MechanicIds: " +
-                                                         $"{
-                                                             string.Join(", ", deletedMechanics
+                                                         $"{string.Join(", ", deletedMechanics
                                                                 .Select(a => a.Id)
-                                                                .ToList()) + 
-                                                            " - " + 
+                                                                .ToList()) +
+                                                            " - " +
                                                             string.Join(", ", deletedMechanics
                                                                 .Select(a => a.Name)
-                                                                .ToList())
-                                                         }) were deleted";
+                                                                .ToList())}) were deleted";
                 return (null, message);
             }
 
@@ -387,15 +386,27 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: no CategoryId informed");
             }
 
+            if (request.CategoryId < 1)
+            {
+                return (false, "Error: invalid CategoryId (is less than 1)");
+
+            }
+
             if (request.MechanicIds == null || request.MechanicIds.Count < 1)
             {
                 return (false, "Error: no MechanicId(s) informed");
             }
 
-            if (request.CategoryId < 1)
+            if (request.MechanicIds != null && request.MechanicIds.Count > 0 && request.MechanicIds.Any(a => a < 0))
             {
-                return (false, "Error: invalid CategoryId (is less than 1)");
+                var invalidMechanicIds = request.MechanicIds.Where(a => a < 0).ToList();
 
+                var message = "Error: invalid MechanicId";
+
+                message += invalidMechanicIds.Count == 1 ? " (is less than 1)" :
+                                                          $"s ({invalidMechanicIds.Count} negative values were requested)";
+
+                return (false, message);
             }
 
             return (true, string.Empty);
@@ -411,11 +422,11 @@ namespace BoardGameGeekLike.Services
             }
 
             var boardGameName_exists = await this._daoDbContext
-                                                 .BoardGames
-                                                 .AsNoTracking()
-                                                 .AnyAsync(a => a.Id != request!.BoardGameId &&
-                                                                a.IsDeleted == false &&
-                                                                a.Name == request.BoardGameName!.Trim());
+                .BoardGames
+                .AsNoTracking()
+                .AnyAsync(a => a.Id != request!.BoardGameId &&
+                            a.IsDeleted == false &&
+                            a.Name == request.BoardGameName!.Trim());
 
 
             if (boardGameName_exists == true)
@@ -424,8 +435,9 @@ namespace BoardGameGeekLike.Services
             }
 
             var boardGameDB = await this._daoDbContext
-                                        .BoardGames
-                                        .FindAsync(request!.BoardGameId);
+                .BoardGames
+                .Include(a => a.Mechanics)
+                .FirstOrDefaultAsync(a => a.Id == request!.BoardGameId);
 
             if (boardGameDB == null)
             {
@@ -438,9 +450,10 @@ namespace BoardGameGeekLike.Services
             }
 
             var categoryIdsDB = await this._daoDbContext
-                                          .Categories
-                                          .Select(a => a.Id)
-                                          .ToListAsync();
+                .Categories
+                .AsNoTracking()
+                .Select(a => a.Id)
+                .ToListAsync();
 
             if (categoryIdsDB == null || categoryIdsDB.Count == 0)
             {
@@ -451,57 +464,66 @@ namespace BoardGameGeekLike.Services
 
             if (CategoryId_exists == false)
             {
-                return (null, $"Error: the requested categoryId ({request.CategoryId}) does not exist");
+                return (null, "Error: requested category not found");
+            }                
+          
+            var mechanicsDB = await this._daoDbContext
+                .Mechanics
+                .AsNoTracking()
+                .ToListAsync();
+
+            if (mechanicsDB == null || mechanicsDB.Count == 0)
+            {
+                return (null, "Error: no mechanic found");
             }
 
+            var availableMechanicIds = mechanicsDB.Select(a => a.Id).ToList();
+
+            var invalidMechanicIds = request.MechanicIds!.Except(availableMechanicIds).ToList();
+
+            if (invalidMechanicIds != null && invalidMechanicIds.Count > 0)
+            {
+                message = "Error: requested MechnicId";
+                message += invalidMechanicIds.Count == 1 ?
+                          $": {invalidMechanicIds[0]} was" :
+                          $"s: {string.Join(", ", invalidMechanicIds)} were ";
+
+                message += "not found";
+
+                return (null, message);
+            }
+
+            var foundMechanics = mechanicsDB.Where(a => request.MechanicIds!.Contains(a.Id)).ToList();
+
+            var deletedMechanics = new List<Mechanic>() { };
 
             var boardGameMechanics = new List<Mechanic>();
 
-            if (request.MechanicIds == null || request.MechanicIds.Count == 0)
+            foreach (var mechanic in foundMechanics)
             {
-                var mechnicNotDetermined = await this._daoDbContext
-                                                     .Mechanics
-                                                     .FindAsync(1);
+                if (mechanic.IsDeleted == true)
+                {
+                    deletedMechanics.Add(mechanic);
+                }
 
-                boardGameMechanics.Add(mechnicNotDetermined!);
+                boardGameMechanics.Add(mechanic);
             }
-            else
+
+            if (deletedMechanics != null && deletedMechanics.Count > 0)
             {
-                var mechanicIdsDB = await this._daoDbContext
-                                                 .Mechanics
-                                                 .Where(a => a.IsDeleted == false)
-                                                 .Select(a => a.Id)
-                                                 .ToListAsync();
-
-                if (mechanicIdsDB == null || mechanicIdsDB.Count == 0)
-                {
-                    return (null, "Error: no board game mechanic was found");
-                }
-
-                var invalidMechanicIds = request.MechanicIds.Except(mechanicIdsDB).ToList();
-
-                if (invalidMechanicIds != null && invalidMechanicIds.Count > 0)
-                {
-                    message = "Error: requested MechnicId";
-                    message += invalidMechanicIds.Count == 1 ?
-                              $": {invalidMechanicIds[0]} was" :
-                              $"s: {string.Join(", ", invalidMechanicIds)} were ";
-
-                    message += "not found";
-
-                    return (null, message);
-                }
-
-                var mechanics = await this._daoDbContext
-                                          .Mechanics
-                                          .Where(a => request.MechanicIds.Contains(a.Id))
-                                          .ToListAsync();
-
-                foreach (var mechanic in mechanics)
-                {
-                    boardGameMechanics.Add(mechanic);
-                }
+                message = "Error: the requested mechanic";
+                message += deletedMechanics.Count == 1 ? $" (MechanicId: {deletedMechanics[0].Id + " - " + deletedMechanics[0].Name}) was deleted" :
+                                                         $"s (MechanicIds: " +
+                                                         $"{string.Join(", ", deletedMechanics
+                                                                .Select(a => a.Id)
+                                                                .ToList()) +
+                                                            " - " +
+                                                            string.Join(", ", deletedMechanics
+                                                                .Select(a => a.Name)
+                                                                .ToList())}) were deleted";
+                return (null, message);
             }
+
 
             boardGameDB.Name = request.BoardGameName!;
             boardGameDB.Description = request.BoardGameDescription == null ? string.Empty : request.BoardGameDescription;
@@ -560,13 +582,30 @@ namespace BoardGameGeekLike.Services
 
             if (request.CategoryId.HasValue == false)
             {
-                return (false, "Error: CategoryId is missing)");
+                return (false, "Error: no CategoryId informed");
             }
 
             if (request.CategoryId < 1)
             {
                 return (false, "Error: invalid CategoryId (is less than 1)");
 
+            }
+
+            if (request.MechanicIds == null || request.MechanicIds.Count < 1)
+            {
+                return (false, "Error: no MechanicId(s) informed");
+            }
+
+            if (request.MechanicIds != null && request.MechanicIds.Count > 0 && request.MechanicIds.Any(a => a < 0))
+            {
+                var invalidMechanicIds = request.MechanicIds.Where(a => a < 0).ToList();
+
+                var message = "(Error: invalid MechanicId";
+
+                message += invalidMechanicIds.Count == 1 ? " (is less than 1)" :
+                                                          $"s ({invalidMechanicIds.Count} negative values were requested)";
+
+                return (false, message);
             }
 
             return (true, string.Empty);
