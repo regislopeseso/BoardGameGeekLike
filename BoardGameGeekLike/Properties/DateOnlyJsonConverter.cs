@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-// This class was created solely for the porpuse
+// This class was created solely for the purposepurpose
 // of converting DateOnly objects to and from JSON
 // in the format "dd/MM/yyyy"
 

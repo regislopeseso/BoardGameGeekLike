@@ -712,14 +712,14 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
             
-            var contentQueriable = this._daoDbContext
+            var contentQueryable = this._daoDbContext
                                        .BoardGames
                                        .Include(a => a.Category)
                                        .Include(a => a.Mechanics)
                                        .AsNoTracking()
                                        .Where(a => a.IsDeleted == false);
 
-            if(contentQueriable == null)
+            if(contentQueryable == null)
             {
                 return (null, "Error: no board games found");
             }
@@ -735,7 +735,7 @@ namespace BoardGameGeekLike.Services
                 request.AverageRating.HasValue == false
                ))
             {
-                var content1 = await contentQueriable
+                var content1 = await contentQueryable
                                 .Select(a => new UsersFindBoardGameResponse
                                 {
                                     BoardGameId = a.Id,
@@ -752,37 +752,37 @@ namespace BoardGameGeekLike.Services
             //Filtering by name
             if(String.IsNullOrWhiteSpace(request!.BoardGameName) == false)
             { 
-                contentQueriable = contentQueriable.Where(a => a.Name.ToLower().Contains(request.BoardGameName.ToLower()));
+                contentQueryable = contentQueryable.Where(a => a.Name.ToLower().Contains(request.BoardGameName.ToLower()));
             }
 
             //Filtering by MinPlayersCount
             if(request.MinPlayersCount.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.MinPlayersCount == request.MinPlayersCount);
+                contentQueryable = contentQueryable.Where(a => a.MinPlayersCount == request.MinPlayersCount);
             }
 
              //Filtering by MaxPlayersCount
             if(request.MaxPlayersCount.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.MaxPlayersCount == request.MaxPlayersCount);
+                contentQueryable = contentQueryable.Where(a => a.MaxPlayersCount == request.MaxPlayersCount);
             }
 
              //Filtering by MinAge
             if(request.MinAge.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.MinAge >= request.MinAge);
+                contentQueryable = contentQueryable.Where(a => a.MinAge >= request.MinAge);
             }
 
             //Filtering by Category
             if(String.IsNullOrWhiteSpace(request.CategoryName) == false)
             {
-                contentQueriable = contentQueriable.Where(a => a.Category!.Name.ToLower().Contains(request.CategoryName.ToLower()));
+                contentQueryable = contentQueryable.Where(a => a.Category!.Name.ToLower().Contains(request.CategoryName.ToLower()));
             }
 
             //Filtering by Mechanic
             if(String.IsNullOrWhiteSpace(request.MechanicName) == false)
             {
-                contentQueriable = contentQueriable.Where(a => a.Mechanics!
+                contentQueryable = contentQueryable.Where(a => a.Mechanics!
                                                                 .Select(a => a.Name.ToLower())
                                                                 .Contains(request.MechanicName.ToLower()));
             }
@@ -790,10 +790,10 @@ namespace BoardGameGeekLike.Services
             //Filtering by Rating
             if(request.AverageRating.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.AverageRating == request.AverageRating);
+                contentQueryable = contentQueryable.Where(a => a.AverageRating == request.AverageRating);
             }
 
-            var content = await contentQueriable
+            var content = await contentQueryable
                                 .Select(a => new UsersFindBoardGameResponse
                                 {
                                     BoardGameId = a.Id,
