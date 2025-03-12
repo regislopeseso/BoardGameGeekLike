@@ -25,8 +25,6 @@ namespace BoardGameGeekLike.Services
             this._daoDbContext = daoDbContext;
         }
 
-       
-
         public async Task<(DevsSeedResponse?, string)> Seed(DevsSeedRequest? request)
         {
             var seededCategories = CategorySeeder(10);
@@ -74,19 +72,16 @@ namespace BoardGameGeekLike.Services
             foreach(var boardGame in seededBoardGames)
             {
                 var users = seededSessions.Where(a => a.BoardGame == boardGame)
-                                          .Select(a => a.User)
-                                          .ToList(); 
+                    .Select(a => a.User)
+                    .Distinct()
+                    .ToList(); 
 
-                var boardGameRatings = new List<int>(){};               
+                var boardGameRatings = new List<decimal>(){};               
 
                 foreach(var user in users)
-                {;
-                    //var ratingValue = random.Next(0,6);
-                    
-                    var a = random.Next(1,5);
-                    
-                    int baseRating = random.Next(2, 5); // Give each board game a base quality rating
-                    int ratingValue = Math.Clamp(baseRating + random.Next(-1, 2), 0, 5);
+                {                                  
+                    decimal baseRating = random.Next(2, 5); // Give each board game a base quality rating
+                    decimal ratingValue = Math.Clamp(baseRating + random.Next(-1, 2), 0, 5);
 
                     boardGameRatings.Add(ratingValue);
 
@@ -97,10 +92,12 @@ namespace BoardGameGeekLike.Services
                         User = user
 
                     });
+
+                    boardGame.RatingsCount++;
                 }
                 
                 boardGame.AverageRating = boardGameRatings.Any() ? 
-                    (int)Math.Ceiling(boardGameRatings.Average()) : 0;
+                    boardGameRatings.Average() : 0;               
             }
 
             await this._daoDbContext.Ratings.AddRangeAsync(ratings);

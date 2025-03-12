@@ -14,7 +14,9 @@ namespace BoardGameGeekLike.Models.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public int Id { get; set; }
-        public int Rate {get; set;}
+
+        [Column(TypeName = "decimal(2,1)")]
+        public decimal Rate {get; set;}
         
 
         [ForeignKey("User")]

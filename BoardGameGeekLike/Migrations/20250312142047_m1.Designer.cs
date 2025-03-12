@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250311173054_m1")]
+    [Migration("20250312142047_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -33,10 +33,10 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AverageRating")
-                        .HasColumnType("int");
+                    b.Property<decimal>("AverageRating")
+                        .HasColumnType("decimal(2,1)");
 
-                    b.Property<int>("CategoryId")
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -81,7 +81,6 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -120,8 +119,8 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("BoardGameId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Rate")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(2,1)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -216,9 +215,7 @@ namespace BoardGameGeekLike.Migrations
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.Category", "Category")
                         .WithMany("BoardGames")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CategoryId");
 
                     b.Navigation("Category");
                 });

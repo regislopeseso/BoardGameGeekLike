@@ -26,7 +26,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? AvgSessionDuration {get; set;}
 
-        public int? AvgRating {get; set;}
+        public decimal? AvgRating {get; set;}
 
         public List<ExploreShowBoardGameDetailsResponse_sessions>? LastFiveSessions {get; set;}
     }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250311205948_m3")]
-    partial class m3
+    [Migration("20250312141057_m31")]
+    partial class m31
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,8 +33,8 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AverageRating")
-                        .HasColumnType("int");
+                    b.Property<decimal>("AverageRating")
+                        .HasColumnType("decimal(1,1)");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
@@ -119,8 +119,8 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("BoardGameId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Rate")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(1,1)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");

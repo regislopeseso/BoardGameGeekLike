@@ -30,8 +30,8 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AverageRating")
-                        .HasColumnType("int");
+                    b.Property<decimal>("AverageRating")
+                        .HasColumnType("decimal(2,1)");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
@@ -116,8 +116,8 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("BoardGameId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Rate")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(2,1)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");

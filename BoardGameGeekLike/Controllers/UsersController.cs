@@ -75,6 +75,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPut]
+        public async Task<IActionResult> EditRating(UsersEditRatingRequest? request)
+        {
+            var (content, message) = await this._usersService.EditRating(request);
+
+            var response = new Response<UsersEditRatingResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> LogSession(UsersLogSessionRequest? request)
         {
@@ -88,7 +102,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-    
         
         [HttpPut]
         public async Task<IActionResult> EditSession(UsersEditSessionRequest? request)
@@ -117,7 +130,5 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }  
-
-        
     }
 }

@@ -26,8 +26,9 @@ namespace BoardGameGeekLike.Models.Entities
         public Category? Category { get; set; }
 
         public List<Mechanic>? Mechanics { get; set; }
-
-        public int AverageRating {get; set;}
+      
+        [Column(TypeName = "decimal(2,1)")]
+        public decimal AverageRating {get; set;}
 
         public int RatingsCount {get; set;}
 
