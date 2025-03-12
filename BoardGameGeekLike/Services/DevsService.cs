@@ -143,11 +143,11 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
-        private static List<Category>? CategorySeeder(int n)
+        private static List<Category>? CategorySeeder(int categoriesCount)
         {
             var newCategories = new List<Category>(){};
             
-            for (int catCount = 1; catCount <= n; catCount ++)
+            for (int catCount = 1; catCount <= categoriesCount; catCount ++)
             {
                 newCategories.Add
                 (
@@ -161,11 +161,11 @@ namespace BoardGameGeekLike.Services
             return newCategories;
         }
 
-        private static List<Mechanic>? MechanicSeeder(int n)
+        private static List<Mechanic>? MechanicSeeder(int mecanicsCount)
         {
             var newMechanics = new List<Mechanic>(){};
             
-            for (int mecCount = 1; mecCount <= 10; mecCount ++)
+            for (int mecCount = 1; mecCount <= mecanicsCount; mecCount ++)
             {
                 newMechanics.Add
                 (
@@ -179,13 +179,13 @@ namespace BoardGameGeekLike.Services
             return newMechanics;
         }
 
-        private static List<BoardGame>? BoardGameSeeder(int n, List<Category> seededCategories, List<Mechanic> seededMechanics)
+        private static List<BoardGame>? BoardGameSeeder(int boardGamesCount, List<Category> seededCategories, List<Mechanic> seededMechanics)
         {
             var newBoardGames = new List<BoardGame>(){};
 
             var random = new Random();
 
-            for(int bgCount = 1; bgCount <= 10; bgCount++)
+            for(int bgCount = 1; bgCount <= boardGamesCount; bgCount++)
             {
                 var minPlayersCount = random.Next(1,3);
                 
@@ -222,7 +222,7 @@ namespace BoardGameGeekLike.Services
             return newBoardGames;
         } 
     
-        private static List<User>? UserSeeder(int n)
+        private static List<User>? UserSeeder(int usersCount)
         {
             var newUsers = new List<User>(){};
 
@@ -230,14 +230,14 @@ namespace BoardGameGeekLike.Services
 
             int currentYear = DateTime.Today.Year;           
 
-            for (int usersCount = 1; usersCount <= n; usersCount ++)
+            for (int usersC = 1; usersC <= usersCount; usersC ++)
             {               
                 newUsers.Add
                 (
                     new User
                     {
-                        Nickname = $"user #{usersCount}",
-                        Email = $"user{usersCount}@email.com",
+                        Nickname = $"user #{usersC}",
+                        Email = $"user{usersC}@email.com",
                         BirthDate = DateGenerator.GetRandomDate(currentYear-12),
                         IsDeleted = false                       
                     }

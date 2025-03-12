@@ -500,7 +500,7 @@ namespace BoardGameGeekLike.Services
             {
                 CategoryName = a.Name,
                 AvgRating = a.BoardGames!.Count != 0 ?
-                    (decimal)a.BoardGames!.Average(b => b.AverageRating) : 0,
+                    Math.Round(a.BoardGames!.Average(b => b.AverageRating),2) : 0,
                 RatingsCount = a.BoardGames.Select(b => b.RatingsCount).Sum()
             })
                 .OrderByDescending(a => a.AvgRating)
