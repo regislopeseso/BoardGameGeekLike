@@ -9,6 +9,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     {
         public string? CategoryName {get; set;}
 
-        public int? AvgRating {get; set;}
+        public decimal? AvgRating {get; set;}
+
+        public int? RatingsCount { get; set; }
     }
 }

@@ -10,5 +10,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public string? CategoryName {get; set;}
 
         public int? Duration {get; set;}
+
+        public int? SessionsCount { get; set; }
     }
 }

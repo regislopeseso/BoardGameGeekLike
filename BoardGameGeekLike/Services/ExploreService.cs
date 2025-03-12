@@ -465,11 +465,11 @@ namespace BoardGameGeekLike.Services
             }
 
             var categoriesDB = await this._daoDbContext
-                                         .Categories
-                                         .Include(a => a.BoardGames!)
-                                         .ThenInclude(a => a.Sessions!)
-                                         .AsNoTracking()
-                                         .ToListAsync();
+                .Categories
+                .Include(a => a.BoardGames!)
+                .ThenInclude(a => a.Sessions!)
+                .AsNoTracking()
+                .ToListAsync();
 
             if (categoriesDB == null)
             {
@@ -477,53 +477,61 @@ namespace BoardGameGeekLike.Services
             }
 
             var theMostPlayed = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_mostPlayedOnes
-            {
-                CategoryName = a.Name,
-                SessionsCount = a.BoardGames!.Sum(b => b.Sessions!.Count)
-            })
-                                            .OrderByDescending(a => a.SessionsCount)
-                                            .Take(3)
-                                            .ToList();
+                {
+                    CategoryName = a.Name,
+                    SessionsCount = a.BoardGames!.Sum(b => b.Sessions!.Count)
+                })
+                .OrderByDescending(a => a.SessionsCount)
+                .Take(3)
+                .ToList();
 
             var theMostPopular = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_mostPopularOnes
-            {
-                CategoryName = a.Name,
-                BoardGamesCount = a.BoardGames!.Count
-            })
-                                             .OrderByDescending(a => a.BoardGamesCount)
-                                             .Take(3)
-                                             .ToList();
+                {
+                    CategoryName = a.Name,
+                    BoardGamesCount = a.BoardGames!.Count,
+                    SessionsCount = a.BoardGames.Select(b => b.SessionsCount).Sum()
+                })
+                .OrderByDescending(a => a.BoardGamesCount)
+                .ThenByDescending(a => a.SessionsCount)
+                .Take(3)
+                .ToList();
 
             var theBestRated = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_bestRatedOnes
             {
                 CategoryName = a.Name,
                 AvgRating = a.BoardGames!.Count != 0 ?
-                                                    (int)a.BoardGames!.Average(b => b.AverageRating) : 0
+                    (decimal)a.BoardGames!.Average(b => b.AverageRating) : 0,
+                RatingsCount = a.BoardGames.Select(b => b.RatingsCount).Sum()
             })
-                                           .OrderByDescending(a => a.AvgRating)
-                                           .Take(3)
-                                           .ToList();
+                .OrderByDescending(a => a.AvgRating)
+                .ThenByDescending(a => a.RatingsCount)
+                .Take(3)
+                .ToList();
 
             var theLongest = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_longestOnes
-            {
-                CategoryName = a.Name,
-                Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
-                                                (int)a.BoardGames!.SelectMany(b => b.Sessions!).Average(c => c.Duration_minutes) : 0
-            })
-                                         .OrderByDescending(a => a.Duration)
-                                         .Take(3)
-                                         .ToList();
+                {
+                    CategoryName = a.Name,
+                    Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
+                        (int)a.BoardGames!.SelectMany(b => b.Sessions!).Max(c => c.Duration_minutes) : 0,
+                    SessionsCount = a.BoardGames!.Select(a => a.SessionsCount).Sum()
+                })
+                .OrderByDescending(a => a.Duration)
+                .ThenByDescending(a => a.SessionsCount)
+                .Take(3)
+                .ToList();
 
             var theShortest = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_shortestOnes
             {
                 CategoryName = a.Name,
                 Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
-                                                    (int)a.BoardGames!.SelectMany(b => b.Sessions!).Average(c => c.Duration_minutes) : 0
+                        (int)a.BoardGames!.SelectMany(b => b.Sessions!).Min(c => c.Duration_minutes) : 0,
+                SessionsCount = a.BoardGames!.Select(a => a.SessionsCount).Sum()
             })
-                                          .Where(a => a.Duration > 0)
-                                          .OrderBy(a => a.Duration)
-                                          .Take(3)
-                                          .ToList();
+                .Where(a => a.Duration > 0)
+                .OrderBy(a => a.Duration)
+                .ThenByDescending(a => a.SessionsCount)
+                .Take(3)
+                .ToList();
 
             var content = new ExploreCategoriesRankingResponse
             {
