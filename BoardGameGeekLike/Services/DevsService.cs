@@ -26,6 +26,13 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(DevsSeedResponse?, string)> Seed(DevsSeedRequest? request)
         {
+            var (isValid, message) = Seed_Validation(request);
+            
+            if(isValid == false)
+            {
+                return (null, message);
+            }
+
             var seededCategories = CategorySeeder(request!.CategoriesCount!.Value);
             if(seededCategories == null || seededCategories.Count != request!.CategoriesCount!.Value)
             {
@@ -104,6 +111,36 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext.SaveChangesAsync();
 
             return(null, "Seeding was successful");
+        }
+
+        private static (bool, string) Seed_Validation(DevsSeedRequest? request)
+        {
+            if(request != null && request.CategoriesCount < 1)
+            {
+                return (false, "Error: requested CategoriesCount < 1");
+            }
+
+            if (request != null && request.MecanicsCount < 1)
+            {
+                return (false, "Error: requested MecanicsCount < 1");
+            }
+
+            if (request != null && request.BoardGamesCount < 1)
+            {
+                return (false, "Error: requested BoardGamesCount < 1");
+            }
+
+            if (request != null && request.UsersCount < 1)
+            {
+                return (false, "Error: requested UsersCount < 1");
+            }
+
+            if (request != null && request.SessionsCount < 1)
+            {
+                return (false, "Error: requested SessionsCount < 1");
+            }          
+
+            return (true, String.Empty);
         }
 
         private static List<Category>? CategorySeeder(int n)
