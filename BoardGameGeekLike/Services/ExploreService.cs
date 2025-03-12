@@ -8,6 +8,7 @@ namespace BoardGameGeekLike.Services
     public class ExploreService
     {
         private readonly ApplicationDbContext _daoDbContext;
+
         public ExploreService(ApplicationDbContext daoDbContext)
         {
             this._daoDbContext = daoDbContext;

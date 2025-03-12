@@ -35,6 +35,16 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: requested UserNickName is already in use");
             }
 
+            var userEmail_exists = await this._daoDbContext
+                .Users
+                .AsNoTracking()
+                .AnyAsync(a => a.Email == request!.UserEmail && a.IsDeleted == false);
+
+            if (userEmail_exists == true)
+            {
+                return (null, "Error: requested UserEmal is already in use");
+            }
+
             var parsedDate = DateOnly.ParseExact(request!.UserBirthDate!, "yyyy-MM-dd");   
 
             var user = new User
@@ -807,7 +817,6 @@ namespace BoardGameGeekLike.Services
             }
 
             return (true, String.Empty);
-        }
-    
+        }    
     }
 }

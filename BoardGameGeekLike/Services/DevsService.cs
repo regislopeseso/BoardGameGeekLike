@@ -17,7 +17,6 @@ namespace BoardGameGeekLike.Services
 {
     public class DevsService
     {
-
         private readonly ApplicationDbContext _daoDbContext;
 
         public DevsService(ApplicationDbContext daoDbContext)
