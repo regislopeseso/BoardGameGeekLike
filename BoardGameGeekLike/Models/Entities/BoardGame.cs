@@ -35,6 +35,8 @@ namespace BoardGameGeekLike.Models.Entities
         [InverseProperty("BoardGame")]
         public List<Session>? Sessions {get; set;}
 
+        public int SessionsCount { get; set; }
+
         public bool IsDeleted { get; set; } = false;
     }
 }

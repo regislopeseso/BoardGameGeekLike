@@ -26,29 +26,29 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(DevsSeedResponse?, string)> Seed(DevsSeedRequest? request)
         {
-            var seededCategories = CategorySeeder(10);
-            if(seededCategories == null || seededCategories.Count != 10)
+            var seededCategories = CategorySeeder(request!.CategoriesCount!.Value);
+            if(seededCategories == null || seededCategories.Count != request!.CategoriesCount!.Value)
             {
                 return (null, "Error: seeding CATEGORIES failed");
             }           
             await this._daoDbContext.Categories.AddRangeAsync(seededCategories);
 
-            var seededMechanics = MechanicSeeder(10);
-            if(seededMechanics == null || seededMechanics.Count != 10)
+            var seededMechanics = MechanicSeeder(request.MecanicsCount!.Value);
+            if(seededMechanics == null || seededMechanics.Count != request.MecanicsCount!.Value)
             {
                 return (null, "Error: seeding MECHANICS failed");
             }
             await this._daoDbContext.Mechanics.AddRangeAsync(seededMechanics);
 
-            var seededBoardGames = BoardGameSeeder(10, seededCategories, seededMechanics);
-            if(seededBoardGames == null || seededBoardGames.Count != 10)
+            var seededBoardGames = BoardGameSeeder(request.BoardGamesCount!.Value, seededCategories, seededMechanics);
+            if(seededBoardGames == null || seededBoardGames.Count != request.BoardGamesCount!.Value)
             {
                 return (null, "Error: seeding BOARD GAMES failed");
             }
             await this._daoDbContext.BoardGames.AddRangeAsync(seededBoardGames);
 
-            var seededUsers = UserSeeder(200);
-            if(seededUsers == null || seededUsers.Count != 200)
+            var seededUsers = UserSeeder(request.UsersCount!.Value);
+            if(seededUsers == null || seededUsers.Count != request.UsersCount!.Value)
             {
                 return (null, "Error: seeding USERS failed");
             }
@@ -57,8 +57,8 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext.SaveChangesAsync();
 
 
-            var seededSessions = SessionSeeder(30, seededUsers, seededBoardGames);
-            if(seededSessions == null || seededSessions.Count !=  6000)
+            var seededSessions = SessionSeeder(request.SessionsCount!.Value, seededUsers, seededBoardGames);
+            if(seededSessions == null || seededSessions.Count == 0)
             {
                 return (null, "Error: seeding SESSIONS failed");
             }
@@ -210,7 +210,7 @@ namespace BoardGameGeekLike.Services
             return newUsers;
         }
 
-        private static List<Session>? SessionSeeder(int n, List<User> seededUsers, List<BoardGame> seededBoardGames)
+        private static List<Session>? SessionSeeder(int sessionsCount, List<User> seededUsers, List<BoardGame> seededBoardGames)
         {
             var newSessions = new List<Session>(){};
 
@@ -228,9 +228,12 @@ namespace BoardGameGeekLike.Services
             int currentMonth = DateTime.UtcNow.Month;
             int currentDay = DateTime.UtcNow.Day;
 
+
             foreach(var user in seededUsers)
             {
-                while (countSessions < n)
+                var randomMaxSessionsCount = random.Next(countSessions, sessionsCount + 1);
+                
+                while (countSessions < randomMaxSessionsCount)
                 {
                     var randomBoardGame = seededBoardGames.OrderBy(a => random.Next()).First();                  
                     
@@ -261,6 +264,9 @@ namespace BoardGameGeekLike.Services
                             IsDeleted = false
                         }
                     );
+
+                    randomBoardGame.SessionsCount++;
+
                     countSessions++;
                 }
                 countSessions = 0;

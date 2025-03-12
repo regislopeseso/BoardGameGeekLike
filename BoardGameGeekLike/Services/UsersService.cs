@@ -545,6 +545,8 @@ namespace BoardGameGeekLike.Services
                 Duration_minutes = request.Duration_minutes!.Value
             };
 
+            boardgameDB.SessionsCount++;
+
             if(request.Date != null)
             {
                 newSession.Date = DateOnly.ParseExact(request.Date!, "yyyy-MM-dd");
@@ -647,8 +649,8 @@ namespace BoardGameGeekLike.Services
             }
 
             var boardgameDB = await this._daoDbContext
-                                             .BoardGames
-                                             .FindAsync(request!.BoardGameId);
+                .BoardGames
+                .FindAsync(request!.BoardGameId);
             
             if(boardgameDB == null)
             {
@@ -661,8 +663,8 @@ namespace BoardGameGeekLike.Services
             }
 
             var sessionDB = await this._daoDbContext
-                                      .Sessions
-                                      .FindAsync(request.SessionId);
+                .Sessions
+                .FindAsync(request.SessionId);
             
             if(sessionDB == null)
             {
@@ -672,6 +674,19 @@ namespace BoardGameGeekLike.Services
             if(sessionDB.IsDeleted == true)
             {
                 return (null, "Error: this session is deleted");
+            }
+
+            if(boardgameDB.Id != request.BoardGameId)
+            {
+                await this._daoDbContext
+                    .BoardGames
+                    .Where(a => a.Id == boardgameDB.Id)
+                    .ExecuteUpdateAsync(a => a.SetProperty(b => b.SessionsCount, b => b.SessionsCount - 1));
+
+                await this._daoDbContext
+                    .BoardGames
+                    .Where(a => a.Id == request.BoardGameId)
+                    .ExecuteUpdateAsync(a => a.SetProperty(b => b.SessionsCount, b => b.SessionsCount + 1));
             }
 
             sessionDB.BoardGameId = request.BoardGameId!.Value;
@@ -778,8 +793,8 @@ namespace BoardGameGeekLike.Services
             }
 
             var sessionDB = await this._daoDbContext
-                                      .Sessions
-                                      .FindAsync(request!.SessionId);
+                .Sessions
+                .FindAsync(request!.SessionId);
             
             if(sessionDB == null)
             {
@@ -791,10 +806,17 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: session was already deleted");
             }
 
+            var boardGameId = sessionDB.BoardGame!.Id;
+
             await this._daoDbContext
-                      .Sessions
-                      .Where(a => a.Id == request.SessionId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+                .BoardGames
+                .Where(a => a.Id == boardGameId)
+                .ExecuteUpdateAsync(a => a.SetProperty(b => b.SessionsCount, b => b.SessionsCount - 1));
+
+            await this._daoDbContext
+                .Sessions
+                .Where(a => a.Id == request.SessionId)
+                .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
 
             return (null, "Session deleted successfully");
         }

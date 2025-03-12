@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250312142047_m1")]
+    [Migration("20250312163352_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -60,6 +60,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<int>("RatingsCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SessionsCount")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

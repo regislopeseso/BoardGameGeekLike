@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BoardGameGeekLike.Migrations
 {
     /// <inheritdoc />
-    public partial class m31 : Migration
+    public partial class m1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -80,8 +80,9 @@ namespace BoardGameGeekLike.Migrations
                     MaxPlayersCount = table.Column<int>(type: "int", nullable: false),
                     MinAge = table.Column<int>(type: "int", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: true),
-                    AverageRating = table.Column<decimal>(type: "decimal(1,1)", nullable: false),
+                    AverageRating = table.Column<decimal>(type: "decimal(2,1)", nullable: false),
                     RatingsCount = table.Column<int>(type: "int", nullable: false),
+                    SessionsCount = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
@@ -126,7 +127,7 @@ namespace BoardGameGeekLike.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Rate = table.Column<decimal>(type: "decimal(1,1)", nullable: false),
+                    Rate = table.Column<decimal>(type: "decimal(2,1)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     BoardGameId = table.Column<int>(type: "int", nullable: false)
                 },

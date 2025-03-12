@@ -59,6 +59,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("RatingsCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("SessionsCount")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");

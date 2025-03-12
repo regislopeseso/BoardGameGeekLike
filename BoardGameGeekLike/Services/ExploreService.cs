@@ -335,10 +335,10 @@ namespace BoardGameGeekLike.Services
 
             #region SESSIONS QUERIES
             var sessionsDB = await this._daoDbContext
-                                         .Sessions
-                                         .AsNoTracking()
-                                         .Include(a => a.BoardGame)
-                                         .ToListAsync();
+                .Sessions
+                .AsNoTracking()
+                .Include(a => a.BoardGame)
+                .ToListAsync();
 
             if (sessionsDB == null || sessionsDB.Count < 1)
             {
@@ -346,38 +346,39 @@ namespace BoardGameGeekLike.Services
             }
 
             var theMostPlayed = sessionsDB.GroupBy(a => a.BoardGameId)
-                                          .OrderByDescending(a => a.Count())
-                                          .Take(3)
-                                          .Select(a => a.First().BoardGame!.Name)
-                                          .ToList();
+                .OrderByDescending(a => a.Count())
+                .Take(3)
+                .Select(a => a.First().BoardGame!.Name)
+                .ToList();         
 
-            var theShortest = sessionsDB.GroupBy(a => a.BoardGameId)
-                                        .OrderBy(a => a.First().Duration_minutes)
-                                        .Take(3)
-                                        .Select(a => a.First().BoardGame!.Name)
-                                        .ToList();
+            var theShortest = sessionsDB.GroupBy(a => a.Duration_minutes)
+                .OrderBy(a => a.Key)
+                .SelectMany(a => a.GroupBy(b => b.BoardGameId).OrderByDescending(b => b.Count()).ToList())                
+                .Take(3)
+                .Select(a => a.First().BoardGame!.Name)
+                .ToList();
+        
 
-            var theLongest = sessionsDB.GroupBy(a => a.BoardGameId)
-                                       .OrderByDescending(a => a.Max(b => b.Duration_minutes))
-                                       .ThenByDescending(a => a.Count())
-                                       .ThenBy(a => a.Key)
-                                       .Take(3)
-                                       .Select(a => a.First().BoardGame!.Name)
-                                       .ToList();
+            var theLongest = sessionsDB.GroupBy(a => a.Duration_minutes)
+                .OrderByDescending(a => a.Key)
+                .SelectMany(a => a.GroupBy(b => b.BoardGameId).OrderByDescending(b => b.Count()).ToList())
+                .Take(3)
+                .Select(a => a.First().BoardGame!.Name)
+                .ToList();
 
             var adultsFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge >= 18)
-                                            .GroupBy(a => a.BoardGameId)
-                                            .OrderByDescending(a => a.Count())
-                                            .Take(3)
-                                            .Select(a => a.First().BoardGame!.Name)
-                                            .ToList();
+                .GroupBy(a => a.BoardGameId)
+                .OrderByDescending(a => a.Count())
+                .Take(3)
+                .Select(a => a.First().BoardGame!.Name)
+                .ToList();
 
-            var teensFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge >= 18)
-                                           .GroupBy(a => a.BoardGameId)
-                                           .OrderByDescending(a => a.Count())
-                                           .Take(3)
-                                           .Select(a => a.First().BoardGame!.Name)
-                                           .ToList();
+            var teensFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge < 18)
+                .GroupBy(a => a.BoardGameId)
+                .OrderByDescending(a => a.Count())
+                .Take(3)
+                .Select(a => a.First().BoardGame!.Name)
+                .ToList();
             #endregion
 
             #region BOARD GAMES QUERIES
