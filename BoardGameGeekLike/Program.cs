@@ -1,10 +1,11 @@
 
 using BoardGameGeekLike.Models;
-//using BoardGameGeekLike.Properties;
 using BoardGameGeekLike.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 builder.Services.AddControllers();
 
@@ -25,7 +26,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         );
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
 {

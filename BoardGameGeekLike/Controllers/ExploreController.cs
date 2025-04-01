@@ -1,7 +1,6 @@
 ﻿using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
@@ -47,11 +46,25 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> BoardGamesRanking(ExploreBoardGamesRankingRequest? request)
+        public async Task<IActionResult> RatedBoardGames(ExploreRatedBoardGamesRequest? request)
         {
-            var (content, message) = await this._exploreService.BoardGamesRanking(request);
+            var (content, message) = await this._exploreService.RatedBoardGames(request);
 
-            var response = new Response<ExploreBoardGamesRankingResponse>
+            var response = new Response<List<ExploreRatedBoardGamesResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BoardGamesRankings(ExploreBoardGamesRankingsRequest? request)
+        {
+            var (content, message) = await this._exploreService.BoardGamesRankings(request);
+
+            var response = new Response<ExploreBoardGamesRankingsResponse>
             {
                 Content = content,
                 Message = message

@@ -325,9 +325,56 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(ExploreBoardGamesRankingResponse?, string)> BoardGamesRanking(ExploreBoardGamesRankingRequest? request)
+        public async Task<(List<ExploreRatedBoardGamesResponse>?, string)> RatedBoardGames(ExploreRatedBoardGamesRequest? request)
         {
-            var (isValid, message) = BoardGamesRanking_Validation(request);
+            var (isValid, message) = RatedBoardGames_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var boardGamesDB = await this._daoDbContext
+                .BoardGames
+                .Select(a => new { a.Name, a.AverageRating, a.RatingsCount })               
+                .OrderByDescending(a => a.AverageRating)
+                .ToListAsync();
+
+            if (boardGamesDB == null || boardGamesDB.Count == 0)
+            {
+                return (null, "Error: no board game found");
+            }
+
+            var ratedBoardGames = new List<ExploreRatedBoardGamesResponse>();
+
+            foreach(var boardGame in boardGamesDB)
+            {
+                ratedBoardGames.Add(
+                    new ExploreRatedBoardGamesResponse
+                    {
+                        BoardGameName = boardGame.Name,
+                        AvgRating = boardGame.AverageRating,
+                        RatingsCount = boardGame.RatingsCount
+                    });
+            }
+
+            return (ratedBoardGames, "Board games successfully listed by rate");
+
+        }
+        private static (bool, string) RatedBoardGames_Validation(ExploreRatedBoardGamesRequest? request)
+        {
+            if(request != null)
+            {
+                return (false, "Error: request is not null");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(ExploreBoardGamesRankingsResponse?, string)> BoardGamesRankings(ExploreBoardGamesRankingsRequest? request)
+        {
+            var (isValid, message) = BoardGamesRankings_Validation(request);
 
             if (isValid == false)
             {
@@ -399,7 +446,7 @@ namespace BoardGameGeekLike.Services
                                            .ToList();
             #endregion
 
-            var content = new ExploreBoardGamesRankingResponse
+            var content = new ExploreBoardGamesRankingsResponse
             {
                 MostPlayedBoardGames = theMostPlayed,
                 BestRatedBoardGames = theBestRated,
@@ -417,7 +464,7 @@ namespace BoardGameGeekLike.Services
             return (content, "Board games ranked successfully");
         }
 
-        private static (bool, string) BoardGamesRanking_Validation(ExploreBoardGamesRankingRequest? request)
+        private static (bool, string) BoardGamesRankings_Validation(ExploreBoardGamesRankingsRequest? request)
         {
             if (request != null)
             {
