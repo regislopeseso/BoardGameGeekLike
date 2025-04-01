@@ -37,6 +37,7 @@ namespace BoardGameGeekLike.Services
 
             if (request == null ||
                (
+               request.BoardGameId.HasValue == false &&
                 string.IsNullOrWhiteSpace(request.BoardGameName) == true &&
                 request.MinPlayersCount.HasValue == false &&
                 request.MaxPlayersCount.HasValue == false &&
