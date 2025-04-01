@@ -30,7 +30,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
         [HttpGet]
         public async Task<IActionResult> ShowBoardGameDetails(ExploreShowBoardGameDetailsRequest? request)
         {

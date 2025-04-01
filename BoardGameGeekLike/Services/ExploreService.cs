@@ -361,6 +361,7 @@ namespace BoardGameGeekLike.Services
             return (ratedBoardGames, "Board games successfully listed by rate");
 
         }
+        
         private static (bool, string) RatedBoardGames_Validation(ExploreRatedBoardGamesRequest? request)
         {
             if(request != null)
@@ -370,7 +371,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
 
         public async Task<(ExploreBoardGamesRankingsResponse?, string)> BoardGamesRankings(ExploreBoardGamesRankingsRequest? request)
         {
