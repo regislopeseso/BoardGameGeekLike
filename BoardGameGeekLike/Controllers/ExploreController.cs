@@ -45,11 +45,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> RatedBoardGames(ExploreRatedBoardGamesRequest? request)
+        public async Task<IActionResult> ListBoardGames(ExploreListBoardGamesRequest? request)
         {
-            var (content, message) = await this._exploreService.RatedBoardGames(request);
+            var (content, message) = await this._exploreService.ListBoardGames(request);
 
-            var response = new Response<List<ExploreRatedBoardGamesResponse>>
+            var response = new Response<List<ExploreListBoardGamesResponse>>
             {
                 Content = content,
                 Message = message

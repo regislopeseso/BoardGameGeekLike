@@ -15,8 +15,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public List<string>? LongestBoardGames {get; set;}
 
-        public List<string>? AdultsFavoritesBoardGames {get; set;}
+        public List<string>? AdultsFavoriteBoardGames {get; set;}
 
-        public List<string>? TeensFavoritesBoardGames {get; set;}
+        public List<string>? TeensFavoriteBoardGames {get; set;}
     }
 }

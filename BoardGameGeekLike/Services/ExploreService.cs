@@ -325,9 +325,9 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(List<ExploreRatedBoardGamesResponse>?, string)> RatedBoardGames(ExploreRatedBoardGamesRequest? request)
+        public async Task<(List<ExploreListBoardGamesResponse>?, string)> ListBoardGames(ExploreListBoardGamesRequest? request)
         {
-            var (isValid, message) = RatedBoardGames_Validation(request);
+            var (isValid, message) = ListBoardGames_Validation(request);
 
             if (isValid == false)
             {
@@ -336,8 +336,8 @@ namespace BoardGameGeekLike.Services
 
             var boardGamesDB = await this._daoDbContext
                 .BoardGames
-                .Select(a => new { a.Name, a.AverageRating, a.RatingsCount })               
-                .OrderByDescending(a => a.AverageRating)
+                .Select(a => new { a.Name, a.AverageRating, a.RatingsCount, a.MinPlayersCount, a.MaxPlayersCount, a.SessionsCount })               
+                .OrderBy(a => a.Name)
                 .ToListAsync();
 
             if (boardGamesDB == null || boardGamesDB.Count == 0)
@@ -345,16 +345,24 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: no board game found");
             }
 
-            var ratedBoardGames = new List<ExploreRatedBoardGamesResponse>();
+            var ratedBoardGames = new List<ExploreListBoardGamesResponse>();
 
             foreach(var boardGame in boardGamesDB)
             {
+                var playersCount = boardGame.MinPlayersCount == boardGame.MaxPlayersCount ?
+                    $"{boardGame.MinPlayersCount}" : $"{boardGame.MinPlayersCount} - {boardGame.MaxPlayersCount}";
+
+
+
                 ratedBoardGames.Add(
-                    new ExploreRatedBoardGamesResponse
+                    new ExploreListBoardGamesResponse
                     {
                         BoardGameName = boardGame.Name,
                         AvgRating = boardGame.AverageRating,
-                        RatingsCount = boardGame.RatingsCount
+                        RatingsCount = boardGame.RatingsCount,
+                        PlayersCount = playersCount,
+                        AvgDuration = 0,
+                        SessionsLogged = boardGame.SessionsCount
                     });
             }
 
@@ -362,7 +370,7 @@ namespace BoardGameGeekLike.Services
 
         }
         
-        private static (bool, string) RatedBoardGames_Validation(ExploreRatedBoardGamesRequest? request)
+        private static (bool, string) ListBoardGames_Validation(ExploreListBoardGamesRequest? request)
         {
             if(request != null)
             {
@@ -452,8 +460,8 @@ namespace BoardGameGeekLike.Services
                 BestRatedBoardGames = theBestRated,
                 ShortestBoardGames = theShortest,
                 LongestBoardGames = theLongest,
-                AdultsFavoritesBoardGames = adultsFavorites,
-                TeensFavoritesBoardGames = teensFavorites
+                AdultsFavoriteBoardGames = adultsFavorites,
+                TeensFavoriteBoardGames = teensFavorites
             };
 
             if (content == null)
