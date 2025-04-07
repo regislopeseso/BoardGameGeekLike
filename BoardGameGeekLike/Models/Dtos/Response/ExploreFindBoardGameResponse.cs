@@ -8,6 +8,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     public class ExploreFindBoardGameResponse
     {
         public required int BoardGameId {get; set;}
-        public required string BoarGameName {get; set;}
+        public required string BoardGameName {get; set;}
     }
 }

@@ -51,7 +51,7 @@ namespace BoardGameGeekLike.Services
                                 .Select(a => new ExploreFindBoardGameResponse
                                 {
                                     BoardGameId = a.Id,
-                                    BoarGameName = a.Name
+                                    BoardGameName = a.Name
                                 })
                                .OrderBy(a => a.BoardGameId)
                                .ToListAsync();
@@ -115,9 +115,9 @@ namespace BoardGameGeekLike.Services
                                 .Select(a => new ExploreFindBoardGameResponse
                                 {
                                     BoardGameId = a.Id,
-                                    BoarGameName = a.Name
+                                    BoardGameName = a.Name
                                 })
-                               .OrderBy(a => a.BoarGameName)
+                               .OrderBy(a => a.BoardGameName)
                                .ToListAsync();
 
             if (content == null || content.Count == 0)
