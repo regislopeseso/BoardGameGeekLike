@@ -17,7 +17,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FindBoardGame(ExploreFindBoardGameRequest? request)
+        public async Task<IActionResult> FindBoardGame([FromQuery] ExploreFindBoardGameRequest? request)
         {
             var (content, message) = await this._exploreService.FindBoardGame(request);
 
@@ -30,8 +30,10 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        //[FromQuery]
+
         [HttpGet]
-        public async Task<IActionResult> ShowBoardGameDetails(ExploreShowBoardGameDetailsRequest? request)
+        public async Task<IActionResult> ShowBoardGameDetails([FromQuery] ExploreShowBoardGameDetailsRequest? request)
         {
             var (content, message) = await this._exploreService.ShowBoardGameDetails(request);
 
