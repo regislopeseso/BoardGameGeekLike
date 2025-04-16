@@ -468,8 +468,7 @@ namespace BoardGameGeekLike.Services
             }                
           
             var mechanicsDB = await this._daoDbContext
-                .Mechanics
-                .AsNoTracking()
+                .Mechanics               
                 .ToListAsync();
 
             if (mechanicsDB == null || mechanicsDB.Count == 0)
