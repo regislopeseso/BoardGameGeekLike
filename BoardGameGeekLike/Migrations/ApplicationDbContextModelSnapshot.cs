@@ -43,6 +43,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDummy")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("MaxPlayersCount")
                         .HasColumnType("int");
 
@@ -80,6 +83,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDummy")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
@@ -97,6 +103,9 @@ namespace BoardGameGeekLike.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDummy")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -185,6 +194,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDummy")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Nickname")

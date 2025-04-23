@@ -15,5 +15,7 @@ namespace BoardGameGeekLike.Models.Entities
         public List<BoardGame>? BoardGames {get; set;}
 
         public bool IsDeleted { get; set; } = false;
+
+        public bool IsDummy { get; set; } = false;
     }
 }

@@ -38,5 +38,6 @@ namespace BoardGameGeekLike.Models.Entities
         public int SessionsCount { get; set; }
 
         public bool IsDeleted { get; set; } = false;
+        public bool IsDummy { get; set; } = false;
     }
 }

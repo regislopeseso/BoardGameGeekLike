@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250401123537_m1")]
-    partial class m1
+    [Migration("20250423135226_M1")]
+    partial class M1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,6 +44,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDummy")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("MaxPlayersCount")
@@ -83,6 +86,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDummy")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
@@ -100,6 +106,9 @@ namespace BoardGameGeekLike.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDummy")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -188,6 +197,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDummy")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Nickname")

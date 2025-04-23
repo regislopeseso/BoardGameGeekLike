@@ -17,5 +17,6 @@ namespace BoardGameGeekLike.Models.Entities
         public required string Email { get; set; }
         public DateOnly BirthDate { get; set; }
         public bool IsDeleted { get; set; } = false;
+        public bool IsDummy { get; set; } = false;
     }
 }

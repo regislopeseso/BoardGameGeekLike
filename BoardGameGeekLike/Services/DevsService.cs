@@ -34,6 +34,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var seededCategories = CategorySeeder(request!.CategoriesCount!.Value);
+
             if(seededCategories == null || seededCategories.Count != request!.CategoriesCount!.Value)
             {
                 return (null, "Error: seeding CATEGORIES failed");
@@ -153,7 +154,8 @@ namespace BoardGameGeekLike.Services
                 (
                     new Category
                     {
-                        Name = $"category {catCount}"
+                        Name = $"category {catCount}",
+                        IsDummy = true
                     }
                 );
             }
@@ -171,7 +173,8 @@ namespace BoardGameGeekLike.Services
                 (
                     new Mechanic
                     {
-                        Name = $"mechanic {mecCount}"
+                        Name = $"mechanic {mecCount}",
+                        IsDummy = true
                     }
                 );
             }
@@ -214,7 +217,8 @@ namespace BoardGameGeekLike.Services
                         Category = seededCategories[random.Next(0, seededCategories.Count)],
                         Mechanics = boardGameMechanics,
                         AverageRating = 0,
-                        IsDeleted = false                                         
+                        IsDeleted = false,
+                        IsDummy = true
                     }
                 );
             }
@@ -239,7 +243,7 @@ namespace BoardGameGeekLike.Services
                         Nickname = $"user #{usersC}",
                         Email = $"user{usersC}@email.com",
                         BirthDate = DateGenerator.GetRandomDate(currentYear-12),
-                        IsDeleted = false                       
+                        IsDummy = true
                     }
                 );
             }
@@ -310,6 +314,33 @@ namespace BoardGameGeekLike.Services
             }
 
             return newSessions;
+        }
+    
+        public async Task<(DevsDeleteSeedResponse?, string)> DeleteSeed(DevsDeleteSeedRequest? request)
+        {
+            await this._daoDbContext
+                .BoardGames
+                .Where(a => a.IsDummy == true)
+                .ExecuteDeleteAsync();
+
+            await this._daoDbContext
+                .Categories
+                .Where(a => a.IsDummy == true)
+                .ExecuteDeleteAsync();
+
+            await this._daoDbContext
+                .Mechanics
+                .Where(a => a.IsDummy == true)
+                .ExecuteDeleteAsync();
+
+
+            await this._daoDbContext
+                .Users
+                .Where(a => a.IsDummy == true)
+                .ExecuteDeleteAsync();
+
+
+            return (null, "Dummies deleted successfully");
         }
     }
 }

@@ -20,12 +20,26 @@ namespace BoardGameGeekLike.Controllers
             this._devsService = devsService;
         }
 
-         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> Seed(DevsSeedRequest? request)
         {
             var (content, message) = await this._devsService.Seed(request);
 
             var response = new Response<DevsSeedResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteSeed(DevsDeleteSeedRequest? request)
+        {
+            var (content, message) = await this._devsService.DeleteSeed(request);
+
+            var response = new Response<DevsDeleteSeedResponse>
             {
                 Content = content,
                 Message = message
