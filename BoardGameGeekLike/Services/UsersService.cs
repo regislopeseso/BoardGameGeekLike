@@ -3,6 +3,7 @@ using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoardGameGeekLike.Services
@@ -10,10 +11,14 @@ namespace BoardGameGeekLike.Services
     public class UsersService
     {
         private readonly ApplicationDbContext _daoDbContext;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public UsersService(ApplicationDbContext daoDbContext)
+        public UsersService(ApplicationDbContext daoDbContext, UserManager<User> userManager, SignInManager<User> signInManager)
         {
             this._daoDbContext = daoDbContext;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
         }
 
         public async Task<(UsersSignUpResponse?, string)> SignUp(UsersSignUpRequest? request)
@@ -25,12 +30,12 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }     
 
-            var userNickName_exists = await this._daoDbContext
+            var userName_exists = await this._daoDbContext
                                         .Users
                                         .AsNoTracking()
-                                        .AnyAsync(a => a.UserName == request!.UserNickname && a.IsDeleted == false);
+                                        .AnyAsync(a => a.UserName == request!.UserName && a.IsDeleted == false);
 
-            if(userNickName_exists == true)
+            if(userName_exists == true)
             {
                 return (null, "Error: requested UserNickName is already in use");
             }
@@ -49,14 +54,12 @@ namespace BoardGameGeekLike.Services
 
             var user = new User
             {
-                UserName = request.UserNickname!,
-                Email = request.UserEmail!,
+                UserName = request.UserName!,
+                Email = request.UserEmail!,              
                 BirthDate = parsedDate,
             };
 
-            await this._daoDbContext.Users.AddAsync(user);
-
-            await this._daoDbContext.SaveChangesAsync();
+            await _userManager.CreateAsync(user, request.Password!);
 
             return (new UsersSignUpResponse(), "User signed up successfully");
         }
@@ -68,7 +71,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserNickname) == true)
+            if (string.IsNullOrWhiteSpace(request.UserName) == true)
             {
                 return (false, "Error: username is null or empty");
             }
@@ -88,6 +91,11 @@ namespace BoardGameGeekLike.Services
             if (string.IsNullOrWhiteSpace(request.UserBirthDate) == true)
             {
                 return (false, "Error: UserBirthDate is missing");
+            }
+            
+            if(string.IsNullOrEmpty(request.Password) == true)
+            {
+                return (false, "Error: UserPassword is missing");
             }
 
             string birthDatePattern = @"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$";
@@ -123,6 +131,60 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+
+        public async Task<(UsersSignInResponse?, string)> SignIn(UsersSignInRequest? request)
+        {
+            var (isValid, message) = SignIn_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var userExists = await this._daoDbContext
+                .Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.UserName == request!.UserName);
+
+            if(userExists == null)
+            {
+                return (null, "Requested user does not exist");
+            }
+            if(userExists.IsDeleted == true)
+            {
+                return (null, "Requested user has been deleted");
+            }
+
+            var result = await this._signInManager.PasswordSignInAsync(request!.UserName!, request.Password!, false, false);
+
+            if(result.Succeeded == false)
+            {
+                return (null, "Error: username or password is incorrect");
+            }
+
+            return (new UsersSignInResponse(), "User signed in successfully");
+        }
+
+        private static (bool, string) SignIn_Validation(UsersSignInRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.UserName) == true)
+            {
+                return (false, "Error: username is null or empty");
+            }
+
+            if (string.IsNullOrEmpty(request.Password) == true)
+            {
+                return (false, "Error: UserPassword is missing");
+            }
+
+            return (true, String.Empty);
+        }
+
 
         public async Task<(UsersEditProfileResponse?, string)> EditProfile(UsersEditProfileRequest? request)
         {

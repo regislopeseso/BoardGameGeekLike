@@ -1,0 +1,8 @@
+﻿namespace BoardGameGeekLike.Models.Dtos.Request
+{
+    public class UsersSignInRequest
+    {
+        public string? UserName { get; set; }
+        public string? Password { get; set; }
+    }
+}
