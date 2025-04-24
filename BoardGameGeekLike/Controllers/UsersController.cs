@@ -1,6 +1,8 @@
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
+using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
@@ -10,10 +12,14 @@ namespace BoardGameGeekLike.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UsersService _usersService;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public UsersController(UsersService usersService)
+        public UsersController(UsersService usersService, UserManager<User> userManager, SignInManager<User> signInManager)
         {
             this._usersService = usersService;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
         }
 
         [HttpPost]
@@ -129,6 +135,21 @@ namespace BoardGameGeekLike.Controllers
             };
 
             return new JsonResult(response);
-        }  
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register([FromBody] UsersRegisterRequest request)
+        {
+            var user = new User { UserName = request.UserName, Email = request.Email };
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (result.Succeeded)
+            {
+                return Ok("User registered successfully!");
+            }
+
+            return BadRequest(result.Errors);
+        }
+
     }
 }

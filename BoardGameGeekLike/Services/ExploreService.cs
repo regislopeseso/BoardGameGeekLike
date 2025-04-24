@@ -278,7 +278,7 @@ namespace BoardGameGeekLike.Services
                     lastFiveSessions.Add(new ExploreShowBoardGameDetailsResponse_sessions
                     {
                         SessionId = loggedSessionsDB[i].Id,
-                        UserNickName = loggedSessionsDB[i].User!.Nickname,
+                        UserNickName = loggedSessionsDB[i].User!.UserName,
                         Date = loggedSessionsDB[i].Date,
                         PlayersCount = loggedSessionsDB[i].PlayersCount,
                         Duration = loggedSessionsDB[i].Duration_minutes

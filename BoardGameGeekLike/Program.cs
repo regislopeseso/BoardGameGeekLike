@@ -1,11 +1,11 @@
 
 using BoardGameGeekLike.Models;
+using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
 
 builder.Services.AddControllers();
 
@@ -16,6 +16,8 @@ builder.Services.AddScoped<AdminsService>();
 builder.Services.AddScoped<UsersService>();
 builder.Services.AddScoped<ExploreService>();
 
+
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -25,6 +27,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options => { options.CommandTimeout(120); }
         );
 });
+// Caso deseja-se utilizar o banco de dados "InMemory" comentar
+// deve-se comentar a configuração acima e descomentar a abaixo!
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//options.UseInMemoryDatabase("AppDb"));
 
 builder.Services.AddCors(options =>
 {
@@ -34,6 +40,15 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
+
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddAuthentication();
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 app.UseCors("AllowAll");
@@ -42,6 +57,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+//app.MapIdentityApi<IdentityUser>();
+
 
 app.UseHttpsRedirection();
 

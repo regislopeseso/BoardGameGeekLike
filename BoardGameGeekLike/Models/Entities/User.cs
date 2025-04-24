@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,12 +9,9 @@ using System.Threading.Tasks;
 namespace BoardGameGeekLike.Models.Entities
 {
     [Table("users")]
-    public class User
+    public class User : IdentityUser
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
-        public int Id { get; set; }
-        public required string Nickname { get; set; }
+        //public required string UserName { get; set; }
         public required string Email { get; set; }
         public DateOnly BirthDate { get; set; }
         public bool IsDeleted { get; set; } = false;

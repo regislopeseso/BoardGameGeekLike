@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
@@ -20,6 +21,7 @@ namespace BoardGameGeekLike.Controllers
             this._devsService = devsService;
         }
 
+        //[Authorize]
         [HttpPost]
         public async Task<IActionResult> Seed(DevsSeedRequest? request)
         {

@@ -28,7 +28,7 @@ namespace BoardGameGeekLike.Services
             var userNickName_exists = await this._daoDbContext
                                         .Users
                                         .AsNoTracking()
-                                        .AnyAsync(a => a.Nickname == request!.UserNickname && a.IsDeleted == false);
+                                        .AnyAsync(a => a.UserName == request!.UserNickname && a.IsDeleted == false);
 
             if(userNickName_exists == true)
             {
@@ -49,7 +49,7 @@ namespace BoardGameGeekLike.Services
 
             var user = new User
             {
-                Nickname = request.UserNickname!,
+                UserName = request.UserNickname!,
                 Email = request.UserEmail!,
                 BirthDate = parsedDate,
             };
@@ -137,7 +137,7 @@ namespace BoardGameGeekLike.Services
                                                 .Users
                                                 .AsNoTracking()
                                                 .AnyAsync(a => a.Id != request!.UserId &&
-                                                               a.Nickname == request!.UserNickname &&
+                                                               a.UserName == request!.UserNickname &&
                                                                a.IsDeleted == false);
 
             if(userNickName_exists == true)
@@ -164,7 +164,7 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext
                       .Users
                       .Where(a => a.Id == request.UserId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.Nickname, request.UserNickname)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.UserName, request.UserNickname)
                                                 .SetProperty(b => b.Email, request.UserEmail)
                                                 .SetProperty(b => b.BirthDate, parsedDate));
 
@@ -178,7 +178,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if(request.UserId.HasValue == false)
+            if(request.UserId == null)
             {
                 return (false, "Error: UserId is missing");
             }
@@ -277,15 +277,15 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if(request.UserId.HasValue == false)
+            if(request.UserId == null)
             {
                 return (false, "Error: UserId is missing");
             }
 
-            if (request.UserId < 1)
-            {
-                return (false, "Error: invalid CategoryId (is less than 1)");
-            }
+            //if (request.UserId < 1)
+            //{
+            //    return (false, "Error: invalid CategoryId (is less than 1)");
+            //}
 
             return (true, String.Empty);
         }
@@ -346,7 +346,7 @@ namespace BoardGameGeekLike.Services
             var newRate = new Rating
             {
                 Rate = request.Rate!.Value,
-                UserId = request.UserId!.Value,
+                UserId = request.UserId!,
                 BoardGameId = request.BoardGameId!.Value
             };
 
@@ -382,15 +382,15 @@ namespace BoardGameGeekLike.Services
                  return (false, "Error: invalid rate. It must be a value between 0 and 5");
             }
 
-            if(request.UserId.HasValue == false)
+            if(request.UserId == null)
             {
                 return (false, "Error: UserId is missing");
             }
             
-            if (request.UserId < 1)
-            {
-                return (false, "Error: invalid UserId (is less than 1)");
-            }
+            //if (request.UserId < 1)
+            //{
+            //    return (false, "Error: invalid UserId (is less than 1)");
+            //}
 
              if(request.BoardGameId.HasValue == false)
             {
@@ -482,15 +482,15 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid rate. It must be a value between 0 and 5");
             }
 
-            if (request.UserId.HasValue == false)
+            if (request.UserId == null)
             {
                 return (false, "Error: UserId is missing");
             }
 
-            if (request.UserId < 1)
-            {
-                return (false, "Error: invalid UserId (is less than 1)");
-            }
+            //if (request.UserId < 1)
+            //{
+            //    return (false, "Error: invalid UserId (is less than 1)");
+            //}
 
             if (request.BoardGameId.HasValue == false)
             {
@@ -539,7 +539,7 @@ namespace BoardGameGeekLike.Services
 
             var newSession = new Session
             {
-                UserId = request.UserId!.Value,
+                UserId = request.UserId!,
                 BoardGameId = request.BoardGameId!.Value,
                 PlayersCount = request.PlayersCount!.Value,
                 Duration_minutes = request.Duration_minutes!.Value
@@ -566,15 +566,15 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if(request.UserId.HasValue == false)
+            if(request.UserId == null)
             {
                 return(false, "Error: UserId is missing");
             }
 
-            if (request.UserId < 1)
-            {
-                return (false, "Error: invalid CategoryId (is less than 1)");
-            }
+            //if (request.UserId < 1)
+            //{
+            //    return (false, "Error: invalid CategoryId (is less than 1)");
+            //}
 
             if(request.BoardGameId.HasValue == false)
             {
