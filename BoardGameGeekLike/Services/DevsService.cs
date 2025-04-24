@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Utility;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
@@ -17,11 +19,11 @@ namespace BoardGameGeekLike.Services
 {
     public class DevsService
     {
-        private readonly ApplicationDbContext _daoDbContext;
+        private readonly ApplicationDbContext _daoDbContext; 
 
         public DevsService(ApplicationDbContext daoDbContext)
         {
-            this._daoDbContext = daoDbContext;
+            this._daoDbContext = daoDbContext;         
         }
 
         public async Task<(DevsSeedResponse?, string)> Seed(DevsSeedRequest? request)

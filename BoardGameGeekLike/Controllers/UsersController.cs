@@ -2,6 +2,7 @@ using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,11 +18,11 @@ namespace BoardGameGeekLike.Controllers
         {
             this._usersService = usersService;
         }
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> SignUp(UsersSignUpRequest? request)
         {
-            var (content, message) = await this._usersService.SignUp(request);
+            var (content, message) = await this._usersService.SignUp(request, "User");
 
             var response = new Response<UsersSignUpResponse>
             {
@@ -31,7 +32,8 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
+        
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> SignIn(UsersSignInRequest? request)
         {
@@ -47,7 +49,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
-
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPut]
         public async Task<IActionResult> EditProfile(UsersEditProfileRequest? request)
         {
@@ -62,7 +64,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpDelete]
         public async Task<IActionResult> DeleteProfile(UsersDeleteProfileRequest? request)
         {
@@ -77,7 +79,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
+        [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> Rate(UsersRateRequest? request)
         {
@@ -92,6 +94,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPut]
         public async Task<IActionResult> EditRating(UsersEditRatingRequest? request)
         {
@@ -106,6 +109,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> LogSession(UsersLogSessionRequest? request)
         {
@@ -119,7 +123,8 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
+        [Authorize(Roles = "User")]
         [HttpPut]
         public async Task<IActionResult> EditSession(UsersEditSessionRequest? request)
         {
@@ -132,8 +137,9 @@ namespace BoardGameGeekLike.Controllers
             };
 
             return new JsonResult(response);
-        }  
+        }
 
+        [Authorize(Roles = "User")]
         [HttpDelete]
         public async Task<IActionResult> DeleteSession(UsersDeleteSessionRequest? request)
         {
@@ -147,7 +153,5 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
- 
-
     }
 }

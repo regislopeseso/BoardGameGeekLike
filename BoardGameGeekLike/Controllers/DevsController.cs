@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
 {
+    [Authorize(Roles = "Developer")]
     [ApiController]
     [Route("devs/[action]")]
     public class DevsController : ControllerBase
@@ -18,10 +19,9 @@ namespace BoardGameGeekLike.Controllers
 
         public DevsController(DevsService devsService)
         {
-            this._devsService = devsService;
+            this._devsService = devsService;     
         }
 
-        //[Authorize]
         [HttpPost]
         public async Task<IActionResult> Seed(DevsSeedRequest? request)
         {
@@ -49,5 +49,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
     }
 }

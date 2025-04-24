@@ -1,10 +1,12 @@
 ﻿using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
-{
+{   
+    [AllowAnonymous]
     [ApiController]
     [Route("explore/[action]")]
     public class ExploreController : ControllerBase

@@ -21,7 +21,7 @@ namespace BoardGameGeekLike.Services
             this._signInManager = signInManager;
         }
 
-        public async Task<(UsersSignUpResponse?, string)> SignUp(UsersSignUpRequest? request)
+        public async Task<(UsersSignUpResponse?, string)> SignUp(UsersSignUpRequest? request, string? userRole)
         {
             var (isValid, message) = SignUp_Validation(request);
             
@@ -60,6 +60,7 @@ namespace BoardGameGeekLike.Services
             };
 
             await _userManager.CreateAsync(user, request.Password!);
+            await _userManager.AddToRoleAsync(user, "User");
 
             return (new UsersSignUpResponse(), "User signed up successfully");
         }

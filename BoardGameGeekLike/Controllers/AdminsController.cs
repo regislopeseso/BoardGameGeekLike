@@ -1,10 +1,12 @@
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
 {
+    [Authorize(Roles = "Developer, Administrator")]
     [ApiController]
     [Route("admins/[action]")]
     public class AdminsController : ControllerBase

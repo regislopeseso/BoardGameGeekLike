@@ -11,7 +11,6 @@ namespace BoardGameGeekLike.Models.Entities
     [Table("users")]
     public class User : IdentityUser
     {
-        //public required string UserName { get; set; }
         public required string Email { get; set; }
         public DateOnly BirthDate { get; set; }
         public bool IsDeleted { get; set; } = false;
