@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
 {
-    [Authorize(Roles = "Developer")]
+    //[Authorize(Roles = "Developer")]
+    [AllowAnonymous]
     [ApiController]
     [Route("devs/[action]")]
     public class DevsController : ControllerBase

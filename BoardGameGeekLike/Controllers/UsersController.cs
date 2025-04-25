@@ -20,7 +20,7 @@ namespace BoardGameGeekLike.Controllers
         }
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> SignUp(UsersSignUpRequest? request)
+        public async Task<IActionResult> SignUp([FromForm] UsersSignUpRequest? request)
         {
             var (content, message) = await this._usersService.SignUp(request, "User");
 
