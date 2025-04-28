@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
@@ -6,6 +7,7 @@ using BoardGameGeekLike.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace BoardGameGeekLike.Services
 {
     public class UsersService
@@ -13,12 +15,14 @@ namespace BoardGameGeekLike.Services
         private readonly ApplicationDbContext _daoDbContext;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UsersService(ApplicationDbContext daoDbContext, UserManager<User> userManager, SignInManager<User> signInManager)
+        public UsersService(ApplicationDbContext daoDbContext, UserManager<User> userManager, SignInManager<User> signInManager, IHttpContextAccessor httpContextAccessor)
         {
             this._daoDbContext = daoDbContext;
             this._userManager = userManager;
             this._signInManager = signInManager;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<(UsersSignUpResponse?, string)> SignUp(UsersSignUpRequest? request, string? userRole)
@@ -29,17 +33,7 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }     
-
-            var userName_exists = await this._daoDbContext
-                                        .Users
-                                        .AsNoTracking()
-                                        .AnyAsync(a => a.UserName == request!.UserName && a.IsDeleted == false);
-
-            if(userName_exists == true)
-            {
-                return (null, "Error: requested UserNickName is already in use");
-            }
-
+           
             var userEmail_exists = await this._daoDbContext
                 .Users
                 .AsNoTracking()
@@ -47,14 +41,15 @@ namespace BoardGameGeekLike.Services
 
             if (userEmail_exists == true)
             {
-                return (null, "Error: requested UserEmal is already in use");
+                return (null, "Error: requested emal is already in use");
             }
 
             var parsedDate = DateOnly.ParseExact(request!.UserBirthDate!, "yyyy-MM-dd");   
 
             var user = new User
             {
-                UserName = request.UserName!,
+                Name = request.Name!,
+                UserName = request.UserEmail!,
                 Email = request.UserEmail!,              
                 BirthDate = parsedDate,
             };
@@ -72,9 +67,9 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserName) == true)
+            if (string.IsNullOrWhiteSpace(request.Name) == true)
             {
-                return (false, "Error: username is null or empty");
+                return (false, "Error: Name is null or empty");
             }
 
             if (string.IsNullOrWhiteSpace(request.UserEmail)== true)
@@ -145,7 +140,7 @@ namespace BoardGameGeekLike.Services
             var userExists = await this._daoDbContext
                 .Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.UserName == request!.UserName);
+                .FirstOrDefaultAsync(a => a.Email == request!.Email);
 
             if(userExists == null)
             {
@@ -156,14 +151,14 @@ namespace BoardGameGeekLike.Services
                 return (null, "Requested user has been deleted");
             }
 
-            var result = await this._signInManager.PasswordSignInAsync(request!.UserName!, request.Password!, false, false);
+            var result = await this._signInManager.PasswordSignInAsync(request!.Email!, request.Password!, false, false);
 
             if(result.Succeeded == false)
             {
-                return (null, "Error: username or password is incorrect");
+                return (null, "Error: email or password is incorrect");
             }
 
-            return (new UsersSignInResponse(), "User signed in successfully");
+            return (new UsersSignInResponse(), $"User: {userExists.Name} signed in successfully");
         }
 
         private static (bool, string) SignIn_Validation(UsersSignInRequest? request)
@@ -171,11 +166,18 @@ namespace BoardGameGeekLike.Services
             if (request == null)
             {
                 return (false, "Error: request is null");
+            }       
+
+            if (string.IsNullOrWhiteSpace(request.Email) == true)
+            {
+                return (false, "Error: Email is missing");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserName) == true)
+            string emailPattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
+
+            if (Regex.IsMatch(request.Email, emailPattern) == false)
             {
-                return (false, "Error: username is null or empty");
+                return (false, "Error: invalid email format");
             }
 
             if (string.IsNullOrEmpty(request.Password) == true)
@@ -186,9 +188,70 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
+        public (UsersValidateStatusResponse?, string) ValidateStatus()
+        {
+            if (this._httpContextAccessor.HttpContext?.User.Identity != null &&
+        this._httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            {
+                return (new UsersValidateStatusResponse {IsUserLoggedIn = true  } , "User is authenticated.");
+            }
+            else
+            {
+                return (new UsersValidateStatusResponse { IsUserLoggedIn = false },  "User is not authenticated.");
+            }
+        }
+
+        public async Task<(UsersGetRoleResponse?, string)> GetRole()
+        {
+            var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
+            if (user == null)
+            {
+                return (null, "Error: User not found");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var userRole = roles.FirstOrDefault(); // assuming 1 role per user
+
+            if (string.IsNullOrEmpty(userRole))
+            {
+                return (null, "Error: User has no role assigned");
+            }
+
+            return (new UsersGetRoleResponse
+            {
+                Role = userRole
+            }, "Role read successfully");
+        }
+
+        public async Task<(UsersSignOutResponse?, string)> SignOut()
+        {
+            var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
+            if (user == null)
+            {
+                return (null, "Error: User not found");
+            }
+
+            try
+            {
+                await _signInManager.SignOutAsync();
+
+                return (new UsersSignOutResponse { IsUserSignOut = true }, "User signed out successfully");
+            }
+            catch (Exception ex)
+            {               
+                return (new UsersSignOutResponse { IsUserSignOut = false }, $"Error: Failed to sign out user. {ex.Message}");
+            }
+        }
 
         public async Task<(UsersEditProfileResponse?, string)> EditProfile(UsersEditProfileRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = EditProfile_Validation(request);
             
             if (isValid == false)
@@ -196,21 +259,21 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             } 
 
-            var userNickName_exists = await this._daoDbContext
+            var userEmail_exists = await this._daoDbContext
                                                 .Users
                                                 .AsNoTracking()
-                                                .AnyAsync(a => a.Id != request!.UserId &&
-                                                               a.UserName == request!.UserNickname &&
+                                                .AnyAsync(a => a.Id != userId &&
+                                                               a.Email == request!.NewEmail &&
                                                                a.IsDeleted == false);
 
-            if(userNickName_exists == true)
+            if(userEmail_exists == true)
             {
-                return (null, "Error: requested UserNickName is already in use");
+                return (null, "Error: requested Email is already in use");
             }
 
             var userDB = await this._daoDbContext
                                    .Users
-                                   .FindAsync(request!.UserId);
+                                   .FindAsync(userId);
 
             if(userDB == null)
             {
@@ -221,15 +284,36 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, "Error: user is deleted");
             }
+            
+            var parsedDate = DateOnly.ParseExact(request.NewBirthDate!, "yyyy-MM-dd");
 
-            var parsedDate = DateOnly.ParseExact(request.UserBirthDate!, "dd/MM/yyyy");           
+            if (!string.IsNullOrEmpty(request.NewPassword))
+            {
+                // Remove old password and set new password
+                var removeResult = await _userManager.RemovePasswordAsync(userDB);
+                if (!removeResult.Succeeded)
+                {
+                    return (null, "Error: failed to remove old password");
+                }
 
-            await this._daoDbContext
-                      .Users
-                      .Where(a => a.Id == request.UserId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.UserName, request.UserNickname)
-                                                .SetProperty(b => b.Email, request.UserEmail)
-                                                .SetProperty(b => b.BirthDate, parsedDate));
+                var addPasswordResult = await _userManager.AddPasswordAsync(userDB, request.NewPassword);
+                if (!addPasswordResult.Succeeded)
+                {
+                    return (null, "Error: failed to set new password");
+                }
+            }
+
+            userDB.Name = request.NewName;
+            userDB.Email = request.NewEmail;
+            userDB.UserName = request.NewEmail;
+            userDB.BirthDate = parsedDate;
+
+            var updateResult = await _userManager.UpdateAsync(userDB);
+
+            if (!updateResult.Succeeded)
+            {
+                return (null, "Error: failed to update user profile");
+            }
 
             return (null, "User's profile edited successfully");
         }
@@ -241,42 +325,37 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is null");
             }
 
-            if(request.UserId == null)
+            if (string.IsNullOrWhiteSpace(request.NewName) == true)
             {
-                return (false, "Error: UserId is missing");
+                return (false, "Error: Name is missing");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserNickname) == true)
-            {
-                return (false, "Error: UserNickName is missing");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.UserEmail) == true)
+            if (string.IsNullOrWhiteSpace(request.NewEmail) == true)
             {
                 return (false, "Error: UserEmail is missing");
             }
 
             string emailPattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
 
-            if (Regex.IsMatch(request.UserEmail, emailPattern) == false)
+            if (Regex.IsMatch(request.NewEmail, emailPattern) == false)
             {
                 return (false, "Error: invalid email format");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserBirthDate) == true)
+            if (string.IsNullOrWhiteSpace(request.NewBirthDate) == true)
             {
                 return (false, "Error: UserBirthDate is missing");
             }
 
-            string birthDatePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
+            string birthDatePattern = @"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$";
 
-            if (Regex.IsMatch(request.UserBirthDate, birthDatePattern) == false)
+            if (Regex.IsMatch(request.NewBirthDate, birthDatePattern) == false)
             {
-                return (false, "Error: invalid birth date format. Expected format: DD/MM/YYYY");
+                return (false, "Error: invalid birth date format. Expected format: yyyy-MM-dd");
             }
 
             // Convert string to DateOnly
-            if (DateOnly.TryParseExact(request.UserBirthDate, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
+            if (DateOnly.TryParseExact(request.NewBirthDate, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
             {
                 return (false, "Error: invalid birth date");
             }

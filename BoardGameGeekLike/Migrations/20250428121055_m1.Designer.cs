@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250424181843_m1")]
+    [Migration("20250428121055_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -217,6 +217,10 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)

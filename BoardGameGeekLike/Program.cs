@@ -15,6 +15,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<DevsService>();
 builder.Services.AddScoped<AdminsService>();
 builder.Services.AddScoped<UsersService>();
+builder.Services.AddHttpContextAccessor();  
 builder.Services.AddScoped<ExploreService>();
 
 
@@ -36,9 +37,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "AllowAll",
-        policy => policy.AllowAnyOrigin()
+        policy => policy.WithOrigins("http://127.0.0.1:5500")        
+                        .AllowAnyHeader()
                         .AllowAnyMethod()
-                        .AllowAnyHeader());
+                        .AllowCredentials());
 });
 
 
@@ -48,6 +50,9 @@ builder.Services.AddIdentity<User, IdentityRole>()
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
     options.Events.OnRedirectToLogin = context =>
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -105,6 +110,8 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

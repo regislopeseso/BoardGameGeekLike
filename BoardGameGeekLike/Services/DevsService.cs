@@ -242,7 +242,8 @@ namespace BoardGameGeekLike.Services
                 (
                     new User
                     {
-                        UserName = $"user #{usersC}",
+                        Name = $"user #{usersC}",
+                        UserName = $"user{usersC}@email.com",
                         Email = $"user{usersC}@email.com",
                         BirthDate = DateGenerator.GetRandomDate(currentYear-12),
                         IsDummy = true

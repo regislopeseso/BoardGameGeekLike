@@ -35,7 +35,7 @@ namespace BoardGameGeekLike.Controllers
         
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> SignIn(UsersSignInRequest? request)
+        public async Task<IActionResult> SignIn([FromForm] UsersSignInRequest? request)
         {
             var (content, message) = await this._usersService.SignIn(request);
 
@@ -48,10 +48,55 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpGet]
+        public IActionResult ValidateStatus()
+        {
+            var (content, message) = this._usersService.ValidateStatus();
+
+            var response = new Response<UsersValidateStatusResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+        
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpGet]
+        public async Task<IActionResult> GetRole()
+        {
+            var (content, message) = await this._usersService.GetRole();
+
+            var response = new Response<UsersGetRoleResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpPost]
+        public async Task<IActionResult> SignOut()
+        {
+            var (content, message) = await this._usersService.SignOut();
+
+            var response = new Response<UsersSignOutResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPut]
-        public async Task<IActionResult> EditProfile(UsersEditProfileRequest? request)
+        public async Task<IActionResult> EditProfile([FromForm] UsersEditProfileRequest? request)
         {
             var (content, message) = await this._usersService.EditProfile(request);
 
