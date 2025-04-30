@@ -646,8 +646,16 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+       
         public async Task<(UsersLogSessionResponse?, string)> LogSession(UsersLogSessionRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = LogSession_Validation(request);
             
             if (isValid == false)
@@ -658,7 +666,7 @@ namespace BoardGameGeekLike.Services
             var user_exists = await this._daoDbContext
                                         .Users
                                         .AsNoTracking()
-                                        .AnyAsync(a => a.Id == request!.UserId && a.IsDeleted == false);
+                                        .AnyAsync(a => a.Id == userId && a.IsDeleted == false);
 
             if(user_exists == false)
             {
@@ -681,7 +689,7 @@ namespace BoardGameGeekLike.Services
 
             var newSession = new Session
             {
-                UserId = request.UserId!,
+                UserId = userId!,
                 BoardGameId = request.BoardGameId!.Value,
                 PlayersCount = request.PlayersCount!.Value,
                 Duration_minutes = request.Duration_minutes!.Value
@@ -707,16 +715,6 @@ namespace BoardGameGeekLike.Services
             {
                 return (false, "Error: request is null");
             }
-
-            if(request.UserId == null)
-            {
-                return(false, "Error: UserId is missing");
-            }
-
-            //if (request.UserId < 1)
-            //{
-            //    return (false, "Error: invalid CategoryId (is less than 1)");
-            //}
 
             if(request.BoardGameId.HasValue == false)
             {
@@ -781,6 +779,39 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);           
         }
 
+        public async Task<(UsersGetSessionsResponse?, string)> GetSessions(UsersGetSessionsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var bgExists = await this._daoDbContext
+                .BoardGames
+                .AsNoTracking()
+                .AnyAsync(a => a.Id == request!.BoardGameId);
+
+            if(bgExists == false)
+            {
+                return (null, "Error: requested board game was not found");
+            }
+            
+
+            var sessionsDB = await this._daoDbContext
+                .Sessions
+                .Where(a => a.BoardGameId == request.BoardGameId && a.UserId == userId)
+                .ToListAsync();
+
+            if(sessionsDB == null)
+            {
+                return (null, "Error: no sessions found for the requested board game");
+            }
+            
+            return (new UsersGetSessionsResponse { Sessions = sessionsDB},"Seessions loaded successfully");
+        }
+        
         public async Task<(UsersEditSessionResponse?, string)> EditSession(UsersEditSessionRequest? request)
         {
             var (isValid, message) = EditSession_Validation(request);

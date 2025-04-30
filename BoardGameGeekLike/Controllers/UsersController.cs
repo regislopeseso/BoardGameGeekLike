@@ -48,7 +48,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "Developer, Administrator, User")]
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult ValidateStatus()
         {
@@ -122,6 +122,66 @@ namespace BoardGameGeekLike.Controllers
             };
 
             return new JsonResult(response);
+        }      
+
+        [Authorize(Roles = "User")]
+        [HttpPost]
+        public async Task<IActionResult> LogSession([FromForm] UsersLogSessionRequest? request)
+        {
+            var (content, message) = await this._usersService.LogSession(request);
+
+            var response = new Response<UsersLogSessionResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet]
+        public async Task<IActionResult> GetSessions([FromQuery] UsersGetSessionsRequest? request)
+        {
+            var (content, message) = await this._usersService.GetSessions(request);
+
+            var response = new Response<UsersGetSessionsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpPost]
+        public async Task<IActionResult> EditSession([FromForm] UsersEditSessionRequest? request)
+        {
+            var (content, message) = await this._usersService.EditSession(request);
+
+            var response = new Response<UsersEditSessionResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteSession(UsersDeleteSessionRequest? request)
+        {
+            var (content, message) = await this._usersService.DeleteSession(request);
+
+            var response = new Response<UsersDeleteSessionResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
         }
 
         [Authorize(Roles = "User")]
@@ -154,49 +214,5 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
-        [HttpPost]
-        public async Task<IActionResult> LogSession(UsersLogSessionRequest? request)
-        {
-            var (content, message) = await this._usersService.LogSession(request);
-
-            var response = new Response<UsersLogSessionResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [Authorize(Roles = "User")]
-        [HttpPut]
-        public async Task<IActionResult> EditSession(UsersEditSessionRequest? request)
-        {
-            var (content, message) = await this._usersService.EditSession(request);
-
-            var response = new Response<UsersEditSessionResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [Authorize(Roles = "User")]
-        [HttpDelete]
-        public async Task<IActionResult> DeleteSession(UsersDeleteSessionRequest? request)
-        {
-            var (content, message) = await this._usersService.DeleteSession(request);
-
-            var response = new Response<UsersDeleteSessionResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
     }
 }
