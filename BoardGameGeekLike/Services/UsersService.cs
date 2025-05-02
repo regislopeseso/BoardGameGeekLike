@@ -863,12 +863,12 @@ namespace BoardGameGeekLike.Services
             }
 
             sessionDB.BoardGameId = request.BoardGameId!.Value;
-            sessionDB.PlayersCount = request.PlayersCount!.Value;
-            sessionDB.Duration_minutes = request.Duration_minutes!.Value;
+            sessionDB.PlayersCount = request.NewPlayersCount!.Value;
+            sessionDB.Duration_minutes = request.NewDuration_minutes!.Value;
 
-            if(request.Date != null)
+            if(request.NewDate != null)
             {
-                sessionDB.Date = DateOnly.ParseExact(request.Date!, "dd/MM/yyyy");
+                sessionDB.Date = DateOnly.ParseExact(request.NewDate!, "yyyy-MM-dd");
             }
 
             await this._daoDbContext.SaveChangesAsync();
@@ -903,19 +903,19 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid BoarGameId (is less than 1)");
             }
 
-            if(String.IsNullOrWhiteSpace(request.Date) == false)
+            if(String.IsNullOrWhiteSpace(request.NewDate) == false)
             {
-                string datePattern = @"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$";
+                string datePattern = @"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
 
-                if (Regex.IsMatch(request.Date, datePattern) == false)
+                if (Regex.IsMatch(request.NewDate, datePattern) == false)
                 {
-                    return (false, "Error: invalid date format. Expected format: DD/MM/YYYY");
+                    return (false, "Error: invalid date format. Expected format: yyyy-MM-dd");
                 }
 
                 // Convert string to DateOnly
-                if (DateOnly.TryParseExact(request.Date, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
+                if (DateOnly.TryParseExact(request.NewDate, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
                 {
-                    return (false, "Error: invalid birth date");
+                    return (false, "Error: invalid date");
                 }
 
                 var thisYear = DateTime.Now.Year;
@@ -928,27 +928,27 @@ namespace BoardGameGeekLike.Services
                 }
             }
 
-            if(request.PlayersCount.HasValue == false)
+            if(request.NewPlayersCount.HasValue == false)
             {
                 return (false, "Error: PlayersCount is missing");
             }
 
-            if(request.PlayersCount < 1)
+            if(request.NewPlayersCount < 1)
             {
                 return (false, "Error: invalid PlayersCount (is less than 1)");
             }
 
-            if(request.Duration_minutes.HasValue == false)
+            if(request.NewDuration_minutes.HasValue == false)
             {
                 return (false, "Error: Daration_minutes is missing");
             }
 
-            if(request.Duration_minutes < 0)
+            if(request.NewDuration_minutes < 0)
             {
                 return (false, "Error: invalid Duration_minutes (is negative)");
             }
 
-            if(request.Duration_minutes > 1440)
+            if(request.NewDuration_minutes > 1440)
             {
                 return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes)");
             }
@@ -979,7 +979,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: session was already deleted");
             }
 
-            var boardGameId = sessionDB.BoardGame!.Id;
+            var boardGameId = sessionDB.BoardGameId;
 
             await this._daoDbContext
                 .BoardGames

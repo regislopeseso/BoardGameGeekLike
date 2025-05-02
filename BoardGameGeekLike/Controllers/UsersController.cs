@@ -155,8 +155,8 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [Authorize(Roles = "User")]
-        [HttpPost]
-        public async Task<IActionResult> EditSession([FromForm] UsersEditSessionRequest? request)
+        [HttpPut]
+        public async Task<IActionResult> EditSession([FromBody] UsersEditSessionRequest? request)
         {
             var (content, message) = await this._usersService.EditSession(request);
 
@@ -171,7 +171,7 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "User")]
         [HttpDelete]
-        public async Task<IActionResult> DeleteSession(UsersDeleteSessionRequest? request)
+        public async Task<IActionResult> DeleteSession([FromQuery] UsersDeleteSessionRequest? request)
         {
             var (content, message) = await this._usersService.DeleteSession(request);
 
