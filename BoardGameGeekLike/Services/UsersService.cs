@@ -44,14 +44,15 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: requested emal is already in use");
             }
 
-            var parsedDate = DateOnly.ParseExact(request!.UserBirthDate!, "yyyy-MM-dd");   
+            var parsedDate = DateOnly.ParseExact(request!.UserBirthDate!, "yyyy-MM-dd");
 
             var user = new User
             {
                 Name = request.Name!,
                 UserName = request.UserEmail!,
-                Email = request.UserEmail!,              
+                Email = request.UserEmail!,
                 BirthDate = parsedDate,
+                SignUpDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             await _userManager.CreateAsync(user, request.Password!);
@@ -432,221 +433,51 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
-        public async Task<(UsersRateResponse?, string)> Rate(UsersRateRequest? request)
+        public async Task<(UsersGetProfileDetailsResponse?, string)> GetProfileDetails(UsersGetProfileDetailsRequest? request)
         {
-            var (isValid, message) = Rate_Validation(request);
-            
-            if (isValid == false)
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
             {
-                return (null, message);
+                return (null, "Error: User is not authenticated");
             }
 
-            var user_exists = await this._daoDbContext
+            var userDB = await this._daoDbContext
                 .Users
-                .AsNoTracking()
-                .AnyAsync(a => a.Id == request!.UserId && a.IsDeleted == false);
+                .FindAsync(userId);
 
-            if(user_exists == false)
+            if(userDB == null)
             {
-                return (null, "Error: user not found");
+                return (null, "Error: User not found");
             }
-
-            var boardgameDB = await this._daoDbContext
-                .BoardGames
-                .FindAsync(request!.BoardGameId);
             
-            if(boardgameDB == null)
+            if (userDB.IsDeleted == true)
             {
-                return (null, "Error: board game not found");
+                return (null, "Error: User has been deleted");
             }
 
-            if(boardgameDB.IsDeleted == true)
-            {
-                return (null, "Error: board game is deleted");
-            }
-
-            var session_exists = await this._daoDbContext
+            var countSessionsDB = await this._daoDbContext
                 .Sessions
                 .AsNoTracking()
-                .AnyAsync(a => a.BoardGameId == boardgameDB.Id && a.UserId == request.UserId);
+                .Where(a => a.UserId == userId && a.IsDeleted == false)
+                .CountAsync();
 
-            if(session_exists == false)
-            {
-                return (null, "Error: rating a board game without having played it is not allowed");
-            }
-
-            var rate_exists = await this._daoDbContext
+            var countRatedBgDB = await this._daoDbContext
                 .Ratings
                 .AsNoTracking()
-                .AnyAsync(a => a.UserId == request.UserId && a.BoardGameId == request.BoardGameId);
+                .Where(a => a.UserId == userId)
+                .CountAsync();        
 
-            if(rate_exists == true)
+            return (new UsersGetProfileDetailsResponse
             {
-                return (null, "Error: the request board game was already rated by this user");
-            }
+                Name = userDB.Name,
+                SignUpDate = userDB.SignUpDate,
+                SessionsCount = countSessionsDB,           
+                RatedBgCount = countRatedBgDB
+            },"User details loaded successfully");
 
-            var newRate = new Rating
-            {
-                Rate = request.Rate!.Value,
-                UserId = request.UserId!,
-                BoardGameId = request.BoardGameId!.Value
-            };
-
-            await this._daoDbContext.Ratings.AddAsync(newRate);
-
-            var newAverageRating =
-            (
-                ((boardgameDB.AverageRating * boardgameDB.RatingsCount) + newRate.Rate) / (boardgameDB.RatingsCount + 1)
-            );
-
-            boardgameDB.AverageRating = newAverageRating;
-            boardgameDB.RatingsCount++;
-
-            await this._daoDbContext.SaveChangesAsync();         
-
-            return (null, $"Board game rated successfully, its new average rating is: {newAverageRating:F1}");
         }
-
-        private static (bool, string) Rate_Validation(UsersRateRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null");
-            }
-
-            if(request.Rate.HasValue == false)
-            {
-                 return (false, "Error: Rate is missing");
-            }
-
-            if(request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5) == true)
-            {
-                 return (false, "Error: invalid rate. It must be a value between 0 and 5");
-            }
-
-            if(request.UserId == null)
-            {
-                return (false, "Error: UserId is missing");
-            }
-            
-            //if (request.UserId < 1)
-            //{
-            //    return (false, "Error: invalid UserId (is less than 1)");
-            //}
-
-             if(request.BoardGameId.HasValue == false)
-            {
-                return (false, "Error: BoardGameId is missing");
-            }
-
-            if (request.BoardGameId < 1)
-            {
-                return (false, "Error: invalid BoardGameId (is less than 1)");
-            }
-
-            return (true, String.Empty);
-        }
-
-        public async Task<(UsersEditRatingResponse?, string)> EditRating(UsersEditRatingRequest? request)
-        {
-            var (isValid, message) = EditRating_Validation(request);
-
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var user_exists = await this._daoDbContext
-                .Users
-                .AsNoTracking()
-                .AnyAsync(a => a.Id == request!.UserId && a.IsDeleted == false);
-
-            if (user_exists == false)
-            {
-                return (null, "Error: user not found");
-            }
-
-            var boardgameDB = await this._daoDbContext
-                .BoardGames
-                .FindAsync(request!.BoardGameId);
-
-            if (boardgameDB == null)
-            {
-                return (null, "Error: board game not found");
-            }
-
-            if (boardgameDB.IsDeleted == true)
-            {
-                return (null, "Error: board game is deleted");
-            }
-
-            var rateDB = await this._daoDbContext
-                .Ratings                                       
-                .FirstOrDefaultAsync(a => a.UserId == request.UserId && a.BoardGameId == request.BoardGameId);
-
-            if (rateDB == null)
-            {
-                return (null, "Error: the requested board game was not yet rated by this user");
-            }
-
-            var oldRate = rateDB.Rate;
-
-            rateDB.Rate = request.Rate!.Value;
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            var newAverageRating =
-            (
-                (boardgameDB.AverageRating * boardgameDB.RatingsCount - oldRate + request.Rate!.Value) / (boardgameDB.RatingsCount)
-            );
-
-            boardgameDB.AverageRating = newAverageRating;
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (null, $"Board game rate edited successfully, its new average rating is: {newAverageRating:F1}");
-        }
-
-        private static (bool, string) EditRating_Validation(UsersEditRatingRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null");
-            }
-
-            if (request.Rate.HasValue == false)
-            {
-                return (false, "Error: Rate is missing");
-            }
-
-            if (request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5) == true)
-            {
-                return (false, "Error: invalid rate. It must be a value between 0 and 5");
-            }
-
-            if (request.UserId == null)
-            {
-                return (false, "Error: UserId is missing");
-            }
-
-            //if (request.UserId < 1)
-            //{
-            //    return (false, "Error: invalid UserId (is less than 1)");
-            //}
-
-            if (request.BoardGameId.HasValue == false)
-            {
-                return (false, "Error: BoardGameId is missing");
-            }
-
-            if (request.BoardGameId < 1)
-            {
-                return (false, "Error: invalid BoardGameId (is less than 1)");
-            }
-
-            return (true, String.Empty);
-        }
-       
+        
         public async Task<(UsersLogSessionResponse?, string)> LogSession(UsersLogSessionRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -958,6 +789,13 @@ namespace BoardGameGeekLike.Services
     
         public async Task<(UsersDeleteSessionResponse?, string)> DeleteSession(UsersDeleteSessionRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = DeleteSession_Validation(request);
 
             if(isValid == false)
@@ -969,7 +807,7 @@ namespace BoardGameGeekLike.Services
                 .Sessions
                 .FindAsync(request!.SessionId);
             
-            if(sessionDB == null)
+            if(sessionDB == null || sessionDB.UserId != userId)
             {
                 return (null, "Error: session not found");
             }
@@ -1012,6 +850,208 @@ namespace BoardGameGeekLike.Services
             }
 
             return (true, String.Empty);
-        }    
+        }
+
+        public async Task<(UsersRateResponse?, string)> Rate(UsersRateRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = Rate_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }           
+
+            var boardgameDB = await this._daoDbContext
+                .BoardGames
+                .FindAsync(request!.BoardGameId);
+
+            if (boardgameDB == null)
+            {
+                return (null, "Error: board game not found");
+            }
+
+            if (boardgameDB.IsDeleted == true)
+            {
+                return (null, "Error: board game is deleted");
+            }
+
+            var session_exists = await this._daoDbContext
+                .Sessions
+                .AsNoTracking()
+                .AnyAsync(a => a.BoardGameId == boardgameDB.Id && a.UserId == userId);
+
+            if (session_exists == false)
+            {
+                return (null, "Error: a player must have at least one session logged of the board game to rate it.");
+            }
+
+            var rate_exists = await this._daoDbContext
+                .Ratings
+                .AsNoTracking()
+                .AnyAsync(a => a.UserId == userId && a.BoardGameId == request.BoardGameId);
+
+            if (rate_exists == true)
+            {
+                return (null, "Error: the request board game was already rated by this user");
+            }
+
+            var newRate = new Rating
+            {
+                Rate = request.Rate!.Value,
+                UserId = userId,
+                BoardGameId = request.BoardGameId!.Value
+            };
+
+            await this._daoDbContext.Ratings.AddAsync(newRate);
+
+            var newAverageRating =
+            (
+                ((boardgameDB.AverageRating * boardgameDB.RatingsCount) + newRate.Rate) / (boardgameDB.RatingsCount + 1)
+            );
+
+            boardgameDB.AverageRating = newAverageRating;
+            boardgameDB.RatingsCount++;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, $"Board game rated successfully, its new average rating is: {newAverageRating:F1}");
+        }
+
+        private static (bool, string) Rate_Validation(UsersRateRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.Rate.HasValue == false)
+            {
+                return (false, "Error: Rate is missing");
+            }
+
+            if (request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5) == true)
+            {
+                return (false, "Error: invalid rate. It must be a value between 0 and 5");
+            }       
+
+            if (request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is missing");
+            }
+
+            if (request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
+
+        public async Task<(UsersEditRatingResponse?, string)> EditRating(UsersEditRatingRequest? request)
+        {
+            var (isValid, message) = EditRating_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var user_exists = await this._daoDbContext
+                .Users
+                .AsNoTracking()
+                .AnyAsync(a => a.Id == request!.UserId && a.IsDeleted == false);
+
+            if (user_exists == false)
+            {
+                return (null, "Error: user not found");
+            }
+
+            var boardgameDB = await this._daoDbContext
+                .BoardGames
+                .FindAsync(request!.BoardGameId);
+
+            if (boardgameDB == null)
+            {
+                return (null, "Error: board game not found");
+            }
+
+            if (boardgameDB.IsDeleted == true)
+            {
+                return (null, "Error: board game is deleted");
+            }
+
+            var rateDB = await this._daoDbContext
+                .Ratings
+                .FirstOrDefaultAsync(a => a.UserId == request.UserId && a.BoardGameId == request.BoardGameId);
+
+            if (rateDB == null)
+            {
+                return (null, "Error: the requested board game was not yet rated by this user");
+            }
+
+            var oldRate = rateDB.Rate;
+
+            rateDB.Rate = request.Rate!.Value;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            var newAverageRating =
+            (
+                (boardgameDB.AverageRating * boardgameDB.RatingsCount - oldRate + request.Rate!.Value) / (boardgameDB.RatingsCount)
+            );
+
+            boardgameDB.AverageRating = newAverageRating;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, $"Board game rate edited successfully, its new average rating is: {newAverageRating:F1}");
+        }
+
+        private static (bool, string) EditRating_Validation(UsersEditRatingRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.Rate.HasValue == false)
+            {
+                return (false, "Error: Rate is missing");
+            }
+
+            if (request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5) == true)
+            {
+                return (false, "Error: invalid rate. It must be a value between 0 and 5");
+            }
+
+            if (request.UserId == null)
+            {
+                return (false, "Error: UserId is missing");
+            }
+
+            //if (request.UserId < 1)
+            //{
+            //    return (false, "Error: invalid UserId (is less than 1)");
+            //}
+
+            if (request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is missing");
+            }
+
+            if (request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
     }
 }

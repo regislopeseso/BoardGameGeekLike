@@ -7,10 +7,8 @@ namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersRateRequest
     {
-        public decimal? Rate {get; set;}
-
-        public string? UserId {get; set;}
-
         public int? BoardGameId {get; set;}
+        
+        public decimal? Rate {get; set;}
     }
 }

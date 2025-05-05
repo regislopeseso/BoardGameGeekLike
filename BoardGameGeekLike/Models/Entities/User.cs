@@ -13,6 +13,7 @@ namespace BoardGameGeekLike.Models.Entities
     {
         public string Name { get; set; }
         public required string Email { get; set; }
+        public DateOnly SignUpDate { get; set; }
         public DateOnly BirthDate { get; set; }
         public bool IsDeleted { get; set; } = false;
         public bool IsDummy { get; set; } = false;

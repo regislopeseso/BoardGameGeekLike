@@ -122,7 +122,22 @@ namespace BoardGameGeekLike.Controllers
             };
 
             return new JsonResult(response);
-        }      
+        }
+
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpGet]
+        public async Task<IActionResult> GetProfileDetails([FromQuery] UsersGetProfileDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.GetProfileDetails(request);
+
+            var response = new Response<UsersGetProfileDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [Authorize(Roles = "User")]
         [HttpPost]
@@ -186,7 +201,7 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "User")]
         [HttpPost]
-        public async Task<IActionResult> Rate(UsersRateRequest? request)
+        public async Task<IActionResult> Rate([FromForm] UsersRateRequest? request)
         {
             var (content, message) = await this._usersService.Rate(request);
 
@@ -198,6 +213,8 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+
 
         [Authorize(Roles = "User")]
         [HttpPut]
