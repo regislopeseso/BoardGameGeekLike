@@ -2,7 +2,6 @@
 {
     public class UsersGetRateRequest
     {
-        public int? id { get; set; }
-        public int? rate { get; set; }
+        public int? BoardGameId { get; set; }
     }
 }

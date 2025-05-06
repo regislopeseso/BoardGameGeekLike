@@ -214,11 +214,24 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [Authorize(Roles = "User")]
+        [HttpGet]
+        public async Task<IActionResult> GetRate([FromQuery] UsersGetRateRequest? request)
+        {
+            var (content, message) = await this._usersService.GetRate(request);
 
+            var response = new Response<UsersGetRateResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [Authorize(Roles = "User")]
         [HttpPut]
-        public async Task<IActionResult> EditRating(UsersEditRatingRequest? request)
+        public async Task<IActionResult> EditRating([FromBody] UsersEditRatingRequest? request)
         {
             var (content, message) = await this._usersService.EditRating(request);
 

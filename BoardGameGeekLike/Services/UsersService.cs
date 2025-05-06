@@ -953,25 +953,82 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
-
-        public async Task<(UsersEditRatingResponse?, string)> EditRating(UsersEditRatingRequest? request)
+        
+        public async Task<(UsersGetRateResponse?, string)> GetRate(UsersGetRateRequest? request)
         {
-            var (isValid, message) = EditRating_Validation(request);
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = GetRate_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var user_exists = await this._daoDbContext
-                .Users
-                .AsNoTracking()
-                .AnyAsync(a => a.Id == request!.UserId && a.IsDeleted == false);
+            var boardGameDB = await this._daoDbContext
+                .BoardGames
+                .FindAsync(request.BoardGameId);
 
-            if (user_exists == false)
+            if(boardGameDB == null)
             {
-                return (null, "Error: user not found");
+                return (null, "Error: requested board game was not found");
             }
+            if(boardGameDB.IsDeleted == true)
+            {
+                return (null, "Error: requested board game has been deleted");
+            }
+
+            var RateDB = await this._daoDbContext
+                .Ratings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.BoardGameId == request.BoardGameId);
+
+            if(RateDB == null)
+            {
+                return (null, "Error: requested rating was not found");
+            }
+
+            return (new UsersGetRateResponse
+            {
+                Rate = RateDB.Rate
+            }, "Rating loaded successfully");
+
+        }
+        
+        public static (bool, string) GetRate_Validation(UsersGetRateRequest? request)
+        {
+            if(request == null)
+            {
+                return (false, "Error: null request");
+            }
+            if(request.BoardGameId == null)
+            {
+                return (false, "Error: BoardGameId is null");
+            }
+
+            return (true, string.Empty);
+        }
+       
+        public async Task<(UsersEditRatingResponse?, string)> EditRating(UsersEditRatingRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = EditRating_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }            
 
             var boardgameDB = await this._daoDbContext
                 .BoardGames
@@ -989,7 +1046,7 @@ namespace BoardGameGeekLike.Services
 
             var rateDB = await this._daoDbContext
                 .Ratings
-                .FirstOrDefaultAsync(a => a.UserId == request.UserId && a.BoardGameId == request.BoardGameId);
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.BoardGameId == request.BoardGameId);
 
             if (rateDB == null)
             {
@@ -1029,17 +1086,7 @@ namespace BoardGameGeekLike.Services
             if (request.Rate.HasValue == true && (request.Rate < 0 || request.Rate > 5) == true)
             {
                 return (false, "Error: invalid rate. It must be a value between 0 and 5");
-            }
-
-            if (request.UserId == null)
-            {
-                return (false, "Error: UserId is missing");
-            }
-
-            //if (request.UserId < 1)
-            //{
-            //    return (false, "Error: invalid UserId (is less than 1)");
-            //}
+            }       
 
             if (request.BoardGameId.HasValue == false)
             {
@@ -1053,5 +1100,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+    
     }
 }
