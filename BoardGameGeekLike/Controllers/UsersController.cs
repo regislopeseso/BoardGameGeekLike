@@ -210,7 +210,7 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
-
+           
             return new JsonResult(response);
         }
 
@@ -225,7 +225,7 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
-
+            
             return new JsonResult(response);
         }
 

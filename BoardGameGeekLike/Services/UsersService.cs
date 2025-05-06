@@ -632,7 +632,7 @@ namespace BoardGameGeekLike.Services
 
             var sessionsDB = await this._daoDbContext
                 .Sessions
-                .Where(a => a.BoardGameId == request.BoardGameId && a.UserId == userId)
+                .Where(a => a.BoardGameId == request.BoardGameId && a.UserId == userId && a.IsDeleted == false)
                 .ToListAsync();
 
             if(sessionsDB == null)
