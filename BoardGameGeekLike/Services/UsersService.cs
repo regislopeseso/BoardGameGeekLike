@@ -569,7 +569,7 @@ namespace BoardGameGeekLike.Services
                 // Convert string to DateOnly
                 if (DateOnly.TryParseExact(request.Date, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out DateOnly parsedDate) == false)
                 {
-                    return (false, "Error: invalid birth date");
+                    return (false, "Error: invalid date");
                 }
 
                 var thisYear = DateTime.Now.Year;
@@ -579,6 +579,11 @@ namespace BoardGameGeekLike.Services
                 if(thisYear - requestedYear < 0)
                 {
                     return (false, "Error: invalid date. Requested date is a future date");
+                }
+
+                if (thisYear - requestedYear > 100)
+                {
+                    return (false, "Error: invalid date. Minimum date allowed is 100 years ago");
                 }
             }
 
