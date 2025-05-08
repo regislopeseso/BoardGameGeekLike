@@ -471,6 +471,8 @@ namespace BoardGameGeekLike.Services
             return (new UsersGetProfileDetailsResponse
             {
                 Name = userDB.Name,
+                Email = userDB.Email,
+                BirthDate = userDB.BirthDate,
                 SignUpDate = userDB.SignUpDate,
                 SessionsCount = countSessionsDB,           
                 RatedBgCount = countRatedBgDB
