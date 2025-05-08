@@ -288,21 +288,21 @@ namespace BoardGameGeekLike.Services
             
             var parsedDate = DateOnly.ParseExact(request.NewBirthDate!, "yyyy-MM-dd");
 
-            if (!string.IsNullOrEmpty(request.NewPassword))
-            {
-                // Remove old password and set new password
-                var removeResult = await _userManager.RemovePasswordAsync(userDB);
-                if (!removeResult.Succeeded)
-                {
-                    return (null, "Error: failed to remove old password");
-                }
+            //if (!string.IsNullOrEmpty(request.NewPassword))
+            //{
+            //    // Remove old password and set new password
+            //    var removeResult = await _userManager.RemovePasswordAsync(userDB);
+            //    if (!removeResult.Succeeded)
+            //    {
+            //        return (null, "Error: failed to remove old password");
+            //    }
 
-                var addPasswordResult = await _userManager.AddPasswordAsync(userDB, request.NewPassword);
-                if (!addPasswordResult.Succeeded)
-                {
-                    return (null, "Error: failed to set new password");
-                }
-            }
+            //    var addPasswordResult = await _userManager.AddPasswordAsync(userDB, request.NewPassword);
+            //    if (!addPasswordResult.Succeeded)
+            //    {
+            //        return (null, "Error: failed to set new password");
+            //    }
+            //}
 
             userDB.Name = request.NewName;
             userDB.Email = request.NewEmail;

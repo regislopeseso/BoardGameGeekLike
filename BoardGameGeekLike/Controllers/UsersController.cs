@@ -96,7 +96,7 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPut]
-        public async Task<IActionResult> EditProfile([FromForm] UsersEditProfileRequest? request)
+        public async Task<IActionResult> EditProfile([FromBody] UsersEditProfileRequest? request)
         {
             var (content, message) = await this._usersService.EditProfile(request);
 
