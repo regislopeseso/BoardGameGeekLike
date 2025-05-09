@@ -2,5 +2,6 @@
 {
     public class UsersSignInResponse
     {
+        public int RemainingSignInAttempts { get; set; }
     }
 }

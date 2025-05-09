@@ -7,6 +7,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersDeleteProfileRequest
     {
-        public string? UserId {get; set;}
+        public string? Password {get; set;}
     }
 }

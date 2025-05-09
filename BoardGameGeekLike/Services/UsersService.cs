@@ -5,6 +5,7 @@ using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -55,7 +56,13 @@ namespace BoardGameGeekLike.Services
                 SignUpDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
-            await _userManager.CreateAsync(user, request.Password!);
+            var signUpAttempt = await _userManager.CreateAsync(user, request.Password!);
+
+            if(signUpAttempt.Succeeded == false)
+            {
+                var errors = string.Join("; ", signUpAttempt.Errors.Select(e => e.Description));
+                return (null, $"Error creating user: {errors}");
+            }
             await _userManager.AddToRoleAsync(user, "User");
 
             return (new UsersSignUpResponse(), "User signed up successfully");
@@ -83,6 +90,16 @@ namespace BoardGameGeekLike.Services
             if (Regex.IsMatch(request.UserEmail, emailPattern) == false)
             {
                 return (false, "Error: invalid email format");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                return (false, "Error: password is null");
+            }
+
+            if (request.Password.Trim().Length < 6)
+            {
+                return (false, "Error: password must have at leat 6 digits");
             }
 
             if (string.IsNullOrWhiteSpace(request.UserBirthDate) == true)
@@ -138,28 +155,54 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var userExists = await this._daoDbContext
+            var userDB = await this._daoDbContext
                 .Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.Email == request!.Email);
 
-            if(userExists == null)
+            if(userDB == null)
             {
                 return (null, "Requested user does not exist");
             }
-            if(userExists.IsDeleted == true)
+            if(userDB.IsDeleted == true)
             {
                 return (null, "Requested user has been deleted");
             }
 
-            var result = await this._signInManager.PasswordSignInAsync(request!.Email!, request.Password!, false, false);
+            var result = await this._signInManager
+                .PasswordSignInAsync(request!.Email!, request.Password!, false, true);
 
-            if(result.Succeeded == false)
+            if (result.IsLockedOut == true)
             {
-                return (null, "Error: email or password is incorrect");
+                return (null, "Error: account temporarily locked due to multiple failed attempts");
             }
 
-            return (new UsersSignInResponse(), $"User: {userExists.Name} signed in successfully");
+            if (result.IsNotAllowed == true)
+            {
+                return (null, "Error: account is not allowed to sign in (e.g. email not confirmed)");
+            }
+
+            var countFailedAttempts = await this._userManager
+                .GetAccessFailedCountAsync(userDB);
+
+            var maxAllowedAttempts = this._userManager
+                .Options
+                .Lockout
+                .MaxFailedAccessAttempts;
+
+            var remainingAttempts = maxAllowedAttempts - countFailedAttempts;
+
+            var response = new UsersSignInResponse
+            {
+                RemainingSignInAttempts = remainingAttempts
+            };
+
+            if (result.Succeeded == false)
+            {
+                return (response, $"Error: email or password is incorrect. You have {remainingAttempts} attempts remaining");
+            }
+        
+            return (null, $"User: {userDB.Name} signed in successfully");
         }
 
         private static (bool, string) SignIn_Validation(UsersSignInRequest? request)
@@ -384,6 +427,13 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(UsersDeleteProfileResponse?, string)> DeleteProfile(UsersDeleteProfileRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }                        
+
             var (isValid, message) = DeleteProfile_Validation(request);
             
             if (isValid == false)
@@ -393,7 +443,7 @@ namespace BoardGameGeekLike.Services
 
             var userDB = await this._daoDbContext
                                    .Users
-                                   .FindAsync(request!.UserId);
+                                   .FindAsync(userId);
 
             if(userDB == null)
             {
@@ -405,12 +455,46 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: this user's profile was already deleted");
             }
 
+            var isUserLocked = await this._userManager.IsLockedOutAsync(userDB);
+            
+            if(isUserLocked == true)
+            {
+                return (null, "Error: account temporarily locked duo to multiple failed attempts");
+            }
+
+            var isPasswordValid = await _userManager.CheckPasswordAsync(userDB, request!.Password!);
+
+            var countFailedAttempts = await this._userManager
+                .GetAccessFailedCountAsync(userDB);
+
+            var maxAllowedAttempts = this._userManager
+                .Options
+                .Lockout
+                .MaxFailedAccessAttempts;
+
+            var remainingAttempts = maxAllowedAttempts - countFailedAttempts -1;
+
+            var response = new UsersDeleteProfileResponse
+            {
+                RemainingPasswordAttempts = remainingAttempts
+            };
+
+            if (isPasswordValid == false)
+            {
+                await _userManager.AccessFailedAsync(userDB);
+                return (response, $"Invalid Password. You have {remainingAttempts} attempts remaining");
+            }
+
+            await this._userManager.ResetAccessFailedCountAsync(userDB);
+
             await this._daoDbContext
                       .Users
-                      .Where(a => a.Id == request.UserId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));            
+                      .Where(a => a.Id == userId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
 
-            return (null, "User's profile deleted successfully");
+            await this.SignOut();
+
+            return (new UsersDeleteProfileResponse(), "User's profile deleted successfully");
         }
 
         private static (bool, string) DeleteProfile_Validation(UsersDeleteProfileRequest? request)
@@ -419,19 +503,41 @@ namespace BoardGameGeekLike.Services
             {
                 return (false, "Error: request is null");
             }
-
-            if(request.UserId == null)
+            
+            if(string.IsNullOrWhiteSpace(request.Password) == true)
             {
-                return (false, "Error: UserId is missing");
+                return (false, "Error: requested password is empty");
             }
-
-            //if (request.UserId < 1)
-            //{
-            //    return (false, "Error: invalid CategoryId (is less than 1)");
-            //}
 
             return (true, String.Empty);
         }
+
+        public async Task<(UsersValidatePasswordResponse?, string)> ValidatePassword(UsersValidatePasswordRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var userDB = await this._daoDbContext
+                .Users
+                .FindAsync(userId);
+
+            if (userDB == null)
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var isValid = await _userManager.CheckPasswordAsync(userDB, request.Password);
+
+            return (new UsersValidatePasswordResponse
+            {
+                IsValid = true
+            }, "Requested password is correct!");
+        }
+
 
         public async Task<(UsersGetProfileDetailsResponse?, string)> GetProfileDetails(UsersGetProfileDetailsRequest? request)
         {

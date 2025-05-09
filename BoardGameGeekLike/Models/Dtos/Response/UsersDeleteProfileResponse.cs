@@ -7,6 +7,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersDeleteProfileResponse
     {
-
+        public int? RemainingPasswordAttempts { get; set; }
     }
 }

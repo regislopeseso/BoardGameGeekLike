@@ -44,6 +44,7 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    SignUpDate = table.Column<DateOnly>(type: "date", nullable: false),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: false),
                     IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsDummy = table.Column<bool>(type: "tinyint(1)", nullable: false),

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250428121055_m1")]
+    [Migration("20250509143543_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -241,6 +241,9 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
+
+                    b.Property<DateOnly>("SignUpDate")
+                        .HasColumnType("date");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");

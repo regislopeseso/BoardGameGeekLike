@@ -111,7 +111,7 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpDelete]
-        public async Task<IActionResult> DeleteProfile(UsersDeleteProfileRequest? request)
+        public async Task<IActionResult> DeleteProfile([FromBody] UsersDeleteProfileRequest? request)
         {
             var (content, message) = await this._usersService.DeleteProfile(request);
 
@@ -123,7 +123,8 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
+       
+        
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
         public async Task<IActionResult> GetProfileDetails([FromQuery] UsersGetProfileDetailsRequest? request)
