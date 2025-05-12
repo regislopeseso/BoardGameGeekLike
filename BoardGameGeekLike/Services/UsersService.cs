@@ -4,9 +4,11 @@ using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
+using BoardGameGeekLike.Models.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 
 
 namespace BoardGameGeekLike.Services
@@ -43,7 +45,7 @@ namespace BoardGameGeekLike.Services
             if (userEmail_exists == true)
             {
                 return (null, "Error: requested emal is already in use");
-            }
+            }            
 
             var parsedDate = DateOnly.ParseExact(request!.UserBirthDate!, "yyyy-MM-dd");
 
@@ -51,9 +53,9 @@ namespace BoardGameGeekLike.Services
             {
                 Name = request.Name!,
                 UserName = request.UserEmail!,
-                Email = request.UserEmail!,
+                Email = request.UserEmail!.ToLower(),
                 BirthDate = parsedDate,
-                SignUpDate = DateOnly.FromDateTime(DateTime.Now)
+                Gender = request.Gender
             };
 
             var signUpAttempt = await _userManager.CreateAsync(user, request.Password!);
@@ -140,7 +142,16 @@ namespace BoardGameGeekLike.Services
 
             if (age > 90)
             {
-                return (false, "Error: birth date is too old");
+                return (false, "Error: invalid birth date");
+            }          
+
+            if (Enum.IsDefined(request.Gender) == false)
+            {
+                var validOption = string.Join(", ", Enum.GetValues(typeof(Gender))
+                                       .Cast<Gender>()
+                                       .Select(gender => $"{gender} ({(int)gender})"));
+
+                return (false, $"Error: invalid Gender. It must be one of the following: {validOption}");
             }
 
             return (true, String.Empty);
@@ -348,10 +359,10 @@ namespace BoardGameGeekLike.Services
             //}
 
             userDB.Name = request.NewName;
-            userDB.Email = request.NewEmail;
+            userDB.Email = request.NewEmail!.ToLower();
             userDB.UserName = request.NewEmail;
             userDB.BirthDate = parsedDate;
-
+            
             var updateResult = await _userManager.UpdateAsync(userDB);
 
             if (!updateResult.Succeeded)
@@ -572,17 +583,20 @@ namespace BoardGameGeekLike.Services
                 .Ratings
                 .AsNoTracking()
                 .Where(a => a.UserId == userId)
-                .CountAsync();        
+                .CountAsync();
+
+            var treatmentTitle = userDB.Gender == 0 ? "Mr." : "Mrs.";
 
             return (new UsersGetProfileDetailsResponse
             {
+                TreatmentTitle = treatmentTitle,
                 Name = userDB.Name,
                 Email = userDB.Email,
                 BirthDate = userDB.BirthDate,
                 SignUpDate = userDB.SignUpDate,
-                SessionsCount = countSessionsDB,           
+                SessionsCount = countSessionsDB,
                 RatedBgCount = countRatedBgDB
-            },"User details loaded successfully");
+            }, "User details loaded successfully");
 
         }
         
@@ -624,7 +638,7 @@ namespace BoardGameGeekLike.Services
             if(boardgameDB.IsDeleted == true)
             {
                 return (null, "Error: board game is deleted");
-            }          
+            }        
 
             var newSession = new Session
             {

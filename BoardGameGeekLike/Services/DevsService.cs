@@ -234,10 +234,10 @@ namespace BoardGameGeekLike.Services
 
             var random = new Random(); 
 
-            int currentYear = DateTime.Today.Year;           
+            int currentYear = DateTime.Today.Year;   
 
             for (int usersC = 1; usersC <= usersCount; usersC ++)
-            {               
+            {
                 newUsers.Add
                 (
                     new User
@@ -245,7 +245,8 @@ namespace BoardGameGeekLike.Services
                         Name = $"user #{usersC}",
                         UserName = $"user{usersC}@email.com",
                         Email = $"user{usersC}@email.com",
-                        BirthDate = DateGenerator.GetRandomDate(currentYear-12),
+                        BirthDate = DateGenerator.GetRandomDate(currentYear - 12),
+                        Gender = (Models.Enums.Gender)random.Next(0, 2),
                         IsDummy = true
                     }
                 );
