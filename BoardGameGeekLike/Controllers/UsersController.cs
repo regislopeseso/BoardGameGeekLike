@@ -110,6 +110,24 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpPut]
+        public async Task<IActionResult> ChangePassword([FromBody] UsersChangePasswordRequest? request)
+        {
+            var (content, message) = await this._usersService.ChangePassword(request);
+
+            var response = new Response<UsersChangePasswordResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
+
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpDelete]
         public async Task<IActionResult> DeleteProfile([FromBody] UsersDeleteProfileRequest? request)
         {
