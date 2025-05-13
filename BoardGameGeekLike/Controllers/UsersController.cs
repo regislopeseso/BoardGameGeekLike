@@ -124,9 +124,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
-
-
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpDelete]
         public async Task<IActionResult> DeleteProfile([FromBody] UsersDeleteProfileRequest? request)

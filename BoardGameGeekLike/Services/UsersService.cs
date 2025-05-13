@@ -157,15 +157,8 @@ namespace BoardGameGeekLike.Services
             return (true, String.Empty);
         }
 
-        private async Task<(bool, string)>ValidatePassword(User userDB, string userPassword)
+        private async Task<(int, string)>ValidatePassword(User userDB, string userPassword)
         {
-            var isUserLocked = await this._userManager.IsLockedOutAsync(userDB);
-
-            if (isUserLocked == true)
-            {
-                return (false, "Error: account temporarily locked duo to multiple failed attempts");
-            }
-
             var isPasswordValid = await _userManager.CheckPasswordAsync(userDB, userPassword);
 
             var countFailedAttempts = await this._userManager
@@ -176,17 +169,25 @@ namespace BoardGameGeekLike.Services
                 .Lockout
                 .MaxFailedAccessAttempts;
 
-            var remainingAttempts = maxAllowedAttempts - countFailedAttempts - 1;
+            var remainingAttempts = maxAllowedAttempts - countFailedAttempts;
 
+            var isUserLocked = await this._userManager.IsLockedOutAsync(userDB);
+
+            if (isUserLocked == true)
+            {
+                return (remainingAttempts, "Error: account temporarily locked duo to multiple failed attempts");
+            }
+         
             if (isPasswordValid == false)
             {
+                remainingAttempts--;
                 await _userManager.AccessFailedAsync(userDB);
-                return (false, $"Invalid Password. You have {remainingAttempts} attempts remaining");
+                return (remainingAttempts, $"Invalid Password. You have {remainingAttempts} attempts remaining");
             }
 
             await this._userManager.ResetAccessFailedCountAsync(userDB);
 
-            return (true, string.Empty);
+            return (remainingAttempts, string.Empty);
         }
         public async Task<(UsersSignInResponse?, string)> SignIn(UsersSignInRequest? request)
         {
@@ -233,17 +234,22 @@ namespace BoardGameGeekLike.Services
                 .MaxFailedAccessAttempts;
 
             var remainingAttempts = maxAllowedAttempts - countFailedAttempts;
-
-            var response = new UsersSignInResponse
-            {
-                RemainingSignInAttempts = remainingAttempts
-            };
+    
 
             if (result.Succeeded == false)
             {
+                remainingAttempts--;
+
+                var response = new UsersSignInResponse
+                {
+                    RemainingSignInAttempts = remainingAttempts
+                };
+
                 return (response, $"Error: email or password is incorrect. You have {remainingAttempts} attempts remaining");
             }
-        
+
+            await this._userManager.ResetAccessFailedCountAsync(userDB);
+
             return (null, $"User: {userDB.Name} signed in successfully");
         }
 
@@ -483,11 +489,14 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: user is deleted");
             }
 
-            (isValid, message) = await this.ValidatePassword(userDB, request!.CurrentPassword!);
+            var (remainingAttempts, text) = await this.ValidatePassword(userDB, request!.CurrentPassword!);
             
-            if (isValid == false)
+            if (remainingAttempts < 3)
             {
-                return (null, message);
+                return (new UsersChangePasswordResponse
+                {
+                    RemainingPasswordAttempts = remainingAttempts
+                }, text);
             }
             
             // Remove current password
@@ -567,12 +576,15 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: this user's profile was already deleted");
             }
 
-            (isValid, message) = await this.ValidatePassword(userDB, request!.Password!);
+            var (remainingAttempts, text) = await this.ValidatePassword(userDB, request!.Password!);
 
-            if (isValid == false)
+            if (remainingAttempts < 3)
             {
-                return (null, message);
-            }                
+                return (new UsersDeleteProfileResponse
+                {
+                    RemainingPasswordAttempts = remainingAttempts
+                }, text);
+            }             
   
             await this._daoDbContext
                       .Users
