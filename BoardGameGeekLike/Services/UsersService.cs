@@ -200,8 +200,7 @@ namespace BoardGameGeekLike.Services
 
             var userDB = await this._daoDbContext
                 .Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.Email == request!.Email);
+                .FirstOrDefaultAsync(a => a.Email == request!.Email);          
 
             if(userDB == null)
             {
@@ -237,9 +236,7 @@ namespace BoardGameGeekLike.Services
     
 
             if (result.Succeeded == false)
-            {
-                remainingAttempts--;
-
+            {               
                 var response = new UsersSignInResponse
                 {
                     RemainingSignInAttempts = remainingAttempts

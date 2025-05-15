@@ -2,8 +2,10 @@ using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BoardGameGeekLike.Services
@@ -11,10 +13,14 @@ namespace BoardGameGeekLike.Services
     public class AdminsService
     {
         private readonly ApplicationDbContext _daoDbContext;
+        private readonly UserManager<User> _userManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AdminsService(ApplicationDbContext daoDbContext)
+        public AdminsService(ApplicationDbContext daoDbContext, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
         {
             this._daoDbContext = daoDbContext;
+            this._userManager = userManager;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<(AdminsAddCategoryResponse?, string)> AddCategory(AdminsAddCategoryRequest? request)
@@ -661,5 +667,65 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
+
+        public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ListBoardGames_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var boardGamesDB = await this._daoDbContext
+                .BoardGames
+                .Select(a => new { a.Name, a.Description, a.MinPlayersCount, a.MaxPlayersCount, a.MinAge, a.IsDeleted })
+                .OrderBy(a => a.Name)
+                .ToListAsync();
+
+            if (boardGamesDB == null || boardGamesDB.Count == 0)
+            {
+                return (null, "Error: no board game found");
+            }
+
+            var boardGamesList = new List<AdminsListBoardGamesResponse>();
+
+            foreach (var boardGame in boardGamesDB)
+            {
+                var playersCount = boardGame.MinPlayersCount == boardGame.MaxPlayersCount ?
+                    $"{boardGame.MinPlayersCount}" : $"{boardGame.MinPlayersCount} - {boardGame.MaxPlayersCount}";
+
+                boardGamesList.Add(
+                    new AdminsListBoardGamesResponse
+                    {
+                        Name = boardGame.Name,
+                        Description = boardGame.Description,
+                        PlayersCount = playersCount,
+                        MinAge = boardGame.MinAge,
+                        IsDeleted = boardGame.IsDeleted
+                    });
+            }
+
+            return (boardGamesList, "Board games successfully listed by rate");
+        }
+
+        private static (bool, string) ListBoardGames_Validation(AdminsListBoardGamesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is not null");
+            }
+
+            return (true, string.Empty);
+        }
+
     }
 }

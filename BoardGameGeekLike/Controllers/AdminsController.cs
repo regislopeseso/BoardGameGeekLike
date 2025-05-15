@@ -87,5 +87,19 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ListBoardGames(AdminsListBoardGamesRequest? request)
+        {
+            var (content, message) = await this._adminsService.ListBoardGames(request);
+
+            var response = new Response<List<AdminsListBoardGamesResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
     }
 }
