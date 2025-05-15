@@ -687,7 +687,7 @@ namespace BoardGameGeekLike.Services
 
             var boardGamesDB = await this._daoDbContext
                 .BoardGames
-                .Select(a => new { a.Name, a.Description, a.MinPlayersCount, a.MaxPlayersCount, a.MinAge, a.IsDeleted })
+                .Select(a => new { a.Name, a.Description, a.MinPlayersCount, a.MaxPlayersCount, a.MinAge, a.Category, a.Mechanics, a.IsDeleted })
                 .OrderBy(a => a.Name)
                 .ToListAsync();
 
@@ -703,6 +703,8 @@ namespace BoardGameGeekLike.Services
                 var playersCount = boardGame.MinPlayersCount == boardGame.MaxPlayersCount ?
                     $"{boardGame.MinPlayersCount}" : $"{boardGame.MinPlayersCount} - {boardGame.MaxPlayersCount}";
 
+                
+
                 boardGamesList.Add(
                     new AdminsListBoardGamesResponse
                     {
@@ -710,6 +712,8 @@ namespace BoardGameGeekLike.Services
                         Description = boardGame.Description,
                         PlayersCount = playersCount,
                         MinAge = boardGame.MinAge,
+                        Category = boardGame.Category,
+                        Mechanics = boardGame.Mechanics,
                         IsDeleted = boardGame.IsDeleted
                     });
             }
