@@ -8,8 +8,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public string? Description { get; set; }
         public string? PlayersCount { get; set; }        
         public int? MinAge { get; set; }
-        public Category? Category { get; set; }
-        public List<Mechanic>? Mechanics { get; set; }
+        public string? Category { get; set; }
+        public List<string>? Mechanics { get; set; }
         public bool? IsDeleted { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Security.Claims;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BoardGameGeekLike.Services
@@ -686,8 +687,17 @@ namespace BoardGameGeekLike.Services
             }
 
             var boardGamesDB = await this._daoDbContext
-                .BoardGames
-                .Select(a => new { a.Name, a.Description, a.MinPlayersCount, a.MaxPlayersCount, a.MinAge, a.Category, a.Mechanics, a.IsDeleted })
+            .BoardGames
+                .Select(a => new AdminsListBoardGamesResponse
+                {
+                    Name = a.Name,
+                    Description = a.Description,
+                    PlayersCount = a.MinPlayersCount == a.MaxPlayersCount ? $"{a.MinPlayersCount}" : $"{a.MinPlayersCount} - {a.MaxPlayersCount}",
+                    MinAge = a.MinAge,
+                    Category = a.Category!.Name,
+                    Mechanics = a.Mechanics!.Select(b => b.Name).ToList(),
+                    IsDeleted = a.IsDeleted
+                })
                 .OrderBy(a => a.Name)
                 .ToListAsync();
 
@@ -696,29 +706,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: no board game found");
             }
 
-            var boardGamesList = new List<AdminsListBoardGamesResponse>();
-
-            foreach (var boardGame in boardGamesDB)
-            {
-                var playersCount = boardGame.MinPlayersCount == boardGame.MaxPlayersCount ?
-                    $"{boardGame.MinPlayersCount}" : $"{boardGame.MinPlayersCount} - {boardGame.MaxPlayersCount}";
-
-                
-
-                boardGamesList.Add(
-                    new AdminsListBoardGamesResponse
-                    {
-                        Name = boardGame.Name,
-                        Description = boardGame.Description,
-                        PlayersCount = playersCount,
-                        MinAge = boardGame.MinAge,
-                        Category = boardGame.Category,
-                        Mechanics = boardGame.Mechanics,
-                        IsDeleted = boardGame.IsDeleted
-                    });
-            }
-
-            return (boardGamesList, "Board games successfully listed by rate");
+            return (boardGamesDB, "Board games successfully listed by rate");
         }
 
         private static (bool, string) ListBoardGames_Validation(AdminsListBoardGamesRequest? request)
