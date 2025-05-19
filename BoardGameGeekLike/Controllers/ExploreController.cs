@@ -31,6 +31,20 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> ListBoardGames(ExploreListBoardGamesRequest? request)
+        {
+            var (content, message) = await this._exploreService.ListBoardGames(request);
+
+            var response = new Response<List<ExploreListBoardGamesResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpGet]
         public async Task<IActionResult> ShowBoardGameDetails([FromQuery] ExploreShowBoardGameDetailsRequest? request)
@@ -46,20 +60,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ListBoardGames(ExploreListBoardGamesRequest? request)
-        {
-            var (content, message) = await this._exploreService.ListBoardGames(request);
-
-            var response = new Response<List<ExploreListBoardGamesResponse>>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
+       
         [HttpGet]
         public async Task<IActionResult> BoardGamesRankings(ExploreBoardGamesRankingsRequest? request)
         {

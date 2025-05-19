@@ -189,6 +189,7 @@ namespace BoardGameGeekLike.Services
 
             return (remainingAttempts, string.Empty);
         }
+       
         public async Task<(UsersSignInResponse?, string)> SignIn(UsersSignInRequest? request)
         {
             var (isValid, message) = SignIn_Validation(request);
@@ -247,7 +248,7 @@ namespace BoardGameGeekLike.Services
 
             await this._userManager.ResetAccessFailedCountAsync(userDB);
 
-            return (null, $"User: {userDB.Name} signed in successfully");
+            return (new UsersSignInResponse(), $"User: {userDB.Name} signed in successfully");
         }
 
         private static (bool, string) SignIn_Validation(UsersSignInRequest? request)

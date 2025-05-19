@@ -48,7 +48,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
     // Lockout settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    options.Lockout.MaxFailedAccessAttempts = 3;
+    options.Lockout.MaxFailedAccessAttempts = 30;
     options.Lockout.AllowedForNewUsers = true;
 
     // Optional: enforce strong passwords

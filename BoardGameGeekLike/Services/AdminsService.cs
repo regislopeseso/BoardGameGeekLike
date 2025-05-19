@@ -188,6 +188,32 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        public async Task<(List<AdminsShowCategoriesResponse>?, string)> ShowCategories(AdminsShowCategoriesRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var response = await this._daoDbContext
+                .Categories
+                .Where(a => a.IsDeleted == false && a.IsDummy == false)
+                .OrderBy(a => a.Name)
+                .Select(a => new AdminsShowCategoriesResponse { 
+                    CategoryId = a.Id, 
+                    CategoryName = a.Name })
+                .ToListAsync();
+
+            if(response == null || response.Count <= 0)
+            {
+                return (null, "Error: no valid categories were found");
+            }
+
+            return (response, "All board game categories listed successfully");
+        }
+
         public async Task<(AdminsAddMechanicResponse?, string)> AddMechanic(AdminsAddMechanicRequest? request)
         {
             var (isValid, message) = AddMechanic_Validation(request);
@@ -218,6 +244,35 @@ namespace BoardGameGeekLike.Services
 
             return (null, "Mechanic added successfully");
         }
+        
+        public async Task<(List<AdminsShowMechanicsResponse>?, string)> ShowMechanics(AdminsShowMechanicsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var response = await this._daoDbContext
+                .Mechanics
+                .Where(a => a.IsDeleted == false && a.IsDummy == false)
+                .OrderBy(a => a.Name)
+                .Select(a => new AdminsShowMechanicsResponse
+                {
+                    MechanicId = a.Id,
+                    MechanicName = a.Name
+                })
+                .ToListAsync();
+
+            if (response == null || response.Count <= 0)
+            {
+                return (null, "Error: no valid mechanics were found");
+            }
+
+            return (response, "All board game mechancis listed successfully");
+        }
+
 
         private static (bool, string) AddMechanic_Validation(AdminsAddMechanicRequest? request)
         {

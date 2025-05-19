@@ -32,6 +32,21 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ShowCategories(AdminsShowCategoriesRequest? request)
+        {
+            var (content, message) = await this._adminsService.ShowCategories(request);
+
+            var response = new Response<List<AdminsShowCategoriesResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
         {
@@ -46,6 +61,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ShowMechanics(AdminsShowMechanicsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ShowMechanics(request);
+
+            var response = new Response<List<AdminsShowMechanicsResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+
+        }
         [HttpPost]
         public async Task<IActionResult> AddBoardGame(AdminsAddBoardGameRequest? request)
         {
