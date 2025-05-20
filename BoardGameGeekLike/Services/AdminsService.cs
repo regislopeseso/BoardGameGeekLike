@@ -497,6 +497,7 @@ namespace BoardGameGeekLike.Services
 
             var boardgameDB = await _daoDbContext
                 .BoardGames
+                .Include(a => a.Category)
                 .Include(a => a.Mechanics)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.Id == request!.BoardGameId);
@@ -506,17 +507,19 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: Requested BoardGame not found");
             }
 
-            var categoryDB = await _daoDbContext.Categories.FindAsync(boardgameDB.CategoryId);
-            
-            if (categoryDB == null)
+            if (boardgameDB?.Category == null)
             {
-                return (null, "Error: No BoardGame category found");
+                return (null, "Error: BoardGame category not found");
             }
+
+            var categoryName = boardgameDB.Category.Name!;
 
             if (boardgameDB.Mechanics == null || boardgameDB.Mechanics.Count <= 0)
             {
                 return (null, "Error: No BoardGame mechanics found");
             }
+
+            var mechanicsNames = boardgameDB.Mechanics.Select(a => a.Name).ToList();
 
             var content = new AdminsShowBoardGameDetailsResponse
             {
@@ -525,8 +528,8 @@ namespace BoardGameGeekLike.Services
                 MinPlayersCount = boardgameDB.MinPlayersCount,
                 MaxPlayerCount = boardgameDB.MaxPlayersCount,
                 MinAge = boardgameDB.MinAge,
-                Category = categoryDB.Name!,
-                Mechanics = boardgameDB.Mechanics.Select(m => m.Name).ToList(),
+                Category = categoryName!,
+                Mechanics = mechanicsNames,
                 IsDeleted = boardgameDB.IsDeleted
             };
 
