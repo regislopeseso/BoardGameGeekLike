@@ -3,6 +3,7 @@ using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Security.Claims;
@@ -272,8 +273,6 @@ namespace BoardGameGeekLike.Services
 
             return (response, "All board game mechancis listed successfully");
         }
-
-
         private static (bool, string) AddMechanic_Validation(AdminsAddMechanicRequest? request)
         {
             if (request == null)
@@ -291,6 +290,13 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(AdminsAddBoardGameResponse?, string)> AddBoardGame(AdminsAddBoardGameRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = AddBoardGame_Validation(request);
 
             if (isValid == false)
@@ -473,6 +479,81 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
+        public async Task<(AdminsShowBoardGameDetailsResponse?, string)> ShowBoardGameDetails(AdminsShowBoardGameDetailsRequest? request)
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowBoardGameDetails_Validation(request);
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            var boardgameDB = await _daoDbContext
+                .BoardGames
+                .Include(a => a.Mechanics)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == request!.BoardGameId);
+
+            if (boardgameDB == null)
+            {
+                return (null, "Error: Requested BoardGame not found");
+            }
+
+            var categoryDB = await _daoDbContext.Categories.FindAsync(boardgameDB.CategoryId);
+            
+            if (categoryDB == null)
+            {
+                return (null, "Error: No BoardGame category found");
+            }
+
+            if (boardgameDB.Mechanics == null || boardgameDB.Mechanics.Count <= 0)
+            {
+                return (null, "Error: No BoardGame mechanics found");
+            }
+
+            var content = new AdminsShowBoardGameDetailsResponse
+            {
+                BoardGameName = boardgameDB.Name,
+                BoardGameDescription = boardgameDB.Description,
+                MinPlayersCount = boardgameDB.MinPlayersCount,
+                MaxPlayerCount = boardgameDB.MaxPlayersCount,
+                MinAge = boardgameDB.MinAge,
+                Category = categoryDB.Name!,
+                Mechanics = boardgameDB.Mechanics.Select(m => m.Name).ToList(),
+                IsDeleted = boardgameDB.IsDeleted
+            };
+
+            return (content, "Board game details listed successfully");
+        }
+
+        private static (bool, string) ShowBoardGameDetails_Validation(AdminsShowBoardGameDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is missing");
+            }
+
+            if (request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (requested BoardGameId is zero or a negative number)");
+            }
+
+            return (true, string.Empty);
+        }
+
+
 
         public async Task<(AdminsEditBoardGameResponse?, string)> EditBoardGame(AdminsEditBoardGameRequest? request)
         {
