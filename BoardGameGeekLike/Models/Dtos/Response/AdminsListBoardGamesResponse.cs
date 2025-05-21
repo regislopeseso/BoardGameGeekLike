@@ -4,6 +4,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class AdminsListBoardGamesResponse
     {
+        public int? BoardGameId { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? PlayersCount { get; set; }        

@@ -512,17 +512,18 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: BoardGame category not found");
             }
 
-            var categoryName = boardgameDB.Category.Name!;
+            var categoryName = boardgameDB.Category.Id!;
 
             if (boardgameDB.Mechanics == null || boardgameDB.Mechanics.Count <= 0)
             {
                 return (null, "Error: No BoardGame mechanics found");
             }
 
-            var mechanicsNames = boardgameDB.Mechanics.Select(a => a.Name).ToList();
+            var mechanicsNames = boardgameDB.Mechanics.Select(a => a.Id).ToList();
 
             var content = new AdminsShowBoardGameDetailsResponse
             {
+                BoardGameId = boardgameDB.Id,
                 BoardGameName = boardgameDB.Name,
                 BoardGameDescription = boardgameDB.Description,
                 MinPlayersCount = boardgameDB.MinPlayersCount,
@@ -555,8 +556,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
-
 
         public async Task<(AdminsEditBoardGameResponse?, string)> EditBoardGame(AdminsEditBoardGameRequest? request)
         {
@@ -829,6 +828,7 @@ namespace BoardGameGeekLike.Services
             .BoardGames
                 .Select(a => new AdminsListBoardGamesResponse
                 {
+                    BoardGameId = a.Id,
                     Name = a.Name,
                     Description = a.Description,
                     PlayersCount = a.MinPlayersCount == a.MaxPlayersCount ? $"{a.MinPlayersCount}" : $"{a.MinPlayersCount} - {a.MaxPlayersCount}",

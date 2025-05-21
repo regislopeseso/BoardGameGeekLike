@@ -99,11 +99,9 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
-
+            await Task.Delay(1000);
             return new JsonResult(response);
-
         }
-
 
         [HttpPut]
         public async Task<IActionResult> EditBoardGame(AdminsEditBoardGameRequest? request)
@@ -143,6 +141,8 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
+
+            await Task.Delay(1000);
 
             return new JsonResult(response);
         }
