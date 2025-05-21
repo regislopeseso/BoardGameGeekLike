@@ -59,7 +59,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
        
         [HttpGet]
         public async Task<IActionResult> BoardGamesRankings(ExploreBoardGamesRankingsRequest? request)

@@ -569,9 +569,8 @@ namespace BoardGameGeekLike.Services
             var boardGameName_exists = await this._daoDbContext
                 .BoardGames
                 .AsNoTracking()
-                .AnyAsync(a => a.Id != request!.BoardGameId &&
-                            a.IsDeleted == false &&
-                            a.Name == request.BoardGameName!.Trim());
+                .AnyAsync(a => a.Id != request!.BoardGameId && 
+                    a.Name == request.BoardGameName!.Trim());
 
 
             if (boardGameName_exists == true)
@@ -587,11 +586,6 @@ namespace BoardGameGeekLike.Services
             if (boardGameDB == null)
             {
                 return (null, "Error: board game not found");
-            }
-
-            if (boardGameDB.IsDeleted == true)
-            {
-                return (null, "Error: board game is deleted");
             }
 
             var categoryIdsDB = await this._daoDbContext
@@ -807,6 +801,65 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        public async Task<(AdminsRestoreBoardGameResponse?, string)> RestoreBoardGame(AdminsRestoreBoardGameRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = DeleteBoardGame_Validation(request);
+            
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var boardGameDb = await this._daoDbContext
+                                        .BoardGames
+                                        .FindAsync(request!.BoardGameId);
+
+            if (boardGameDb == null)
+            {
+                return (null, "Error: board game not found");
+            }
+
+            if (boardGameDb.IsDeleted == false)
+            {
+                return (null, "Error: board game was already restored");
+            }
+
+            boardGameDb.IsDeleted = true;
+
+            await this._daoDbContext
+                      .BoardGames
+                      .Where(a => a.Id == request!.BoardGameId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, false));
+
+            return (new AdminsRestoreBoardGameResponse(), "Board game restored successfully");
+        }
+
+        private static (bool, string) DeleteBoardGame_Validation(AdminsRestoreBoardGameRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.BoardGameId.HasValue == false)
+            {
+                return (false, "Error: BoardGameId is missing");
+            }
+
+            if (request.BoardGameId < 1)
+            {
+                return (false, "Error: invalid BoardGameId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
 
         public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
         {

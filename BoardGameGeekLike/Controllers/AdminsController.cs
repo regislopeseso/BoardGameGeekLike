@@ -75,6 +75,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
 
         }
+        
         [HttpPost]
         public async Task<IActionResult> AddBoardGame([FromForm] AdminsAddBoardGameRequest? request)
         {
@@ -104,7 +105,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> EditBoardGame(AdminsEditBoardGameRequest? request)
+        public async Task<IActionResult> EditBoardGame([FromBody] AdminsEditBoardGameRequest? request)
         {
             var (content, message) = await this._adminsService.EditBoardGame(request);
 
@@ -123,6 +124,20 @@ namespace BoardGameGeekLike.Controllers
             var (content, message) = await this._adminsService.DeleteBoardGame(request);
 
             var response = new Response<AdminsDeleteBoardGameResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestoreBoardGame([FromForm]  AdminsRestoreBoardGameRequest? request)
+        {
+            var (content, message) = await this._adminsService.RestoreBoardGame(request);
+
+            var response = new Response<AdminsRestoreBoardGameResponse>
             {
                 Content = content,
                 Message = message
