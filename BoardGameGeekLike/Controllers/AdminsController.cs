@@ -18,64 +18,22 @@ namespace BoardGameGeekLike.Controllers
             this._adminsService = adminsService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddCategory(AdminsAddCategoryRequest? request)
-        {
-            var (content, message) = await this._adminsService.AddCategory(request);
-
-            var response = new Response<AdminsAddCategoryResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
         [HttpGet]
-        public async Task<IActionResult> ShowCategories(AdminsShowCategoriesRequest? request)
+        public async Task<IActionResult> ListBoardGames(AdminsListBoardGamesRequest? request)
         {
-            var (content, message) = await this._adminsService.ShowCategories(request);
+            var (content, message) = await this._adminsService.ListBoardGames(request);
 
-            var response = new Response<List<AdminsShowCategoriesResponse>>
+            var response = new Response<List<AdminsListBoardGamesResponse>>
             {
                 Content = content,
                 Message = message
             };
 
-            return new JsonResult(response);
-
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
-        {
-            var (content, message) = await this._adminsService.AddMechanic(request);
-
-            var response = new Response<AdminsAddMechanicResponse>
-            {
-                Content = content,
-                Message = message
-            };
+            await Task.Delay(1000);
 
             return new JsonResult(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ShowMechanics(AdminsShowMechanicsRequest? request)
-        {
-            var (content, message) = await this._adminsService.ShowMechanics(request);
-
-            var response = new Response<List<AdminsShowMechanicsResponse>>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-
-        }
-        
         [HttpPost]
         public async Task<IActionResult> AddBoardGame([FromForm] AdminsAddBoardGameRequest? request)
         {
@@ -147,11 +105,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListBoardGames(AdminsListBoardGamesRequest? request)
+        public async Task<IActionResult> ListCategories(AdminsListCategoriesRequest? request)
         {
-            var (content, message) = await this._adminsService.ListBoardGames(request);
+            var (content, message) = await this._adminsService.ListCategories(request);
 
-            var response = new Response<List<AdminsListBoardGamesResponse>>
+            var response = new Response<List<AdminsListCategoriesResponse>>
             {
                 Content = content,
                 Message = message
@@ -160,6 +118,108 @@ namespace BoardGameGeekLike.Controllers
             await Task.Delay(1000);
 
             return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddCategory([FromForm] AdminsAddCategoryRequest? request)
+        {
+            var (content, message) = await this._adminsService.AddCategory(request);
+
+            var response = new Response<AdminsAddCategoryResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ShowCategoryDetails([FromQuery] AdminsShowCategoryDetailsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ShowCategoryDetails(request);
+
+            var response = new Response<AdminsShowCategoryDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+            await Task.Delay(1000);
+            return new JsonResult(response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> EditCategory([FromBody] AdminsEditCategoryRequest? request)
+        {
+            var (content, message) = await this._adminsService.EditCategory(request);
+
+            var response = new Response<AdminsEditCategoryResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteCategory([FromBody] AdminsDeleteCategoryRequest? request)
+        {
+            var (content, message) = await this._adminsService.DeleteCategory(request);
+
+            var response = new Response<AdminsDeleteCategoryResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestoreCategory([FromBody] AdminsRestoreCategoryRequest? request)
+        {
+            var (content, message) = await this._adminsService.RestoreCategory(request);
+
+            var response = new Response<AdminsRestoreCategoryResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
+        {
+            var (content, message) = await this._adminsService.AddMechanic(request);
+
+            var response = new Response<AdminsAddMechanicResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ShowMechanics(AdminsShowMechanicsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ShowMechanics(request);
+
+            var response = new Response<List<AdminsShowMechanicsResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+
         }
     }
 }

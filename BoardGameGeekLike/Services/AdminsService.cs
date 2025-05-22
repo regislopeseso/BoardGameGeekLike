@@ -25,171 +25,7 @@ namespace BoardGameGeekLike.Services
             this._httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<(AdminsAddCategoryResponse?, string)> AddCategory(AdminsAddCategoryRequest? request)
-        {
-            var (isValid, message) = AddCategory_Validation(request);
-
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var name_exists = await this._daoDbContext
-                                        .Categories
-                                        .AsNoTracking()
-                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.CategoryName!.Trim());
-
-            if (name_exists == true)
-            {
-                return (null, "Error: requested CategoryName is already in use");
-            }
-
-            var newCategory = new Category
-            {
-                Name = request!.CategoryName!
-            };
-
-            await this._daoDbContext.Categories.AddAsync(newCategory);
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (null, "Category added successfully");
-        }
-
-        private static (bool, string) AddCategory_Validation(AdminsAddCategoryRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.CategoryName))
-            {
-                return (false, "Error: CategoryName is missing");
-            }
-
-            return (true, string.Empty);
-        }
-
-        public async Task<(AdminsEditCategoryResponse?, string)> EditCategory(AdminsEditCategoryRequest? request)
-        {
-            var (isValid, message) = EditCategory_Validation(request);
-
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var name_exists = await this._daoDbContext
-                                        .Categories
-                                        .AsNoTracking()
-                                        .AnyAsync(a => a.Id != request!.CategoryId &&
-                                                       a.IsDeleted == false &&
-                                                       a.Name == request!.CategoryName!.Trim());
-
-            if (name_exists == true)
-            {
-                return (null, "Error: requested category name is already in use");
-            }
-
-            var categoryDB = await this._daoDbContext
-                                       .Categories
-                                       .FindAsync(request!.CategoryId);
-
-            if (categoryDB == null)
-            {
-                return (null, "Error: category not found");
-            }
-
-            if (categoryDB.IsDeleted == true)
-            {
-                return (null, "Error: category is deleted");
-            }
-
-            await this._daoDbContext
-                      .Categories
-                      .Where(a => a.Id == request.CategoryId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.Name, request.CategoryName));
-
-            return (null, "Category edited successfully");
-        }
-
-        private static (bool, string) EditCategory_Validation(AdminsEditCategoryRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null");
-            }
-
-            if (request.CategoryId.HasValue == false)
-            {
-                return (false, "Error: CategoryId is missing");
-            }
-
-            if (request.CategoryId < 1)
-            {
-                return (false, "Error: invalid CategoryId (is less than 1)");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.CategoryName) == true)
-            {
-                return (false, "Error: Category name is missing");
-            }
-
-            return (true, string.Empty);
-        }
-
-        public async Task<(AdminsDeleteCategoryResponse?, string)> DeleteCategory(AdminsDeleteCategoryRequest? request)
-        {
-            var (isValid, message) = DeleteCategory_Validation(request);
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var categoryDB = await this._daoDbContext
-                                       .Categories
-                                       .FindAsync(request!.CategoryId);
-
-            if (categoryDB == null)
-            {
-                return (null, "Error: category not found");
-            }
-
-            if (categoryDB.IsDeleted == true)
-            {
-                return (null, "Error: category was already deleted");
-            }
-
-            await this._daoDbContext
-                      .Categories
-                      .Where(a => a.Id == request.CategoryId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
-
-            return (null, "Category deleted successfully");
-        }
-
-        private static (bool, string) DeleteCategory_Validation(AdminsDeleteCategoryRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null");
-            }
-
-            if (request.CategoryId.HasValue == false)
-            {
-                return (false, "Error: CategoryId is missing");
-            }
-
-            if (request.CategoryId < 1)
-            {
-                return (false, "Error: invalid CategoryId (is less than 1)");
-            }
-
-            return (true, string.Empty);
-        }
-
-        public async Task<(List<AdminsShowCategoriesResponse>?, string)> ShowCategories(AdminsShowCategoriesRequest? request)
+        public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -198,91 +34,42 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var response = await this._daoDbContext
-                .Categories
-                .Where(a => a.IsDeleted == false && a.IsDummy == false)
-                .OrderBy(a => a.Name)
-                .Select(a => new AdminsShowCategoriesResponse { 
-                    CategoryId = a.Id, 
-                    CategoryName = a.Name })
-                .ToListAsync();
-
-            if(response == null || response.Count <= 0)
-            {
-                return (null, "Error: no valid categories were found");
-            }
-
-            return (response, "All board game categories listed successfully");
-        }
-
-        public async Task<(AdminsAddMechanicResponse?, string)> AddMechanic(AdminsAddMechanicRequest? request)
-        {
-            var (isValid, message) = AddMechanic_Validation(request);
+            var (isValid, message) = ListBoardGames_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var name_exists = await this._daoDbContext
-                                        .Mechanics
-                                        .AsNoTracking()
-                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.MechanicName!.Trim());
-
-            if (name_exists == true)
-            {
-                return (null, "Error: requested mechanic name is already in use");
-            }
-
-            var newMechanic = new Mechanic
-            {
-                Name = request!.MechanicName!
-            };
-
-            await this._daoDbContext.Mechanics.AddAsync(newMechanic);
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (null, "Mechanic added successfully");
-        }
-        
-        public async Task<(List<AdminsShowMechanicsResponse>?, string)> ShowMechanics(AdminsShowMechanicsRequest? request)
-        {
-            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (null, "Error: User is not authenticated");
-            }
-
-            var response = await this._daoDbContext
-                .Mechanics
-                .Where(a => a.IsDeleted == false && a.IsDummy == false)
-                .OrderBy(a => a.Name)
-                .Select(a => new AdminsShowMechanicsResponse
+            var boardGamesDB = await this._daoDbContext
+            .BoardGames
+                .Select(a => new AdminsListBoardGamesResponse
                 {
-                    MechanicId = a.Id,
-                    MechanicName = a.Name
+                    BoardGameId = a.Id,
+                    Name = a.Name,
+                    Description = a.Description,
+                    PlayersCount = a.MinPlayersCount == a.MaxPlayersCount ? $"{a.MinPlayersCount}" : $"{a.MinPlayersCount} - {a.MaxPlayersCount}",
+                    MinAge = a.MinAge,
+                    Category = a.Category!.Name,
+                    Mechanics = a.Mechanics!.Select(b => b.Name).ToList(),
+                    IsDeleted = a.IsDeleted
                 })
+                .OrderBy(a => a.Name)
                 .ToListAsync();
 
-            if (response == null || response.Count <= 0)
+            if (boardGamesDB == null || boardGamesDB.Count == 0)
             {
-                return (null, "Error: no valid mechanics were found");
+                return (null, "Error: no board game found");
             }
 
-            return (response, "All board game mechancis listed successfully");
+            return (boardGamesDB, "Board games successfully listed by rate");
         }
-        private static (bool, string) AddMechanic_Validation(AdminsAddMechanicRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null");
-            }
 
-            if (string.IsNullOrWhiteSpace(request.MechanicName) == true)
+        private static (bool, string) ListBoardGames_Validation(AdminsListBoardGamesRequest? request)
+        {
+            if (request != null)
             {
-                return (false, "Error: MechanicName is missing");
+                return (false, "Error: request is not null");
             }
 
             return (true, string.Empty);
@@ -810,7 +597,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = DeleteBoardGame_Validation(request);
+            var (isValid, message) = RestoreBoardGame_Validation(request);
             
             if (isValid == false)
             {
@@ -841,7 +628,7 @@ namespace BoardGameGeekLike.Services
             return (new AdminsRestoreBoardGameResponse(), "Board game restored successfully");
         }
 
-        private static (bool, string) DeleteBoardGame_Validation(AdminsRestoreBoardGameRequest? request)
+        private static (bool, string) RestoreBoardGame_Validation(AdminsRestoreBoardGameRequest? request)
         {
             if (request == null)
             {
@@ -861,7 +648,7 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
+        public async Task<(List<AdminsListCategoriesResponse>?, string)> ListCategories(AdminsListCategoriesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -870,38 +657,33 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = ListBoardGames_Validation(request);
+            var (isValid, message) = ListCategories_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var boardGamesDB = await this._daoDbContext
-            .BoardGames
-                .Select(a => new AdminsListBoardGamesResponse
+            var categoryDB = await this._daoDbContext
+            .Categories
+                .Select(a => new AdminsListCategoriesResponse
                 {
-                    BoardGameId = a.Id,
-                    Name = a.Name,
-                    Description = a.Description,
-                    PlayersCount = a.MinPlayersCount == a.MaxPlayersCount ? $"{a.MinPlayersCount}" : $"{a.MinPlayersCount} - {a.MaxPlayersCount}",
-                    MinAge = a.MinAge,
-                    Category = a.Category!.Name,
-                    Mechanics = a.Mechanics!.Select(b => b.Name).ToList(),
+                    CategoryId = a.Id,
+                    Name = a.Name,              
                     IsDeleted = a.IsDeleted
                 })
                 .OrderBy(a => a.Name)
                 .ToListAsync();
 
-            if (boardGamesDB == null || boardGamesDB.Count == 0)
+            if (categoryDB == null || categoryDB.Count == 0)
             {
                 return (null, "Error: no board game found");
             }
 
-            return (boardGamesDB, "Board games successfully listed by rate");
+            return (categoryDB, "Categories listed successfully");
         }
 
-        private static (bool, string) ListBoardGames_Validation(AdminsListBoardGamesRequest? request)
+        private static (bool, string) ListCategories_Validation(AdminsListCategoriesRequest? request)
         {
             if (request != null)
             {
@@ -911,5 +693,365 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        public async Task<(AdminsAddCategoryResponse?, string)> AddCategory(AdminsAddCategoryRequest? request)
+        {
+            var (isValid, message) = AddCategory_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var name_exists = await this._daoDbContext
+                                        .Categories
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.CategoryName!.Trim());
+
+            if (name_exists == true)
+            {
+                return (null, "Error: requested CategoryName is already in use");
+            }
+
+            var newCategory = new Category
+            {
+                Name = request!.CategoryName!
+            };
+
+            await this._daoDbContext.Categories.AddAsync(newCategory);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, "Category added successfully");
+        }
+
+        private static (bool, string) AddCategory_Validation(AdminsAddCategoryRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CategoryName))
+            {
+                return (false, "Error: CategoryName is missing");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsEditCategoryResponse?, string)> EditCategory(AdminsEditCategoryRequest? request)
+        {
+            var (isValid, message) = EditCategory_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var name_exists = await this._daoDbContext
+                                        .Categories
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.Id != request!.CategoryId &&
+                                                       a.IsDeleted == false &&
+                                                       a.Name == request!.CategoryName!.Trim());
+
+            if (name_exists == true)
+            {
+                return (null, "Error: requested category name is already in use");
+            }
+
+            var categoryDB = await this._daoDbContext
+                                       .Categories
+                                       .FindAsync(request!.CategoryId);
+
+            if (categoryDB == null)
+            {
+                return (null, "Error: category not found");
+            }
+
+            if (categoryDB.IsDeleted == true)
+            {
+                return (null, "Error: category is deleted");
+            }
+
+            await this._daoDbContext
+                      .Categories
+                      .Where(a => a.Id == request.CategoryId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.Name, request.CategoryName));
+
+            return (null, "Category edited successfully");
+        }
+
+        private static (bool, string) EditCategory_Validation(AdminsEditCategoryRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CategoryId.HasValue == false)
+            {
+                return (false, "Error: CategoryId is missing");
+            }
+
+            if (request.CategoryId < 1)
+            {
+                return (false, "Error: invalid CategoryId (is less than 1)");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CategoryName) == true)
+            {
+                return (false, "Error: Category name is missing");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsDeleteCategoryResponse?, string)> DeleteCategory(AdminsDeleteCategoryRequest? request)
+        {
+            var (isValid, message) = DeleteCategory_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var categoryDB = await this._daoDbContext
+                                       .Categories
+                                       .FindAsync(request!.CategoryId);
+
+            if (categoryDB == null)
+            {
+                return (null, "Error: category not found");
+            }
+
+            if (categoryDB.IsDeleted == true)
+            {
+                return (null, "Error: category was already deleted");
+            }
+
+            await this._daoDbContext
+                      .Categories
+                      .Where(a => a.Id == request.CategoryId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+
+            return (null, "Category deleted successfully");
+        }
+
+        private static (bool, string) DeleteCategory_Validation(AdminsDeleteCategoryRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CategoryId.HasValue == false)
+            {
+                return (false, "Error: CategoryId is missing");
+            }
+
+            if (request.CategoryId < 1)
+            {
+                return (false, "Error: invalid CategoryId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(AdminsRestoreCategoryResponse?, string)> RestoreCategory(AdminsRestoreCategoryRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = RestoreCategory_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var categoryDB = await this._daoDbContext
+                                        .Categories
+                                        .FindAsync(request!.CategoryId);
+
+            if (categoryDB == null)
+            {
+                return (null, "Error: category not found");
+            }
+
+            if (categoryDB.IsDeleted == false)
+            {
+                return (null, "Error: category was already restored");
+            }
+
+            categoryDB.IsDeleted = true;
+
+            await this._daoDbContext
+                      .Categories
+                      .Where(a => a.Id == request!.CategoryId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, false));
+
+            return (new AdminsRestoreCategoryResponse(), "Category restored successfully");
+        }
+
+        private static (bool, string) RestoreCategory_Validation(AdminsRestoreCategoryRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CategoryId.HasValue == false)
+            {
+                return (false, "Error: CategoryId is missing");
+            }
+
+            if (request.CategoryId < 1)
+            {
+                return (false, "Error: invalid CategoryId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+
+
+
+
+
+
+
+        public async Task<(AdminsShowCategoryDetailsResponse?, string)> ShowCategoryDetails(AdminsShowCategoryDetailsRequest? request)
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowCategoryDetails_Validation(request);
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            var categoryDB = await _daoDbContext
+                .Categories                
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == request!.CategoryId);
+
+            if (categoryDB == null)
+            {
+                return (null, "Error: Requested BoardGame not found");
+            }               
+
+            var content = new AdminsShowCategoryDetailsResponse
+            {
+                CategoryId = categoryDB.Id,
+                CategoryName = categoryDB.Name,                
+                IsDeleted = categoryDB.IsDeleted
+            };
+
+            return (content, "Category details listed successfully");
+        }
+
+        private static (bool, string) ShowCategoryDetails_Validation(AdminsShowCategoryDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CategoryId.HasValue == false)
+            {
+                return (false, "Error: CategoryId is missing");
+            }
+
+            if (request.CategoryId < 1)
+            {
+                return (false, "Error: invalid CategoryId (requested CategoryId is zero or a negative number)");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsAddMechanicResponse?, string)> AddMechanic(AdminsAddMechanicRequest? request)
+        {
+            var (isValid, message) = AddMechanic_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var name_exists = await this._daoDbContext
+                                        .Mechanics
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.IsDeleted == false && a.Name == request!.MechanicName!.Trim());
+
+            if (name_exists == true)
+            {
+                return (null, "Error: requested mechanic name is already in use");
+            }
+
+            var newMechanic = new Mechanic
+            {
+                Name = request!.MechanicName!
+            };
+
+            await this._daoDbContext.Mechanics.AddAsync(newMechanic);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, "Mechanic added successfully");
+        }
+
+        public async Task<(List<AdminsShowMechanicsResponse>?, string)> ShowMechanics(AdminsShowMechanicsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var response = await this._daoDbContext
+                .Mechanics
+                .Where(a => a.IsDeleted == false && a.IsDummy == false)
+                .OrderBy(a => a.Name)
+                .Select(a => new AdminsShowMechanicsResponse
+                {
+                    MechanicId = a.Id,
+                    MechanicName = a.Name
+                })
+                .ToListAsync();
+
+            if (response == null || response.Count <= 0)
+            {
+                return (null, "Error: no valid mechanics were found");
+            }
+
+            return (response, "All board game mechancis listed successfully");
+        }
+        private static (bool, string) AddMechanic_Validation(AdminsAddMechanicRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.MechanicName) == true)
+            {
+                return (false, "Error: MechanicName is missing");
+            }
+
+            return (true, string.Empty);
+        }
     }
 }
