@@ -119,7 +119,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteBoardGame(AdminsDeleteBoardGameRequest? request)
+        public async Task<IActionResult> DeleteBoardGame([FromBody] AdminsDeleteBoardGameRequest? request)
         {
             var (content, message) = await this._adminsService.DeleteBoardGame(request);
 
@@ -133,7 +133,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RestoreBoardGame([FromForm]  AdminsRestoreBoardGameRequest? request)
+        public async Task<IActionResult> RestoreBoardGame([FromBody] AdminsRestoreBoardGameRequest? request)
         {
             var (content, message) = await this._adminsService.RestoreBoardGame(request);
 
