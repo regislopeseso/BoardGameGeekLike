@@ -24,7 +24,11 @@ namespace BoardGameGeekLike.Services
             this._userManager = userManager;
             this._httpContextAccessor = httpContextAccessor;
         }
-
+        
+        //
+        //  BOARD GAMES
+        //
+        
         public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -647,7 +651,11 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
+        
+        //
+        //  CATEGORIES
+        //
+        
         public async Task<(List<AdminsListCategoriesResponse>?, string)> ListCategories(AdminsListCategoriesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -677,7 +685,7 @@ namespace BoardGameGeekLike.Services
 
             if (categoryDB == null || categoryDB.Count == 0)
             {
-                return (null, "Error: no board game found");
+                return (null, "Error: no category found");
             }
 
             return (categoryDB, "Categories listed successfully");
@@ -734,6 +742,61 @@ namespace BoardGameGeekLike.Services
             if (string.IsNullOrWhiteSpace(request.CategoryName))
             {
                 return (false, "Error: CategoryName is missing");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsShowCategoryDetailsResponse?, string)> ShowCategoryDetails(AdminsShowCategoryDetailsRequest? request)
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowCategoryDetails_Validation(request);
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            var categoryDB = await _daoDbContext
+                .Categories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == request!.CategoryId);
+
+            if (categoryDB == null)
+            {
+                return (null, "Error: Requested Category not found");
+            }
+
+            var content = new AdminsShowCategoryDetailsResponse
+            {
+                CategoryId = categoryDB.Id,
+                CategoryName = categoryDB.Name,
+                IsDeleted = categoryDB.IsDeleted
+            };
+
+            return (content, "Category details listed successfully");
+        }
+
+        private static (bool, string) ShowCategoryDetails_Validation(AdminsShowCategoryDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CategoryId.HasValue == false)
+            {
+                return (false, "Error: CategoryId is missing");
+            }
+
+            if (request.CategoryId < 1)
+            {
+                return (false, "Error: invalid CategoryId (requested CategoryId is zero or a negative number)");
             }
 
             return (true, string.Empty);
@@ -917,70 +980,59 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+        
+        //
+        //  MECHANICS
+        //
 
 
 
 
-
-
-
-
-
-        public async Task<(AdminsShowCategoryDetailsResponse?, string)> ShowCategoryDetails(AdminsShowCategoryDetailsRequest? request)
+        public async Task<(List<AdminsListMechanicsResponse>?, string)> ListMechanics(AdminsListMechanicsRequest? request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
             {
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = ShowCategoryDetails_Validation(request);
-            if (!isValid)
+            var (isValid, message) = ListMechanics_Validation(request);
+
+            if (isValid == false)
             {
                 return (null, message);
             }
 
-            var categoryDB = await _daoDbContext
-                .Categories                
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.Id == request!.CategoryId);
+            var mechanicDB = await this._daoDbContext
+            .Mechanics
+                .Select(a => new AdminsListMechanicsResponse
+                {
+                    MechanicId = a.Id,
+                    Name = a.Name,
+                    IsDeleted = a.IsDeleted
+                })
+                .OrderBy(a => a.Name)
+                .ToListAsync();
 
-            if (categoryDB == null)
+            if (mechanicDB == null || mechanicDB.Count == 0)
             {
-                return (null, "Error: Requested BoardGame not found");
-            }               
+                return (null, "Error: no mechanic found");
+            }
 
-            var content = new AdminsShowCategoryDetailsResponse
-            {
-                CategoryId = categoryDB.Id,
-                CategoryName = categoryDB.Name,                
-                IsDeleted = categoryDB.IsDeleted
-            };
-
-            return (content, "Category details listed successfully");
+            return (mechanicDB, "Mechanics listed successfully");
         }
 
-        private static (bool, string) ShowCategoryDetails_Validation(AdminsShowCategoryDetailsRequest? request)
+        private static (bool, string) ListMechanics_Validation(AdminsListMechanicsRequest? request)
         {
-            if (request == null)
+            if (request != null)
             {
-                return (false, "Error: request is null");
-            }
-
-            if (request.CategoryId.HasValue == false)
-            {
-                return (false, "Error: CategoryId is missing");
-            }
-
-            if (request.CategoryId < 1)
-            {
-                return (false, "Error: invalid CategoryId (requested CategoryId is zero or a negative number)");
+                return (false, "Error: request is not null");
             }
 
             return (true, string.Empty);
         }
-
+     
         public async Task<(AdminsAddMechanicResponse?, string)> AddMechanic(AdminsAddMechanicRequest? request)
         {
             var (isValid, message) = AddMechanic_Validation(request);
@@ -1012,7 +1064,195 @@ namespace BoardGameGeekLike.Services
             return (null, "Mechanic added successfully");
         }
 
-        public async Task<(List<AdminsShowMechanicsResponse>?, string)> ShowMechanics(AdminsShowMechanicsRequest? request)
+        private static (bool, string) AddMechanic_Validation(AdminsAddMechanicRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.MechanicName))
+            {
+                return (false, "Error: MechanicName is missing");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsShowMechanicDetailsResponse?, string)> ShowMechanicDetails(AdminsShowMechanicDetailsRequest? request)
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowMechanicDetails_Validation(request);
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            var mechanicDB = await _daoDbContext
+                .Mechanics
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == request!.MechanicId);
+
+            if (mechanicDB == null)
+            {
+                return (null, "Error: Requested Mechanic not found");
+            }
+
+            var content = new AdminsShowMechanicDetailsResponse
+            {
+                MechanicId = mechanicDB.Id,
+                MechanicName = mechanicDB.Name,
+                IsDeleted = mechanicDB.IsDeleted
+            };
+
+            return (content, "Mechanic details listed successfully");
+        }
+        private static (bool, string) ShowMechanicDetails_Validation(AdminsShowMechanicDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.MechanicId.HasValue == false)
+            {
+                return (false, "Error: MechanicId is missing");
+            }
+
+            if (request.MechanicId < 1)
+            {
+                return (false, "Error: invalid MechanicId (requested MechanicId is zero or a negative number)");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsEditMechanicResponse?, string)> EditMechanic(AdminsEditMechanicRequest? request)
+        {
+            var (isValid, message) = EditMechanic_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var name_exists = await this._daoDbContext
+                                        .Mechanics
+                                        .AsNoTracking()
+                                        .AnyAsync(a => a.Id != request!.MechanicId &&
+                                                       a.IsDeleted == false &&
+                                                       a.Name == request!.MechanicName!.Trim());
+
+            if (name_exists == true)
+            {
+                return (null, "Error: requested mechanic name is already in use");
+            }
+
+            var mechanicDB = await this._daoDbContext
+                                       .Mechanics
+                                       .FindAsync(request!.MechanicId);
+
+            if (mechanicDB == null)
+            {
+                return (null, "Error: mechanic not found");
+            }
+
+            if (mechanicDB.IsDeleted == true)
+            {
+                return (null, "Error: mechanic is deleted");
+            }
+
+            await this._daoDbContext
+                      .Mechanics
+                      .Where(a => a.Id == request.MechanicId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.Name, request.MechanicName));
+
+            return (null, "Mechanic edited successfully");
+        }
+
+        private static (bool, string) EditMechanic_Validation(AdminsEditMechanicRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.MechanicId.HasValue == false)
+            {
+                return (false, "Error: MechanicId is missing");
+            }
+
+            if (request.MechanicId < 1)
+            {
+                return (false, "Error: invalid MechanicId (is less than 1)");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.MechanicName) == true)
+            {
+                return (false, "Error: Mechanic name is missing");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(AdminsDeleteMechanicResponse?, string)> DeleteMechanic(AdminsDeleteMechanicRequest? request)
+        {
+            var (isValid, message) = DeleteMechanic_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mechanicDB = await this._daoDbContext
+                                       .Mechanics
+                                       .FindAsync(request!.MechanicId);
+
+            if (mechanicDB == null)
+            {
+                return (null, "Error: mechanic not found");
+            }
+
+            if (mechanicDB.IsDeleted == true)
+            {
+                return (null, "Error: mechanic was already deleted");
+            }
+
+            await this._daoDbContext
+                      .Mechanics
+                      .Where(a => a.Id == request.MechanicId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+
+            return (null, "Mechanic deleted successfully");
+        }
+
+        private static (bool, string) DeleteMechanic_Validation(AdminsDeleteMechanicRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.MechanicId.HasValue == false)
+            {
+                return (false, "Error: MechanicId is missing");
+            }
+
+            if (request.MechanicId < 1)
+            {
+                return (false, "Error: invalid MechanicId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsRestoreMechanicResponse?, string)> RestoreMechanic(AdminsRestoreMechanicRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -1021,34 +1261,52 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var response = await this._daoDbContext
-                .Mechanics
-                .Where(a => a.IsDeleted == false && a.IsDummy == false)
-                .OrderBy(a => a.Name)
-                .Select(a => new AdminsShowMechanicsResponse
-                {
-                    MechanicId = a.Id,
-                    MechanicName = a.Name
-                })
-                .ToListAsync();
+            var (isValid, message) = RestoreMechanic_Validation(request);
 
-            if (response == null || response.Count <= 0)
+            if (isValid == false)
             {
-                return (null, "Error: no valid mechanics were found");
+                return (null, message);
             }
 
-            return (response, "All board game mechancis listed successfully");
+            var mechanicDB = await this._daoDbContext
+                                        .Mechanics
+                                        .FindAsync(request!.MechanicId);
+
+            if (mechanicDB == null)
+            {
+                return (null, "Error: mechanic not found");
+            }
+
+            if (mechanicDB.IsDeleted == false)
+            {
+                return (null, "Error: mechanic was already restored");
+            }
+
+            mechanicDB.IsDeleted = true;
+
+            await this._daoDbContext
+                      .Mechanics
+                      .Where(a => a.Id == request!.MechanicId)
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, false));
+
+            return (new AdminsRestoreMechanicResponse(), "Mechanic restored successfully");
         }
-        private static (bool, string) AddMechanic_Validation(AdminsAddMechanicRequest? request)
+
+        private static (bool, string) RestoreMechanic_Validation(AdminsRestoreMechanicRequest? request)
         {
             if (request == null)
             {
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.MechanicName) == true)
+            if (request.MechanicId.HasValue == false)
             {
-                return (false, "Error: MechanicName is missing");
+                return (false, "Error: MechanicId is missing");
+            }
+
+            if (request.MechanicId < 1)
+            {
+                return (false, "Error: invalid MechanicId (is less than 1)");
             }
 
             return (true, string.Empty);

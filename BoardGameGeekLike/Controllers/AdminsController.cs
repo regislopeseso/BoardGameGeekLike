@@ -18,6 +18,10 @@ namespace BoardGameGeekLike.Controllers
             this._adminsService = adminsService;
         }
 
+        //
+        //  BOARD GAMES
+        //
+
         [HttpGet]
         public async Task<IActionResult> ListBoardGames(AdminsListBoardGamesRequest? request)
         {
@@ -103,6 +107,10 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        //
+        //  CATEGORIES
+        //
 
         [HttpGet]
         public async Task<IActionResult> ListCategories(AdminsListCategoriesRequest? request)
@@ -190,11 +198,29 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        //
+        //  MECHANICS
+        //
 
+        [HttpGet]
+        public async Task<IActionResult> ListMechanics(AdminsListMechanicsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ListMechanics(request);
+
+            var response = new Response<List<AdminsListMechanicsResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(1000);
+
+            return new JsonResult(response);
+        }
 
 
         [HttpPost]
-        public async Task<IActionResult> AddMechanic(AdminsAddMechanicRequest? request)
+        public async Task<IActionResult> AddMechanic([FromForm] AdminsAddMechanicRequest? request)
         {
             var (content, message) = await this._adminsService.AddMechanic(request);
 
@@ -208,11 +234,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ShowMechanics(AdminsShowMechanicsRequest? request)
+        public async Task<IActionResult> ShowMechanicDetails([FromQuery] AdminsShowMechanicDetailsRequest? request)
         {
-            var (content, message) = await this._adminsService.ShowMechanics(request);
+            var (content, message) = await this._adminsService.ShowMechanicDetails(request);
 
-            var response = new Response<List<AdminsShowMechanicsResponse>>
+            var response = new Response<AdminsShowMechanicDetailsResponse>
             {
                 Content = content,
                 Message = message
@@ -220,6 +246,48 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
 
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> EditMechanic([FromBody] AdminsEditMechanicRequest? request)
+        {
+            var (content, message) = await this._adminsService.EditMechanic(request);
+
+            var response = new Response<AdminsEditMechanicResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMechanic([FromBody] AdminsDeleteMechanicRequest? request)
+        {
+            var (content, message) = await this._adminsService.DeleteMechanic(request);
+
+            var response = new Response<AdminsDeleteMechanicResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestoreMechanic([FromBody] AdminsRestoreMechanicRequest? request)
+        {
+            var (content, message) = await this._adminsService.RestoreMechanic(request);
+
+            var response = new Response<AdminsRestoreMechanicResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
         }
     }
 }

@@ -155,7 +155,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
         public async Task<IActionResult> LogSession([FromForm] UsersLogSessionRequest? request)
         {
@@ -170,7 +170,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
         public async Task<IActionResult> GetSessions([FromQuery] UsersGetSessionsRequest? request)
         {
@@ -185,7 +185,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPut]
         public async Task<IActionResult> EditSession([FromBody] UsersEditSessionRequest? request)
         {
@@ -200,7 +200,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpDelete]
         public async Task<IActionResult> DeleteSession([FromQuery] UsersDeleteSessionRequest? request)
         {
@@ -215,7 +215,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
         public async Task<IActionResult> Rate([FromForm] UsersRateRequest? request)
         {
@@ -230,7 +230,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
         public async Task<IActionResult> GetRate([FromQuery] UsersGetRateRequest? request)
         {
@@ -245,7 +245,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPut]
         public async Task<IActionResult> EditRating([FromBody] UsersEditRatingRequest? request)
         {
