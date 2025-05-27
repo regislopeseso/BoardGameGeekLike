@@ -40,7 +40,7 @@ namespace BoardGameGeekLike.Services
             var userEmail_exists = await this._daoDbContext
                 .Users
                 .AsNoTracking()
-                .AnyAsync(a => a.Email == request!.UserEmail && a.IsDeleted == false);
+                .AnyAsync(a => a.Email == request!.Email && a.IsDeleted == false);
 
             if (userEmail_exists == true)
             {
@@ -52,8 +52,8 @@ namespace BoardGameGeekLike.Services
             var user = new User
             {
                 Name = request.Name!,
-                UserName = request.UserEmail!,
-                Email = request.UserEmail!.ToLower(),
+                UserName = request.Email!,
+                Email = request.Email!.ToLower(),
                 BirthDate = parsedDate,
                 Gender = request.Gender
             };
@@ -82,14 +82,14 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: Name is null or empty");
             }
 
-            if (string.IsNullOrWhiteSpace(request.UserEmail)== true)
+            if (string.IsNullOrWhiteSpace(request.Email)== true)
             {
                 return (false, "Error: UserEmail is missing");
             }
 
             string emailPattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
 
-            if (Regex.IsMatch(request.UserEmail, emailPattern) == false)
+            if (Regex.IsMatch(request.Email, emailPattern) == false)
             {
                 return (false, "Error: invalid email format");
             }

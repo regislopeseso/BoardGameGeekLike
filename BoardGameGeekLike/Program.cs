@@ -59,7 +59,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddIdentity<User, IdentityRole>(options => 
 {
     // Lockout settings
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 30;
     options.Lockout.AllowedForNewUsers = true;
 
@@ -88,6 +88,11 @@ builder.Services.ConfigureApplicationCookie(options =>
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
         return Task.CompletedTask;
     };
+
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // optional timeout
+    options.SlidingExpiration = false;
+    options.Cookie.IsEssential = true;
+    options.Cookie.Expiration = null; // <-- this ensures it's a session cookie
 });
 
 builder.Services.AddAuthentication();
@@ -123,8 +128,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-app.UseCors("JPROnly");
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -137,7 +140,7 @@ app.UseHttpsRedirection(); // Redirect HTTP to HTTPS (first for security)
 
 app.UseRouting(); // Sets up routing for endpoints
 
-app.UseCors("AllowFrontendOnly");  // <-- Use your named policy here
+app.UseCors("JPROnly");  // <-- Use your named policy here
 
 app.UseAuthentication(); // Handles authentication (if enabled)
  
