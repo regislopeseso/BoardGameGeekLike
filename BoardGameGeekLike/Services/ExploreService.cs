@@ -336,7 +336,7 @@ namespace BoardGameGeekLike.Services
 
             var boardGamesDB = await this._daoDbContext
                 .BoardGames
-                .Select(a => new { a.Name, a.AverageRating, a.RatingsCount, a.MinPlayersCount, a.MaxPlayersCount, a.SessionsCount })               
+                .Select(a => new { a.Name, a.AverageRating, a.RatingsCount, a.MinPlayersCount, a.MaxPlayersCount,a.AvgDuration_minutes, a.SessionsCount })               
                 .OrderBy(a => a.Name)
                 .ToListAsync();
 
@@ -361,7 +361,7 @@ namespace BoardGameGeekLike.Services
                         AvgRating = boardGame.AverageRating,
                         RatingsCount = boardGame.RatingsCount,
                         PlayersCount = playersCount,
-                        AvgDuration = 0,
+                        AvgDuration = (int)boardGame.AvgDuration_minutes,
                         SessionsLogged = boardGame.SessionsCount
                     });
             }

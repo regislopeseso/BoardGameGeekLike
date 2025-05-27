@@ -111,6 +111,15 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.Ratings.AddRangeAsync(ratings);
 
+            foreach (var boardGame in seededBoardGames)
+            {
+                boardGame.AvgDuration_minutes = seededSessions
+                    .Where(a => a.BoardGame == boardGame)
+                    .Select(a => a.Duration_minutes)
+                    .DefaultIfEmpty(5)
+                    .Average();
+            }       
+
             await this._daoDbContext.SaveChangesAsync();
 
             return(null, "Seeding was successful");
@@ -218,6 +227,7 @@ namespace BoardGameGeekLike.Services
                         MinAge = minAges[random.Next(0, minAges.Length)],
                         Category = seededCategories[random.Next(0, seededCategories.Count)],
                         Mechanics = boardGameMechanics,
+                        AvgDuration_minutes = 0,
                         AverageRating = 0,
                         IsDeleted = false,
                         IsDummy = true

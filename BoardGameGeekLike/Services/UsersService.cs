@@ -716,9 +716,16 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.Sessions.AddAsync(newSession);
 
+            var newAvgDuration = (boardgameDB.AvgDuration_minutes * boardgameDB.SessionsCount + request.Duration_minutes!.Value) / (boardgameDB.SessionsCount + 1);
+
+            await this._daoDbContext
+                .BoardGames
+                .Where(a => a.Id == boardgameDB.Id)
+                .ExecuteUpdateAsync(a => a.SetProperty(b => b.AvgDuration_minutes, newAvgDuration));    
+
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, "Session logged successfully");
+            return (null, $"Session logged successfully, new Avg.Duration is: {newAvgDuration} minutes");
         }
 
         private static (bool, string) LogSession_Validation(UsersLogSessionRequest? request)
@@ -1104,6 +1111,8 @@ namespace BoardGameGeekLike.Services
 
             boardgameDB.AverageRating = newAverageRating;
             boardgameDB.RatingsCount++;
+
+
 
             await this._daoDbContext.SaveChangesAsync();
 

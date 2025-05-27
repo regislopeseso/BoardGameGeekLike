@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250512113444_m1")]
+    [Migration("20250527130314_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -35,6 +35,9 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<decimal>("AverageRating")
                         .HasColumnType("decimal(2,1)");
+
+                    b.Property<double>("AvgDuration_minutes")
+                        .HasColumnType("double");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");

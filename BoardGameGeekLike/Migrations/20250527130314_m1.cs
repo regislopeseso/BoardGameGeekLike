@@ -253,6 +253,7 @@ namespace BoardGameGeekLike.Migrations
                     CategoryId = table.Column<int>(type: "int", nullable: true),
                     AverageRating = table.Column<decimal>(type: "decimal(2,1)", nullable: false),
                     RatingsCount = table.Column<int>(type: "int", nullable: false),
+                    AvgDuration_minutes = table.Column<double>(type: "double", nullable: false),
                     SessionsCount = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsDummy = table.Column<bool>(type: "tinyint(1)", nullable: false)

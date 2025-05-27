@@ -12,10 +12,10 @@ builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpContextAccessor();  
 builder.Services.AddScoped<DevsService>();
 builder.Services.AddScoped<AdminsService>();
 builder.Services.AddScoped<UsersService>();
-builder.Services.AddHttpContextAccessor();  
 builder.Services.AddScoped<ExploreService>();
 
 
@@ -29,15 +29,27 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options => { options.CommandTimeout(120); }
         );
 });
-// Caso deseja-se utilizar o banco de dados "InMemory" comentar
+// Caso deseja-se utilizar o banco de dados "InMemory"
 // deve-se comentar a configuração acima e descomentar a abaixo!
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //options.UseInMemoryDatabase("AppDb"));
 
+
+// Configuração do CORS para permitir requisições de qualquer domínio
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy(name: "AllowAll",
+//        policy => policy.WithOrigins("http://127.0.0.1:5500")        
+//                        .AllowAnyHeader()
+//                        .AllowAnyMethod()
+//                        .AllowCredentials());
+//});
+
+// Configuração do CORS para permitir requisições de um domínio específico
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "AllowAll",
-        policy => policy.WithOrigins("http://127.0.0.1:5500")        
+    options.AddPolicy(name: "JPROnly",
+        policy => policy.WithOrigins("http://127.0.0.1:5500")
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials());
@@ -87,9 +99,8 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-
-
 var app = builder.Build();
+
 async Task CreateRoles(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -112,7 +123,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-app.UseCors("AllowAll");
+app.UseCors("JPROnly");
 
 if (app.Environment.IsDevelopment())
 {
@@ -122,12 +133,16 @@ if (app.Environment.IsDevelopment())
 //app.MapIdentityApi<IdentityUser>();
 
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); // Redirect HTTP to HTTPS (first for security)
 
-app.UseAuthentication();
+app.UseRouting(); // Sets up routing for endpoints
 
-app.UseAuthorization();
+app.UseCors("AllowFrontendOnly");  // <-- Use your named policy here
 
-app.MapControllers();
+app.UseAuthentication(); // Handles authentication (if enabled)
+ 
+app.UseAuthorization(); // Handles authorization (must follow authentication)
 
-app.Run();
+app.MapControllers(); // Maps your API controllers
+
+app.Run(); // Starts the application
