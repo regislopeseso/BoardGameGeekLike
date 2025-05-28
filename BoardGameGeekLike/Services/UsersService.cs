@@ -175,7 +175,7 @@ namespace BoardGameGeekLike.Services
 
             if (isUserLocked == true)
             {
-                return (remainingAttempts, "Error: account temporarily locked duo to multiple failed attempts");
+                return (-1, "Error: account temporarily locked duo to multiple failed attempts");
             }
          
             if (isPasswordValid == false)
@@ -279,9 +279,9 @@ namespace BoardGameGeekLike.Services
         }
 
         public (UsersValidateStatusResponse?, string) ValidateStatus()
-        {
+        {         
             if (this._httpContextAccessor.HttpContext?.User.Identity != null &&
-        this._httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+        this._httpContextAccessor.HttpContext.User.Identity.IsAuthenticated == true)
             {
                 return (new UsersValidateStatusResponse {IsUserLoggedIn = true  } , "User is authenticated.");
             }
@@ -310,7 +310,7 @@ namespace BoardGameGeekLike.Services
             return (new UsersGetRoleResponse
             {
                 Role = userRole
-            }, "Role read successfully");
+            }, $"User role: {userRole}" );
         }
 
         public async Task<(UsersSignOutResponse?, string)> SignOut()
@@ -320,6 +320,11 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, "Error: User not found");
             }
+
+            if (user.IsDeleted == true)
+            {
+                return (null, "Error: User has been deleted");
+            }   
 
             try
             {
@@ -576,7 +581,7 @@ namespace BoardGameGeekLike.Services
 
             var (remainingAttempts, text) = await this.ValidatePassword(userDB, request!.Password!);
 
-            if (remainingAttempts < 3)
+            if (remainingAttempts <= 3)
             {
                 return (new UsersDeleteProfileResponse
                 {

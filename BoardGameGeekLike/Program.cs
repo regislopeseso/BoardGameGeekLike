@@ -59,8 +59,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddIdentity<User, IdentityRole>(options => 
 {
     // Lockout settings
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    options.Lockout.MaxFailedAccessAttempts = 30;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(0);
+    options.Lockout.MaxFailedAccessAttempts = 3;
     options.Lockout.AllowedForNewUsers = true;
 
     // Optional: enforce strong passwords

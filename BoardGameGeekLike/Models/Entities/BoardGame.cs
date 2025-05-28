@@ -32,7 +32,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int RatingsCount {get; set;}
 
-        public double AvgDuration_minutes { get; set; }
+        public int AvgDuration_minutes { get; set; }
 
         [InverseProperty("BoardGame")]
         public List<Session>? Sessions {get; set;}

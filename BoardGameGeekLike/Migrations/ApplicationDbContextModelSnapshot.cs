@@ -33,8 +33,8 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<decimal>("AverageRating")
                         .HasColumnType("decimal(2,1)");
 
-                    b.Property<double>("AvgDuration_minutes")
-                        .HasColumnType("double");
+                    b.Property<int>("AvgDuration_minutes")
+                        .HasColumnType("int");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");

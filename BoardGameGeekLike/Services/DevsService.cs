@@ -113,11 +113,13 @@ namespace BoardGameGeekLike.Services
 
             foreach (var boardGame in seededBoardGames)
             {
-                boardGame.AvgDuration_minutes = seededSessions
+                var avgDuration = seededSessions
                     .Where(a => a.BoardGame == boardGame)
                     .Select(a => a.Duration_minutes)
                     .DefaultIfEmpty(5)
                     .Average();
+
+                boardGame.AvgDuration_minutes = (int)Math.Ceiling(avgDuration);
             }       
 
             await this._daoDbContext.SaveChangesAsync();
