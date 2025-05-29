@@ -246,6 +246,21 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpGet]
+        public async Task<IActionResult> FindBoardGame([FromQuery] UsersFindBoardGameRequest? request)
+        {
+            var (content, message) = await this._usersService.FindBoardGame(request);
+
+            var response = new Response<List<UsersFindBoardGameResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPut]
         public async Task<IActionResult> EditRating([FromBody] UsersEditRatingRequest? request)
         {

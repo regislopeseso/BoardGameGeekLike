@@ -820,7 +820,7 @@ namespace BoardGameGeekLike.Services
             var bgExists = await this._daoDbContext
                 .BoardGames
                 .AsNoTracking()
-                .AnyAsync(a => a.Id == request!.BoardGameId);
+                .AnyAsync(a => a.Id == request!.BoardGameId );
 
             if(bgExists == false)
             {
@@ -830,7 +830,7 @@ namespace BoardGameGeekLike.Services
 
             var sessionsDB = await this._daoDbContext
                 .Sessions
-                .Where(a => a.BoardGameId == request.BoardGameId && a.UserId == userId && a.IsDeleted == false)
+                .Where(a => a.BoardGameId == request!.BoardGameId && a.UserId == userId && a.IsDeleted == false)
                 .ToListAsync();
 
             if(sessionsDB == null)
@@ -843,6 +843,13 @@ namespace BoardGameGeekLike.Services
         
         public async Task<(UsersEditSessionResponse?, string)> EditSession(UsersEditSessionRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = EditSession_Validation(request);
             
             if (isValid == false)
@@ -865,8 +872,8 @@ namespace BoardGameGeekLike.Services
             }
 
             var sessionDB = await this._daoDbContext
-                .Sessions
-                .FindAsync(request.SessionId);
+                .Sessions               
+                .FirstOrDefaultAsync(a => a.Id == request.SessionId && a.UserId == userId);
             
             if(sessionDB == null)
             {
@@ -1003,9 +1010,9 @@ namespace BoardGameGeekLike.Services
 
             var sessionDB = await this._daoDbContext
                 .Sessions
-                .FindAsync(request!.SessionId);
-            
-            if(sessionDB == null || sessionDB.UserId != userId)
+                .FirstOrDefaultAsync(a => a.Id == request!.SessionId && a.UserId == userId);
+
+            if (sessionDB == null || sessionDB.UserId != userId)
             {
                 return (null, "Error: session not found");
             }
@@ -1024,7 +1031,7 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext
                 .Sessions
-                .Where(a => a.Id == request.SessionId)
+                .Where(a => a.Id == request!.SessionId)
                 .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
 
             return (null, "Session deleted successfully");
@@ -1080,16 +1087,6 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: board game is deleted");
             }
 
-            var session_exists = await this._daoDbContext
-                .Sessions
-                .AsNoTracking()
-                .AnyAsync(a => a.BoardGameId == boardgameDB.Id && a.UserId == userId);
-
-            if (session_exists == false)
-            {
-                return (null, "Error: a player must have at least one session logged of the board game to rate it.");
-            }
-
             var rate_exists = await this._daoDbContext
                 .Ratings
                 .AsNoTracking()
@@ -1121,7 +1118,7 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, $"Board game rated successfully, its new average rating is: {newAverageRating:F1}");
+            return (new UsersRateResponse(), $"Board game rated successfully, its new average rating is: {newAverageRating:F1}");
         }
 
         private static (bool, string) Rate_Validation(UsersRateRequest? request)
@@ -1213,7 +1210,67 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-       
+
+        public async Task<(List<UsersFindBoardGameResponse>?, string)> FindBoardGame(UsersFindBoardGameRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = FindBoardGame_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var content = new List<UsersFindBoardGameResponse>();
+
+            if (request!.BoardGameName! == null || string.IsNullOrWhiteSpace(request.BoardGameName) == true)
+            {
+                var ratedBoardgamesDB = await this._daoDbContext
+                    .Ratings
+                    .AsNoTracking()
+                    .Where(a => a.UserId == userId)
+                    .Select(a => new UsersFindBoardGameResponse { BoardGameId = a.BoardGameId, BoardGameName = a.BoardGame!.Name })
+                    .ToListAsync();
+
+                content = ratedBoardgamesDB;
+            }
+            else
+            {
+                var ratedBoardgamesDB = await this._daoDbContext
+                    .Ratings
+                    .AsNoTracking()
+                    .Where(a => a.UserId == userId && a!.BoardGame!.Name.ToLower().Contains(request!.BoardGameName!.ToLower()))
+                    .Select(a => new UsersFindBoardGameResponse { BoardGameId = a.BoardGameId, BoardGameName = a.BoardGame!.Name })
+                    .ToListAsync();
+
+                content = ratedBoardgamesDB;
+            }
+
+            if (content == null)
+            {
+                return (null, "Error: no board games found");
+            }
+             
+            return (content, "Board Games listed found successfully");
+        }
+
+        private static (bool, string) FindBoardGame_Validation(UsersFindBoardGameRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error request is null");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(UsersEditRatingResponse?, string)> EditRating(UsersEditRatingRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
