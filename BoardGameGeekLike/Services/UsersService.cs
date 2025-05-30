@@ -1195,8 +1195,8 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
-        
-        public async Task<(UsersGetRateResponse?, string)> GetRate(UsersGetRateRequest? request)
+     
+        public async Task<(List<UsersListRatedBoardGamesResponse>?, string)> ListRatedBoardGames(UsersListRatedBoardGamesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -1205,74 +1205,14 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = GetRate_Validation(request);
+            var (isValid, message) = ListRatedBoardGames_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var boardGameDB = await this._daoDbContext
-                .BoardGames
-                .FindAsync(request.BoardGameId);
-
-            if(boardGameDB == null)
-            {
-                return (null, "Error: requested board game was not found");
-            }
-            if(boardGameDB.IsDeleted == true)
-            {
-                return (null, "Error: requested board game has been deleted");
-            }
-
-            var RateDB = await this._daoDbContext
-                .Ratings
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.BoardGameId == request.BoardGameId);
-
-            if(RateDB == null)
-            {
-                return (null, "Error: requested rating was not found");
-            }
-
-            return (new UsersGetRateResponse
-            {
-                Rate = RateDB.Rate
-            }, "Rating loaded successfully");
-
-        }
-        
-        public static (bool, string) GetRate_Validation(UsersGetRateRequest? request)
-        {
-            if(request == null)
-            {
-                return (false, "Error: null request");
-            }
-            if(request.BoardGameId == null)
-            {
-                return (false, "Error: BoardGameId is null");
-            }
-
-            return (true, string.Empty);
-        }
-
-        public async Task<(List<UsersFindBoardGameResponse>?, string)> FindBoardGame(UsersFindBoardGameRequest? request)
-        {
-            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (null, "Error: User is not authenticated");
-            }
-
-            var (isValid, message) = FindBoardGame_Validation(request);
-
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var content = new List<UsersFindBoardGameResponse>();
+            var content = new List<UsersListRatedBoardGamesResponse>();
 
             if (request!.BoardGameName! == null || string.IsNullOrWhiteSpace(request.BoardGameName) == true)
             {
@@ -1280,7 +1220,13 @@ namespace BoardGameGeekLike.Services
                     .Ratings
                     .AsNoTracking()
                     .Where(a => a.UserId == userId)
-                    .Select(a => new UsersFindBoardGameResponse { BoardGameId = a.BoardGameId, BoardGameName = a.BoardGame!.Name })
+                    .Select(a => new UsersListRatedBoardGamesResponse 
+                    { 
+                        BoardGameId = a.BoardGameId, 
+                        BoardGameName = a.BoardGame!.Name,
+                        RatingId = a.Id,
+                        Rate = (int)Math.Ceiling(a.Rate)
+                    })
                     .ToListAsync();
 
                 content = ratedBoardgamesDB;
@@ -1291,7 +1237,13 @@ namespace BoardGameGeekLike.Services
                     .Ratings
                     .AsNoTracking()
                     .Where(a => a.UserId == userId && a!.BoardGame!.Name.ToLower().Contains(request!.BoardGameName!.ToLower()))
-                    .Select(a => new UsersFindBoardGameResponse { BoardGameId = a.BoardGameId, BoardGameName = a.BoardGame!.Name })
+                    .Select(a => new UsersListRatedBoardGamesResponse
+                    {
+                        BoardGameId = a.BoardGameId,
+                        BoardGameName = a.BoardGame!.Name,
+                        RatingId = a.Id,
+                        Rate = (int)Math.Ceiling(a.Rate)
+                    })
                     .ToListAsync();
 
                 content = ratedBoardgamesDB;
@@ -1305,7 +1257,7 @@ namespace BoardGameGeekLike.Services
             return (content, "Board Games listed found successfully");
         }
 
-        private static (bool, string) FindBoardGame_Validation(UsersFindBoardGameRequest? request)
+        private static (bool, string) ListRatedBoardGames_Validation(UsersListRatedBoardGamesRequest? request)
         {
             if (request == null)
             {
@@ -1332,34 +1284,26 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }            
 
-            var boardgameDB = await this._daoDbContext
-                .BoardGames
-                .FindAsync(request!.BoardGameId);
-
-            if (boardgameDB == null)
-            {
-                return (null, "Error: board game not found");
-            }
-
-            if (boardgameDB.IsDeleted == true)
-            {
-                return (null, "Error: board game is deleted");
-            }
-
-            var rateDB = await this._daoDbContext
+            var ratingDB = await this._daoDbContext
                 .Ratings
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.BoardGameId == request.BoardGameId);
+                .Include(a => a.BoardGame)
+                .FirstOrDefaultAsync(a => a.Id == request!.RatingId && a.UserId == userId);
 
-            if (rateDB == null)
+            if (ratingDB == null)
             {
-                return (null, "Error: the requested board game was not yet rated by this user");
+                return (null, "Error: requested rating not found");
             }
+                     
+            var oldRate = ratingDB.Rate;
 
-            var oldRate = rateDB.Rate;
+            ratingDB.Rate = request!.Rate!.Value;
 
-            rateDB.Rate = request.Rate!.Value;
+            var boardgameDB = ratingDB.BoardGame;
 
-            await this._daoDbContext.SaveChangesAsync();
+            if(boardgameDB == null)
+            {
+                return (null, "Error: requested rated board game not found");
+            }
 
             var newAverageRating =
             (
@@ -1370,7 +1314,7 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, $"Board game rate edited successfully, its new average rating is: {newAverageRating:F1}");
+            return (null, $"Rating edited successfully, its new average rating is: {newAverageRating:F1}");
         }
 
         private static (bool, string) EditRating_Validation(UsersEditRatingRequest? request)
@@ -1390,12 +1334,12 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid rate. It must be a value between 0 and 5");
             }       
 
-            if (request.BoardGameId.HasValue == false)
+            if (request.RatingId.HasValue == false)
             {
                 return (false, "Error: BoardGameId is missing");
             }
 
-            if (request.BoardGameId < 1)
+            if (request.RatingId < 1)
             {
                 return (false, "Error: invalid BoardGameId (is less than 1)");
             }

@@ -245,26 +245,11 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
-        public async Task<IActionResult> GetRate([FromQuery] UsersGetRateRequest? request)
+        public async Task<IActionResult> ListRatedBoardGames([FromQuery] UsersListRatedBoardGamesRequest? request)
         {
-            var (content, message) = await this._usersService.GetRate(request);
+            var (content, message) = await this._usersService.ListRatedBoardGames(request);
 
-            var response = new Response<UsersGetRateResponse>
-            {
-                Content = content,
-                Message = message
-            };
-            
-            return new JsonResult(response);
-        }
-
-        [Authorize(Roles = "Developer, Administrator, User")]
-        [HttpGet]
-        public async Task<IActionResult> FindBoardGame([FromQuery] UsersFindBoardGameRequest? request)
-        {
-            var (content, message) = await this._usersService.FindBoardGame(request);
-
-            var response = new Response<List<UsersFindBoardGameResponse>>
+            var response = new Response<List<UsersListRatedBoardGamesResponse>>
             {
                 Content = content,
                 Message = message
