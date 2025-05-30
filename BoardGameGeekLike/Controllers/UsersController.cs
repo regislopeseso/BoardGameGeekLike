@@ -169,6 +169,19 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        [HttpGet]
+        public async Task<IActionResult> ListPlayedBoardGames(UsersListPlayedBoardGamesRequest? request)
+        {
+            var (content, message) = await this._usersService.ListPlayedBoardGames(request);
+
+            var response = new Response<List<UsersListPlayedBoardGamesResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
@@ -267,6 +280,21 @@ namespace BoardGameGeekLike.Controllers
             var (content, message) = await this._usersService.EditRating(request);
 
             var response = new Response<UsersEditRatingResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteRating([FromQuery] UsersDeleteRatingRequest? request)
+        {
+            var (content, message) = await this._usersService.DeleteRating(request);
+
+            var response = new Response<UsersDeleteRatingResponse>
             {
                 Content = content,
                 Message = message

@@ -807,6 +807,51 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);           
         }
+        
+        public async Task<(List<UsersListPlayedBoardGamesResponse>?, string)> ListPlayedBoardGames(UsersListPlayedBoardGamesRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ListPlayedBoardGames_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var content = await this._daoDbContext
+                .BoardGames
+                .Where(a => a.IsDeleted == false && a.Sessions!.Any(b => b.UserId == userId && b.IsDeleted == false))
+                .Select(a => new UsersListPlayedBoardGamesResponse
+                {
+                    BoardGameId = a.Id,
+                    BoardGameName = a.Name
+                })
+                .ToListAsync();
+           
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "No sessions logged by user yet");
+            }      
+        
+            return (content, "Board Games played by user listed successfully");
+        }
+
+        private static (bool, string) ListPlayedBoardGames_Validation(UsersListPlayedBoardGamesRequest? request)
+        {
+            if (request == null)
+            {
+                return (true, string.Empty);
+            }
+            
+            return (true, string.Empty);
+        }
 
         public async Task<(UsersGetSessionsResponse?, string)> GetSessions(UsersGetSessionsRequest? request)
         {
@@ -1357,6 +1402,89 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
-    
+
+
+        public async Task<(UsersDeleteRatingResponse?, string)> DeleteRating(UsersDeleteRatingRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = DeleteRating_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var ratingDB = await this._daoDbContext
+                .Ratings
+                .Include(a => a.BoardGame)
+                .FirstOrDefaultAsync(a => a.Id == request!.RateId && a.UserId == userId);
+
+            if (ratingDB == null || ratingDB.UserId != userId)
+            {
+                return (null, "Error: user rating not found");
+            }
+
+            var boardgameDB = ratingDB.BoardGame;
+
+            if (boardgameDB == null || boardgameDB.IsDeleted == true)
+            {
+                return (null, "Error: rated board game not found");
+            }
+
+            var ratingsCount = boardgameDB.RatingsCount;
+            var oldAvgRating = boardgameDB.AverageRating;
+
+            
+            if (ratingsCount < 2)
+            {
+                boardgameDB.AverageRating = 0;
+                
+                boardgameDB.RatingsCount = 0;
+
+                this._daoDbContext.Ratings.Remove(ratingDB);
+
+                await this._daoDbContext.SaveChangesAsync();
+
+                return (null, $"Board game rate deleted successfully");
+            }
+                 
+            var newAverageRating = (oldAvgRating * ratingsCount - ratingDB.Rate) / (ratingsCount - 1); 
+
+            boardgameDB.AverageRating = newAverageRating;
+            boardgameDB.RatingsCount = ratingsCount - 1;    
+
+            this._daoDbContext.Ratings.Remove(ratingDB);
+            
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, $"Board game rate edited successfully, its new average rating is: {newAverageRating:F1}");
+        }
+
+        private static (bool, string) DeleteRating_Validation(UsersDeleteRatingRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.RateId.HasValue == false)
+            {
+                return (false, "Error: RateId is missing");
+            }
+
+            if (request.RateId < 1)
+            {
+                return (false, "Error: invalid RateId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
+
     }
 }
