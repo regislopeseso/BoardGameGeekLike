@@ -1395,7 +1395,7 @@ namespace BoardGameGeekLike.Services
 
                 await this._daoDbContext.SaveChangesAsync();
 
-                return (null, $"Board game rate deleted successfully");
+                return (null, $"Board game rating deleted successfully");
             }
                  
             var newAverageRating = (oldAvgRating * ratingsCount - ratingDB.Rate) / (ratingsCount - 1); 
@@ -1407,7 +1407,7 @@ namespace BoardGameGeekLike.Services
             
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, $"Board game rate edited successfully, its new average rating is: {newAverageRating:F1}");
+            return (null, $"Board game rating deleted successfully, its new average rating is: {newAverageRating:F1}");
         }
 
         private static (bool, string) DeleteRating_Validation(UsersDeleteRatingRequest? request)

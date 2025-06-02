@@ -58,7 +58,8 @@ namespace BoardGameGeekLike.Services
                     Mechanics = a.Mechanics!.Select(b => b.Name).ToList(),
                     IsDeleted = a.IsDeleted
                 })
-                .OrderBy(a => a.Name)
+                .OrderBy(a => a.IsDeleted)
+                .ThenBy(a => a.Name)
                 .ToListAsync();
 
             if (boardGamesDB == null || boardGamesDB.Count == 0)
@@ -680,7 +681,8 @@ namespace BoardGameGeekLike.Services
                     Name = a.Name,              
                     IsDeleted = a.IsDeleted
                 })
-                .OrderBy(a => a.Name)
+                .OrderBy(a => a.IsDeleted)
+                .ThenBy(a => a.Name)
                 .ToListAsync();
 
             if (categoryDB == null || categoryDB.Count == 0)
@@ -984,10 +986,6 @@ namespace BoardGameGeekLike.Services
         //
         //  MECHANICS
         //
-
-
-
-
         public async Task<(List<AdminsListMechanicsResponse>?, string)> ListMechanics(AdminsListMechanicsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -1012,7 +1010,8 @@ namespace BoardGameGeekLike.Services
                     Name = a.Name,
                     IsDeleted = a.IsDeleted
                 })
-                .OrderBy(a => a.Name)
+                .OrderBy(a => a.IsDeleted)
+                .ThenBy(a => a.Name)
                 .ToListAsync();
 
             if (mechanicDB == null || mechanicDB.Count == 0)
