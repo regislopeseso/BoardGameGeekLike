@@ -65,6 +65,7 @@ namespace BoardGameGeekLike.Services
                 var errors = string.Join("; ", signUpAttempt.Errors.Select(e => e.Description));
                 return (null, $"Error creating user: {errors}");
             }
+
             await _userManager.AddToRoleAsync(user, "User");
 
             return (new UsersSignUpResponse(), "User signed up successfully");
@@ -1346,8 +1347,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
-
-
         public async Task<(UsersDeleteRatingResponse?, string)> DeleteRating(UsersDeleteRatingRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -1425,6 +1424,77 @@ namespace BoardGameGeekLike.Services
             if (request.RateId < 1)
             {
                 return (false, "Error: invalid RateId (is less than 1)");
+            }
+
+            return (true, String.Empty);
+        }
+
+        public async Task<(UsersNewLifeCounterResponse?, string)> NewLifeCounter(UsersNewLifeCounterRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = NewLifeCounter_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }        
+
+            var exists = await this._daoDbContext
+                                   .LifeCounters
+                                   .AnyAsync(a => a.UserId == userId && a.Name == request!.Name);
+
+            if (exists == true)
+            {
+                return (null, $"Error: {request!.Name} already exists");
+            }
+
+            var lifecounter = new LifeCounter
+            {
+                Name = request!.Name!,
+                StartingLifePoints = request.StartingLifePoints.HasValue == true ? request.StartingLifePoints.Value : 10,
+                FixedMaxLife = request.FixedMaxLife!.Value,
+                AutoEndMatch = request.AutoEndMatch!.Value, 
+                UserId = userId,
+            };
+
+            this._daoDbContext.Add(lifecounter);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersNewLifeCounterResponse(), "New life counter created successfully");
+        }
+
+        public static (bool, string) NewLifeCounter_Validation(UsersNewLifeCounterRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (String.IsNullOrWhiteSpace(request.Name) == true)
+            {
+                return (false, "Error: life counter name request is null");
+            }
+
+            if (request.StartingLifePoints.HasValue == false)
+            {
+                return (false, "Error: players starting life points request is null");
+            }
+
+            if (request.FixedMaxLife.HasValue == false)
+            {
+                return (false, "Error: fixed max life points request is null.");
+            }
+
+            if (request.AutoEndMatch.HasValue == false)
+            {
+                return (false, "Error: auto end match mode request is null");
             }
 
             return (true, String.Empty);

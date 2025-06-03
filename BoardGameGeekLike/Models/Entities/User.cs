@@ -13,11 +13,12 @@ namespace BoardGameGeekLike.Models.Entities
     public class User : IdentityUser
     {
         public string? Name { get; set; }
-        public required string? Email { get; set; }
         public DateOnly SignUpDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
         public DateOnly BirthDate { get; set; }
         public Gender Gender { get; set; }
+        public List<LifeCounter>? LifeCounters { get; set; }
         public bool IsDeleted { get; set; } = false;
         public bool IsDummy { get; set; } = false;
+
     }
 }

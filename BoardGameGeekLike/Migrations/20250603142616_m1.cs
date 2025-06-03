@@ -42,8 +42,6 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     SignUpDate = table.Column<DateOnly>(type: "date", nullable: false),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: false),
                     Gender = table.Column<int>(type: "int", nullable: false),
@@ -52,6 +50,8 @@ namespace BoardGameGeekLike.Migrations
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NormalizedEmail = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -238,6 +238,31 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "LifeCounters",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    StartingLifePoints = table.Column<int>(type: "int", nullable: false),
+                    FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AutoEndMatch = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LifeCounters", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LifeCounters_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "boardgames",
                 columns: table => new
                 {
@@ -301,7 +326,7 @@ namespace BoardGameGeekLike.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Rate = table.Column<decimal>(type: "decimal(2,1)", nullable: false),
-                    UserId = table.Column<string>(type: "varchar(255)", nullable: false)
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     BoardGameId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -312,8 +337,7 @@ namespace BoardGameGeekLike.Migrations
                         name: "FK_ratings_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ratings_boardgames_BoardGameId",
                         column: x => x.BoardGameId,
@@ -403,6 +427,11 @@ namespace BoardGameGeekLike.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LifeCounters_UserId",
+                table: "LifeCounters",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ratings_BoardGameId",
                 table: "ratings",
                 column: "BoardGameId");
@@ -443,6 +472,9 @@ namespace BoardGameGeekLike.Migrations
 
             migrationBuilder.DropTable(
                 name: "BoardGameMechanic");
+
+            migrationBuilder.DropTable(
+                name: "LifeCounters");
 
             migrationBuilder.DropTable(
                 name: "ratings");

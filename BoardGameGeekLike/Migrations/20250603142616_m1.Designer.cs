@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250528115126_m1")]
+    [Migration("20250603142616_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -100,6 +100,37 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("categories");
                 });
 
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AutoEndMatch")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("FixedMaxLife")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("StartingLifePoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LifeCounters");
+                });
+
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>
                 {
                     b.Property<int>("Id")
@@ -138,7 +169,6 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("decimal(2,1)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
@@ -424,6 +454,15 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounter", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
+                        .WithMany("LifeCounters")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.BoardGame", "BoardGame")
@@ -434,9 +473,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("BoardGame");
 
@@ -536,6 +573,11 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Category", b =>
                 {
                     b.Navigation("BoardGames");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
+                {
+                    b.Navigation("LifeCounters");
                 });
 #pragma warning restore 612, 618
         }

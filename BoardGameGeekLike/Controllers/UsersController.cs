@@ -288,5 +288,18 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> NewLifeCounter([FromForm] UsersNewLifeCounterRequest? request)
+        {
+            var (content, message) = await this._usersService.NewLifeCounter(request);
+
+            var response = new Response<UsersNewLifeCounterResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
     }
 }
