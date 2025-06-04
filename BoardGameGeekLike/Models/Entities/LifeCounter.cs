@@ -10,17 +10,21 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public required string Name { get; set; }
+        public string? Name { get; set; }
 
-        public required int StartingLifePoints { get; set; }
+        public int? StartingLifePoints { get; set; }
 
-        public required bool FixedMaxLife { get; set; }
+        public int? MaxLifePoints { get; set; } 
 
-        public required bool AutoEndMatch { get; set; }
+        public bool FixedMaxLife { get; set; }
+
+        public bool AutoEndMatch { get; set; }
 
         [ForeignKey(nameof(User))]
         public string? UserId { get; set; }
 
         public User? User { get; set; }
+
+        public List<LifeCounterManager>? LifeCounterManagerInstances { get; set; }
     }
 }

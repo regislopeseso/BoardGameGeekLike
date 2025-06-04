@@ -243,9 +243,10 @@ namespace BoardGameGeekLike.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "longtext", nullable: false)
+                    Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    StartingLifePoints = table.Column<int>(type: "int", nullable: false),
+                    StartingLifePoints = table.Column<int>(type: "int", nullable: true),
+                    MaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AutoEndMatch = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: true)
@@ -290,6 +291,31 @@ namespace BoardGameGeekLike.Migrations
                         name: "FK_boardgames_categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "categories",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "LifeCounterManager",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    LifeCounterId = table.Column<int>(type: "int", nullable: true),
+                    PlayersCount = table.Column<int>(type: "int", nullable: true),
+                    StartingTime = table.Column<long>(type: "bigint", nullable: true),
+                    EndingTime = table.Column<long>(type: "bigint", nullable: true),
+                    Duration_minutes = table.Column<int>(type: "int", nullable: true),
+                    AutoEnd = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LifeCounterManager", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LifeCounterManager_LifeCounters_LifeCounterId",
+                        column: x => x.LifeCounterId,
+                        principalTable: "LifeCounters",
                         principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -379,6 +405,31 @@ namespace BoardGameGeekLike.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "LifeCounterPlayer",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    StartingLife = table.Column<int>(type: "int", nullable: true),
+                    CurrentLife = table.Column<int>(type: "int", nullable: true),
+                    MaxLife = table.Column<int>(type: "int", nullable: true),
+                    LifeCounterManagerId = table.Column<int>(type: "int", nullable: false),
+                    FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IsDefeated = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LifeCounterPlayer", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LifeCounterPlayer_LifeCounterManager_LifeCounterManagerId",
+                        column: x => x.LifeCounterManagerId,
+                        principalTable: "LifeCounterManager",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -425,6 +476,16 @@ namespace BoardGameGeekLike.Migrations
                 name: "IX_boardgames_CategoryId",
                 table: "boardgames",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LifeCounterManager_LifeCounterId",
+                table: "LifeCounterManager",
+                column: "LifeCounterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LifeCounterPlayer_LifeCounterManagerId",
+                table: "LifeCounterPlayer",
+                column: "LifeCounterManagerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LifeCounters_UserId",
@@ -474,7 +535,7 @@ namespace BoardGameGeekLike.Migrations
                 name: "BoardGameMechanic");
 
             migrationBuilder.DropTable(
-                name: "LifeCounters");
+                name: "LifeCounterPlayer");
 
             migrationBuilder.DropTable(
                 name: "ratings");
@@ -489,13 +550,19 @@ namespace BoardGameGeekLike.Migrations
                 name: "mechanics");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "LifeCounterManager");
 
             migrationBuilder.DropTable(
                 name: "boardgames");
 
             migrationBuilder.DropTable(
+                name: "LifeCounters");
+
+            migrationBuilder.DropTable(
                 name: "categories");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }

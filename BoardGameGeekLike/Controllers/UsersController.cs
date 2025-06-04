@@ -301,5 +301,34 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> GetLifeCounterDetails([FromQuery] UsersGetLifeCounterDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.GetLifeCounterDetails(request);
+
+            var response = new Response<UsersGetLifeCounterDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> StartLifeCounterManager([FromForm] UsersStartLifeCounterManagerRequest request)
+        {
+            var (content, message) = await this._usersService.StartLifeCounterManager(request);
+
+            var response = new Response<UsersStartLifeCounterManagerResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
     }
 }
