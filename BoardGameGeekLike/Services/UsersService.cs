@@ -1437,6 +1437,40 @@ namespace BoardGameGeekLike.Services
 
         //
         // LIFE COUNTERS
+        public async Task<(UsersCountLifeCountersResponse?, string)> CountLifeCounters(UsersCountLifeCountersRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = CountLifeCounters_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifecountersCountDB = await this._daoDbContext
+                .LifeCounters
+                .Where(a => a.UserId == userId)
+                .CountAsync();
+           
+            return (new UsersCountLifeCountersResponse { LifeCountersCount = lifecountersCountDB }, "Users life counters counted successfully");
+        }
+
+        private static (bool, string) CountLifeCounters_Validation(UsersCountLifeCountersRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, $"Error: request is not null: {request}");
+            }
+
+            return (true, string.Empty);
+        }
+
         public async Task<(UsersNewLifeCounterResponse?, string)> NewLifeCounter(UsersNewLifeCounterRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -1465,6 +1499,7 @@ namespace BoardGameGeekLike.Services
             var lifecounter = new LifeCounter
             {
                 Name = request!.Name!,
+                DefaultPlayersCount = request!.DefaultPlayersCount,
                 StartingLifePoints = request.StartingLifePoints.HasValue == true ? request.StartingLifePoints.Value : 10,
                 FixedMaxLife = request.FixedMaxLife!.Value,
                 MaxLifePoints = request.MaxLifePoints,
@@ -1488,27 +1523,41 @@ namespace BoardGameGeekLike.Services
 
             if (String.IsNullOrWhiteSpace(request.Name) == true)
             {
-                return (false, "Error: life counter name request is null");
+                return (false, $"Error: life counter Name request failed: {request.Name}");
+            }
+
+            if(request.DefaultPlayersCount.HasValue == false )
+            {
+                return (false, $"Error: DefaultPlayersCount request failed: {request.DefaultPlayersCount}");
+            }
+
+            if (request.DefaultPlayersCount.HasValue == true && request.DefaultPlayersCount < 1)
+            {
+                return (false, $"Error: DefaultPlayersCount request failed: {request.DefaultPlayersCount}");
+            }
+            if (request.DefaultPlayersCount.HasValue == true && request.DefaultPlayersCount > 6)
+            {
+                return (false, $"Error: DefaultPlayersCount request failed: {request.DefaultPlayersCount}");
             }
 
             if (request.StartingLifePoints.HasValue == false)
             {
-                return (false, "Error: players starting life points request is null");
+                return (false, $"Error: StartingLifePoints request failed: {request.StartingLifePoints}");
             }
 
             if(request.MaxLifePoints.HasValue == true && request.MaxLifePoints < 1)
             {
-                return (false, $"Error: requested MaxLifePoints failed: {request.MaxLifePoints}. It must be at least 1");
+                return (false, $"Error: StartingLifePoints failed: {request.StartingLifePoints}");
             }
 
             if (request.FixedMaxLife.HasValue == false)
             {
-                return (false, "Error: fixed max life points request is null.");
+                return (false, $"Error: FixedMaxLife request failed: {request.FixedMaxLife}");
             }
 
             if (request.AutoEndMatch.HasValue == false)
             {
-                return (false, "Error: auto end match mode request is null");
+                return (false, $"Error: AutoEndMatch request failed: {request.AutoEndMatch}");
             }
 
             return (true, String.Empty);
@@ -1543,6 +1592,7 @@ namespace BoardGameGeekLike.Services
             var response = new UsersGetLifeCounterDetailsResponse
             {
                 Name = lifeCounterDB.Name,
+                DefaultPlayersCount = lifeCounterDB.DefaultPlayersCount,    
                 StartingLifePoints = lifeCounterDB.StartingLifePoints,
                 MaxLifePoints = lifeCounterDB.MaxLifePoints,    
             };
@@ -1565,8 +1615,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
-
 
         public async Task<(UsersStartLifeCounterManagerResponse?, string)> StartLifeCounterManager(UsersStartLifeCounterManagerRequest request)
         {
@@ -1686,9 +1734,54 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-   
-    
-    
-    
+
+        public async Task<(List<UsersListLifeCountersResponse>?, string)> ListLifeCounters(UsersListLifeCountersRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ListLifeCounters_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var content = await this._daoDbContext
+                .LifeCounters
+                .Where(a => a.UserId == userId)
+                .Select(a => new UsersListLifeCountersResponse
+                {
+                    LifeCounterId = a.Id,
+                    LifeCounterName = a.Name!
+                })
+                .ToListAsync();
+
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "No life counters saved by user yet");
+            }
+
+            return (content, "Users life counters listed successfully");
+        }
+
+        private static (bool, string) ListLifeCounters_Validation(UsersListLifeCountersRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, $"Error: request is not null: {request}");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+
+
     }
 }

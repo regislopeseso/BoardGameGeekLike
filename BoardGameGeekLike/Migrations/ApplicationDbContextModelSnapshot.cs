@@ -108,6 +108,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("AutoEndMatch")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("DefaultPlayersCount")
+                        .HasColumnType("int");
+
                     b.Property<bool>("FixedMaxLife")
                         .HasColumnType("tinyint(1)");
 

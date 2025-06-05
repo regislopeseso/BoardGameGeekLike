@@ -245,6 +245,7 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    DefaultPlayersCount = table.Column<int>(type: "int", nullable: true),
                     StartingLifePoints = table.Column<int>(type: "int", nullable: true),
                     MaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),

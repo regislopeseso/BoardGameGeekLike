@@ -288,6 +288,23 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        //
+        // LIFE COUNTERS
+        [HttpGet]
+        public async Task<IActionResult> CountLifeCounters(UsersCountLifeCountersRequest? request)
+        {
+            var (content, message) = await this._usersService.CountLifeCounters(request);
+
+            var response = new Response<UsersCountLifeCountersResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+
+        }
+
         [HttpPost]
         public async Task<IActionResult> NewLifeCounter([FromForm] UsersNewLifeCounterRequest? request)
         {
@@ -329,6 +346,21 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ListLifeCounters(UsersListLifeCountersRequest? request)
+        {
+            var (content, message) = await this._usersService.ListLifeCounters(request);
+
+            var response = new Response<List<UsersListLifeCountersResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
     }
 }

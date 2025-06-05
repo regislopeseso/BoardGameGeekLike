@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250604174614_m1")]
+    [Migration("20250605125918_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -110,6 +110,9 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<bool>("AutoEndMatch")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("DefaultPlayersCount")
+                        .HasColumnType("int");
 
                     b.Property<bool>("FixedMaxLife")
                         .HasColumnType("tinyint(1)");
