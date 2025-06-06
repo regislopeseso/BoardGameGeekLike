@@ -166,7 +166,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("LifeCounterId");
 
-                    b.ToTable("LifeCounterManager");
+                    b.ToTable("LifeCounterManagers");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterPlayer", b =>
@@ -192,6 +192,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("MaxLife")
                         .HasColumnType("int");
 
+                    b.Property<string>("PlayerName")
+                        .HasColumnType("longtext");
+
                     b.Property<int?>("StartingLife")
                         .HasColumnType("int");
 
@@ -199,7 +202,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("LifeCounterManagerId");
 
-                    b.ToTable("LifeCounterPlayer");
+                    b.ToTable("LifeCounterPlayers");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>

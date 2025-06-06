@@ -291,6 +291,20 @@ namespace BoardGameGeekLike.Controllers
         //
         // LIFE COUNTERS
         [HttpGet]
+        public async Task<IActionResult> GetLastLifeCounterManager(UsersGetLastLifeCounterManagerRequest? request)
+        {
+            var (content, message) = await this._usersService.GetLastLifeCounterManager(request);
+
+            var response = new Response<UsersGetLastLifeCounterManagerResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> CountLifeCounters(UsersCountLifeCountersRequest? request)
         {
             var (content, message) = await this._usersService.CountLifeCounters(request);

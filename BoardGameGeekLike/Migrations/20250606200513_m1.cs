@@ -297,7 +297,7 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "LifeCounterManager",
+                name: "LifeCounterManagers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -312,9 +312,9 @@ namespace BoardGameGeekLike.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LifeCounterManager", x => x.Id);
+                    table.PrimaryKey("PK_LifeCounterManagers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_LifeCounterManager_LifeCounters_LifeCounterId",
+                        name: "FK_LifeCounterManagers_LifeCounters_LifeCounterId",
                         column: x => x.LifeCounterId,
                         principalTable: "LifeCounters",
                         principalColumn: "Id");
@@ -407,11 +407,13 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "LifeCounterPlayer",
+                name: "LifeCounterPlayers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PlayerName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     StartingLife = table.Column<int>(type: "int", nullable: true),
                     CurrentLife = table.Column<int>(type: "int", nullable: true),
                     MaxLife = table.Column<int>(type: "int", nullable: true),
@@ -421,11 +423,11 @@ namespace BoardGameGeekLike.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LifeCounterPlayer", x => x.Id);
+                    table.PrimaryKey("PK_LifeCounterPlayers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_LifeCounterPlayer_LifeCounterManager_LifeCounterManagerId",
+                        name: "FK_LifeCounterPlayers_LifeCounterManagers_LifeCounterManagerId",
                         column: x => x.LifeCounterManagerId,
-                        principalTable: "LifeCounterManager",
+                        principalTable: "LifeCounterManagers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -479,13 +481,13 @@ namespace BoardGameGeekLike.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LifeCounterManager_LifeCounterId",
-                table: "LifeCounterManager",
+                name: "IX_LifeCounterManagers_LifeCounterId",
+                table: "LifeCounterManagers",
                 column: "LifeCounterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LifeCounterPlayer_LifeCounterManagerId",
-                table: "LifeCounterPlayer",
+                name: "IX_LifeCounterPlayers_LifeCounterManagerId",
+                table: "LifeCounterPlayers",
                 column: "LifeCounterManagerId");
 
             migrationBuilder.CreateIndex(
@@ -536,7 +538,7 @@ namespace BoardGameGeekLike.Migrations
                 name: "BoardGameMechanic");
 
             migrationBuilder.DropTable(
-                name: "LifeCounterPlayer");
+                name: "LifeCounterPlayers");
 
             migrationBuilder.DropTable(
                 name: "ratings");
@@ -551,7 +553,7 @@ namespace BoardGameGeekLike.Migrations
                 name: "mechanics");
 
             migrationBuilder.DropTable(
-                name: "LifeCounterManager");
+                name: "LifeCounterManagers");
 
             migrationBuilder.DropTable(
                 name: "boardgames");

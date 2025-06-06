@@ -4,11 +4,14 @@ using System.Text.RegularExpressions;
 
 namespace BoardGameGeekLike.Models.Entities
 {
+    [Table("LifeCounterPlayers")]
     public class LifeCounterPlayer
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
+        public string? PlayerName { get; set; }
 
         public int? StartingLife { get; set; }
 
@@ -18,6 +21,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey("LifeCounterManager")]
         public int LifeCounterManagerId { get; set; }
+
         public LifeCounterManager? LifeCounterManager { get; set; }
 
         public bool FixedMaxLife { get; set; }

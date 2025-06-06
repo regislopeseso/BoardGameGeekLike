@@ -1437,6 +1437,54 @@ namespace BoardGameGeekLike.Services
 
         //
         // LIFE COUNTERS
+        public async Task<(UsersGetLastLifeCounterManagerResponse?, string)> GetLastLifeCounterManager(UsersGetLastLifeCounterManagerRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = GetLastLifeCounterManager_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }          
+            
+            var lifeCounterManagersDB = await this._daoDbContext
+                .LifeCounterManagers
+                .Include(a => a.LifeCounter)
+                .Where(a => a.LifeCounter!.UserId == userId && a.IsFinished == false)                
+                .OrderByDescending(a => a.Id)
+                .FirstOrDefaultAsync();
+
+
+            if (lifeCounterManagersDB == null)
+            {
+                return (null, $"Error: life counter manager request failed: {lifeCounterManagersDB}");
+            }       
+
+            return (
+                new UsersGetLastLifeCounterManagerResponse
+                {
+                    LifeCounterManagerId = lifeCounterManagersDB.Id,
+                    LifeCounterId = lifeCounterManagersDB.LifeCounter!.Id
+                },
+                "Life counter manager found successfully");
+        }
+
+        private static (bool, string) GetLastLifeCounterManager_Validation(UsersGetLastLifeCounterManagerRequest request)
+        {
+            if (request != null)
+            {
+                return (false, $"Error: request is not null: {request}");
+            }
+
+            return (true, string.Empty);
+        }
+
         public async Task<(UsersCountLifeCountersResponse?, string)> CountLifeCounters(UsersCountLifeCountersRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -1648,12 +1696,15 @@ namespace BoardGameGeekLike.Services
 
             var newPlayers = new List<LifeCounterPlayer>();
 
-            for (int playersCount = 0; playersCount <= request.PlayersCount; playersCount++)
+            for (int playersCount = 1; playersCount <= request.PlayersCount; playersCount++)
             {
+                var name = $"Player #{playersCount}";
+
                 newPlayers.Add
                 (
                     new LifeCounterPlayer
                     {
+                        PlayerName = name,
                         StartingLife = lifeCounterDB.StartingLifePoints,
                         CurrentLife = lifeCounterDB.StartingLifePoints,
                         MaxLife = lifeCounterDB.MaxLifePoints,
@@ -1698,6 +1749,7 @@ namespace BoardGameGeekLike.Services
                 content.LifeCounterPlayers.Add(new UsersStartLifeCounterManagerResponse_players
                 {
                     LifeCounterPlayerId = newPlayer.Id,
+                    PlayerName = newPlayer.PlayerName,
                     StartingLifePoints = newPlayer.CurrentLife,
                 });
             }

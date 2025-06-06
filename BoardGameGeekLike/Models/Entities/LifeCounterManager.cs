@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("LifeCounterManager")]
+    [Table("LifeCounterManagers")]
     public class LifeCounterManager
     {
         [Key]
