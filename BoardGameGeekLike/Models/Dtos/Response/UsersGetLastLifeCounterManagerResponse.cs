@@ -3,6 +3,7 @@
     public class UsersGetLastLifeCounterManagerResponse
     {
         public int? LifeCounterManagerId { get; set; }
-        public int? LifeCounterId { get; set; }
+       
+        public int? LifeCounterId { get; set; }       
     }
 }

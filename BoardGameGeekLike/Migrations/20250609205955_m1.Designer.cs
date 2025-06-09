@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250609125531_m1")]
+    [Migration("20250609205955_m1")]
     partial class m1
     {
         /// <inheritdoc />
