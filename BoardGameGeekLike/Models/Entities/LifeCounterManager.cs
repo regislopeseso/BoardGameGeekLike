@@ -11,10 +11,15 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+
+        [ForeignKey(nameof(User))]
+        public string? UserId { get; set; }
+        public User? User { get; set; }
+
         [ForeignKey("LifeCounter")]
         public int? LifeCounterId { get; set; }
-     
         public LifeCounter? LifeCounter { get; set; }
+     
 
         public List<LifeCounterPlayer>? LifeCounterPlayers { get; set; }
 

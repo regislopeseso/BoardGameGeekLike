@@ -291,6 +291,20 @@ namespace BoardGameGeekLike.Controllers
         //
         // LIFE COUNTERS
         [HttpGet]
+        public async Task<IActionResult> ListLifeCounters(UsersListLifeCountersRequest? request)
+        {
+            var (content, message) = await this._usersService.ListLifeCounters(request);
+
+            var response = new Response<List<UsersListLifeCountersResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetLastLifeCounterManager(UsersGetLastLifeCounterManagerRequest? request)
         {
             var (content, message) = await this._usersService.GetLastLifeCounterManager(request);
@@ -362,11 +376,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListLifeCounters(UsersListLifeCountersRequest? request)
+        public async Task<IActionResult> GetLifeCounterPlayersDetails([FromQuery] UsersGetLifeCounterPlayersDetailsRequest? request)
         {
-            var (content, message) = await this._usersService.ListLifeCounters(request);
+            var (content, message) = await this._usersService.GetLifeCounterPlayersDetails(request);
 
-            var response = new Response<List<UsersListLifeCountersResponse>>
+            var response = new Response<UsersGetLifeCounterPlayersDetailsResponse>
             {
                 Content = content,
                 Message = message
@@ -374,6 +388,21 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> IncreaseLifePoints([FromForm] UsersIncreaseLifePointsRequest request)
+        {
+            var (content, message) = await this._usersService.IncreaseLifePoints(request);
+
+            var response = new Response<UsersIncreaseLifePointsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
 
     }

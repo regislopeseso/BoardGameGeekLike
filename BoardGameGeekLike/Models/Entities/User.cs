@@ -17,6 +17,7 @@ namespace BoardGameGeekLike.Models.Entities
         public DateOnly BirthDate { get; set; }
         public Gender Gender { get; set; }
         public List<LifeCounter>? LifeCounters { get; set; }
+        public List<LifeCounterManager>? lifeCounterManagers { get; set; }
         public bool IsDeleted { get; set; } = false;
         public bool IsDummy { get; set; } = false;
 

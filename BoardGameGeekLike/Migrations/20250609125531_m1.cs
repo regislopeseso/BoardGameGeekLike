@@ -302,6 +302,8 @@ namespace BoardGameGeekLike.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     LifeCounterId = table.Column<int>(type: "int", nullable: true),
                     PlayersCount = table.Column<int>(type: "int", nullable: true),
                     StartingTime = table.Column<long>(type: "bigint", nullable: true),
@@ -313,6 +315,11 @@ namespace BoardGameGeekLike.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LifeCounterManagers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LifeCounterManagers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_LifeCounterManagers_LifeCounters_LifeCounterId",
                         column: x => x.LifeCounterId,
@@ -484,6 +491,11 @@ namespace BoardGameGeekLike.Migrations
                 name: "IX_LifeCounterManagers_LifeCounterId",
                 table: "LifeCounterManagers",
                 column: "LifeCounterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LifeCounterManagers_UserId",
+                table: "LifeCounterManagers",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LifeCounterPlayers_LifeCounterManagerId",

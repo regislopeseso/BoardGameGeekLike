@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250606200513_m1")]
+    [Migration("20250609125531_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -165,9 +165,14 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<long?>("StartingTime")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LifeCounterId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("LifeCounterManagers");
                 });
@@ -546,7 +551,13 @@ namespace BoardGameGeekLike.Migrations
                         .WithMany("LifeCounterManagerInstances")
                         .HasForeignKey("LifeCounterId");
 
+                    b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
+                        .WithMany("lifeCounterManagers")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("LifeCounter");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterPlayer", b =>
@@ -685,6 +696,8 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
                 {
                     b.Navigation("LifeCounters");
+
+                    b.Navigation("lifeCounterManagers");
                 });
 #pragma warning restore 612, 618
         }
