@@ -1530,10 +1530,6 @@ namespace BoardGameGeekLike.Services
         }
 
 
-
-
-
-
         public async Task<(UsersCountLifeCountersResponse?, string)> CountLifeCounters(UsersCountLifeCountersRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -1975,10 +1971,148 @@ namespace BoardGameGeekLike.Services
                 return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterPlayerId}");
             }
 
-            //if (request.LifePointsToIncrease.HasValue == false || request.LifePointsToIncrease != 1 || request.LifePointsToIncrease != 10)                
-            //{
-            //    return (false, $"Error: invalid increase amount request: {request.LifePointsToIncrease}");
-            //}            
+            if (request.LifePointsToIncrease.HasValue == false || (request.LifePointsToIncrease != 1 && request.LifePointsToIncrease != 10))
+            {
+                return (false, $"Error: invalid increase amount request: {request.LifePointsToIncrease}");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersDecreaseLifePointsResponse?, string)> DecreaseLifePoints(UsersDecreaseLifePointsRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (requestIsValid, message) = DecreaseLifePoints_Validation(request);
+
+            if (requestIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterPlayerDB = await this._daoDbContext
+                .LifeCounterPlayers
+                .Include(a => a.LifeCounterManager)
+                .Where(a => a.Id == request.LifeCounterPlayerId &&
+                    a.LifeCounterManager!.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (lifeCounterPlayerDB == null)
+            {
+                return (null, $"Error, invalid requested LifeCounterManager, returning: {lifeCounterPlayerDB}");
+            }
+
+            if (lifeCounterPlayerDB.LifeCounterManager!.IsFinished == true)
+            {
+                return (null, "Error: this life counter manager was already finished");
+            }
+
+            if (lifeCounterPlayerDB.IsDefeated == true || lifeCounterPlayerDB.CurrentLife <= 0)
+            {
+                return (null, $"Error: {lifeCounterPlayerDB.PlayerName} has been already defeated");
+            }            
+
+            var updatedLifePoints = lifeCounterPlayerDB.CurrentLife - request.LifePointsToDecrease;
+
+            lifeCounterPlayerDB.CurrentLife = updatedLifePoints;
+
+            if(lifeCounterPlayerDB.CurrentLife <= 0)
+            {
+                lifeCounterPlayerDB.CurrentLife = 0; 
+                lifeCounterPlayerDB.IsDefeated = true;
+            }
+
+            await this._daoDbContext.SaveChangesAsync();
+            
+            return (new UsersDecreaseLifePointsResponse { UpdatedLifePoints = updatedLifePoints }, $"{lifeCounterPlayerDB.PlayerName} life points updated successfully. Current life points: {updatedLifePoints}");
+        }
+        private static (bool, string) DecreaseLifePoints_Validation(UsersDecreaseLifePointsRequest request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterPlayerId.HasValue == false || request.LifeCounterPlayerId < 1)
+            {
+                return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterPlayerId}");
+            }
+
+            if (request.LifePointsToDecrease.HasValue == false || (request.LifePointsToDecrease != 1 && request.LifePointsToDecrease != 10))
+            {
+                return (false, $"Error: invalid decrease amount request: {request.LifePointsToDecrease}");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(UsersCheckForLifeCounterManagerEndResponse?, string)> CheckForLifeCounterManagerEnd(UsersCheckForLifeCounterManagerEndRequest request) {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (requestIsValid, message) = CheckForLifeCounterManagerEnd_Validation(request);
+
+            if (requestIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterPlayersDB = await this._daoDbContext
+                .LifeCounterPlayers
+                .Include(a => a.LifeCounterManager)
+                .Where(a => a.LifeCounterManagerId == request.LifeCounterManagerId &&
+                    a.LifeCounterManager!.AutoEnd == true && a.LifeCounterManager!.UserId == userId)
+                .ToListAsync();       
+            
+            if(lifeCounterPlayersDB == null || lifeCounterPlayersDB.Count <= 0)
+            {
+                return (null, $"Error: lifeCounterPlayersDB request failed: {lifeCounterPlayersDB}");
+            }            
+
+            var lifeCounterManagerDB = lifeCounterPlayersDB.Select(a => a.LifeCounterManager).FirstOrDefault();
+            
+            var playersCount = lifeCounterManagerDB!.PlayersCount;
+
+            var defeatePlayers = lifeCounterPlayersDB.Select(a => a.IsDefeated == true).Count();
+
+            var isLifeCounterManagerEnded = (playersCount - defeatePlayers <= 1) == true;
+
+            if (isLifeCounterManagerEnded == false)
+            {
+                return (new UsersCheckForLifeCounterManagerEndResponse()
+                , "This life counter manager is NOT finished");
+            }
+
+            lifeCounterManagerDB.IsFinished = true;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersCheckForLifeCounterManagerEndResponse
+            {
+                IsEnded = true,
+            }, "This life counter manager is finished");
+        }
+        private static (bool, string) CheckForLifeCounterManagerEnd_Validation(UsersCheckForLifeCounterManagerEndRequest request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterManagerId.HasValue == false || request.LifeCounterManagerId < 1)
+            {
+                return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterManagerId}");
+            }
 
             return (true, string.Empty);
         }

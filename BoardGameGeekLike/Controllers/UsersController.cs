@@ -400,9 +400,27 @@ namespace BoardGameGeekLike.Controllers
                 Message = message
             };
 
+            await Task.Delay(300);
+
             return new JsonResult(response);
         }
 
+
+        [HttpPost]
+        public async Task<IActionResult> DecreaseLifePoints([FromForm] UsersDecreaseLifePointsRequest request)
+        {
+            var (content, message) = await this._usersService.DecreaseLifePoints(request);
+
+            var response = new Response<UsersDecreaseLifePointsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
 
 
     }

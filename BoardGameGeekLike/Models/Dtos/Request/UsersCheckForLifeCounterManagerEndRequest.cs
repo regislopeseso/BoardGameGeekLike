@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersGetLifeCounterManagerRequest
+    public class UsersCheckForLifeCounterManagerEndRequest
     {
         public int? LifeCounterManagerId { get; set; }
     }
