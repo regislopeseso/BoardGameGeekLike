@@ -11,6 +11,7 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        public string? LifeCounterName { get; set; }
 
         [ForeignKey(nameof(User))]
         public string? UserId { get; set; }
@@ -19,7 +20,8 @@ namespace BoardGameGeekLike.Models.Entities
         [ForeignKey("LifeCounter")]
         public int? LifeCounterId { get; set; }
         public LifeCounter? LifeCounter { get; set; }
-     
+
+         
 
         public List<LifeCounterPlayer>? LifeCounterPlayers { get; set; }
 
@@ -31,7 +33,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Duration_minutes { get; set; }
 
-        public bool AutoEnd { get; set; }
+        public bool AutoEndMode { get; set; }
 
         public bool IsFinished { get; set; } = false;
     }

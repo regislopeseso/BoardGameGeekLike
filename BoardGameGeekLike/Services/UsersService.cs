@@ -1752,8 +1752,8 @@ namespace BoardGameGeekLike.Services
                         PlayerName = name,
                         StartingLife = lifeCounterDB.PlayersStartingLifePoints,
                         CurrentLife = lifeCounterDB.PlayersStartingLifePoints,
-                        MaxLife = lifeCounterDB.MaxLifePoints,
                         FixedMaxLife = lifeCounterDB.FixedMaxLife,
+                        MaxLife = lifeCounterDB.MaxLifePoints,
                     }
                 );
             }
@@ -1764,10 +1764,11 @@ namespace BoardGameGeekLike.Services
             {
                 UserId = userId,
                 LifeCounterId = request.LifeCounterId,
+                LifeCounterName = lifeCounterDB.Name,
                 LifeCounterPlayers = newPlayers,
                 PlayersCount = newPlayers.Count,
                 StartingTime = startMark,
-                AutoEnd = lifeCounterDB.AutoEndMatch,
+                AutoEndMode = lifeCounterDB.AutoEndMatch,
             };
 
             lifeCounterDB.LifeCounterManagerInstances ??= [];
@@ -2072,7 +2073,7 @@ namespace BoardGameGeekLike.Services
             var lifeCounterManagerDB = await this._daoDbContext
                 .LifeCounterManagers
                 .Include(a => a.LifeCounterPlayers)
-                .FirstOrDefaultAsync(a => a.UserId == userId & a.Id == request!.LifeCounterManagerId & a.AutoEnd == true & a.IsFinished == false);
+                .FirstOrDefaultAsync(a => a.UserId == userId & a.Id == request!.LifeCounterManagerId & a.AutoEndMode == true & a.IsFinished == false);
 
             if( lifeCounterManagerDB == null) 
             {
@@ -2193,6 +2194,151 @@ namespace BoardGameGeekLike.Services
             {
                 return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterManagerId}");
             }            
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersEditLifeCounterManagerResponse?, string)> EditLifeCounterManager(UsersEditLifeCounterManagerRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = EditLifeCounterManager_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterManagerDB = await this._daoDbContext
+                .LifeCounterManagers
+                .Include(a => a.LifeCounterPlayers)
+                .FirstOrDefaultAsync(a => 
+                    a.UserId == userId & 
+                    a.Id == request!.LifeCounterManagerId & 
+                    a.IsFinished == false);
+
+            if(lifeCounterManagerDB == null)
+            {
+                return (null, "Error: LifeCounterManager request failed");
+            }
+
+            if(request!.NewPlayersCount < lifeCounterManagerDB.PlayersCount)
+            {
+                return (null, "Error, new players count request failed");
+            }
+
+            lifeCounterManagerDB.LifeCounterName = request!.NewLifeCounterManagerName;
+
+            var playersDB = lifeCounterManagerDB.LifeCounterPlayers;
+
+            if (playersDB == null)
+            {
+                return (null, "Error: Life counter manager players request failed");
+            }
+
+            if (request.NewPlayersCount > lifeCounterManagerDB.PlayersCount)
+            {
+                playersDB.Add(new LifeCounterPlayer
+                {
+                    PlayerName = $"Player #{request.NewPlayersCount}",
+                    StartingLife = request.NewPlayersStartingLifePoints,
+                    CurrentLife = request.NewPlayersStartingLifePoints,
+                    FixedMaxLife = request.FixedMaxLifePointsMode!.Value,
+                    MaxLife = request.NewPlayersMaxLifePoints
+                });                
+            }
+
+            foreach (var player in playersDB)
+            {
+                player.StartingLife = request.NewPlayersStartingLifePoints;
+                player.FixedMaxLife = request.FixedMaxLifePointsMode!.Value;
+                player.MaxLife = request.NewPlayersMaxLifePoints;              
+            }
+
+            lifeCounterManagerDB.PlayersCount = request.NewPlayersCount;
+            lifeCounterManagerDB.AutoEndMode = request.AutoEndMode!.Value;     
+            
+            await this._daoDbContext.SaveChangesAsync();
+            
+            return (null, $"Life Counter Manager {lifeCounterManagerDB.LifeCounterName} edited successfully");
+        }
+        private static (bool, string) EditLifeCounterManager_Validation(UsersEditLifeCounterManagerRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.LifeCounterManagerId == null || request.LifeCounterManagerId < 1)
+            {
+                return (false, $"Error: LifeCounterManagerId request failed: {request.LifeCounterManagerId}");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NewLifeCounterManagerName) == true)
+            {
+                return (false, $"Error: NewLifeCounterName request failed: {request.NewLifeCounterManagerName}");
+            }
+
+            if (request.NewPlayersCount == null || request.NewPlayersCount < 1)
+            {
+                return (false, $"Error: NewPlayersCount request failed: {request.NewPlayersCount}");
+            }
+
+            if (request.NewPlayersStartingLifePoints == null || request.NewPlayersStartingLifePoints < 1)
+            {
+                return (false, $"Error: NewPlayersStartingLifePoints request failed: {request.NewPlayersStartingLifePoints}");
+            }
+
+            if (request.FixedMaxLifePointsMode == null)
+            {
+                return (false, $"Error: FixedMaxLifePointsMode request failed: {request.FixedMaxLifePointsMode}");
+            }
+
+            if (request.NewPlayersMaxLifePoints == null || request.NewPlayersMaxLifePoints < 1)
+            {
+                return (false, $"Error: NewPlayersMaxLifePoints request failed: {request.NewPlayersMaxLifePoints}");
+            }
+
+            if (request.AutoEndMode == null)
+            {
+                return (false, $"Error: AutoEndMode request failed: {request.AutoEndMode}");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersGetLifeCounterManagerDetailsResponse?, string)> GetLifeCounterManagerDetails(UsersGetLifeCounterManagerDetailsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = GetLifeCounterManagerDetails_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }           
+
+
+            return (null, "Life counter details fetched successfully");
+        }
+        private static (bool, string) GetLifeCounterManagerDetails_Validation(UsersGetLifeCounterManagerDetailsRequest request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
 
             return (true, string.Empty);
         }

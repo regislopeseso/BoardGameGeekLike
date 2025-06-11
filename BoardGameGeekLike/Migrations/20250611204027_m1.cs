@@ -303,6 +303,8 @@ namespace BoardGameGeekLike.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    LifeCounterName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LifeCounterId = table.Column<int>(type: "int", nullable: true),
@@ -310,7 +312,7 @@ namespace BoardGameGeekLike.Migrations
                     StartingTime = table.Column<long>(type: "bigint", nullable: true),
                     EndingTime = table.Column<long>(type: "bigint", nullable: true),
                     Duration_minutes = table.Column<int>(type: "int", nullable: true),
-                    AutoEnd = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AutoEndMode = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
