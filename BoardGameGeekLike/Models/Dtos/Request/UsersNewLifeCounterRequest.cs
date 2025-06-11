@@ -4,7 +4,7 @@
     {
         public string? Name { get; set; }
         public int? DefaultPlayersCount { get; set; }
-        public int? StartingLifePoints { get; set; }
+        public int? PlayersStartingLifePoints { get; set; }
         public int? MaxLifePoints { get; set; }
         public bool? FixedMaxLife { get; set; }
         public bool? AutoEndMatch { get; set; }

@@ -6,7 +6,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     {
         public string? LifeCounterName { get; set; }
         public int? PlayersCount { get; set; }
-        public int? StartingLifePoints { get; set; }
+        public int? PlayersStartingLifePoints { get; set; }
 
         public int? LifeCounterId { get; set; }
         public int? LifeCounterManagerId { get; set; }

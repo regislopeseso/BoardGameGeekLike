@@ -4,6 +4,6 @@
     {
         public int? LifeCounterPlayerId { get; set; }
         public string? PlayerName { get; set; }
-        public int? StartingLifePoints { get; set; }
+        public int? PlayerStartingLifePoints { get; set; }
     }
 }

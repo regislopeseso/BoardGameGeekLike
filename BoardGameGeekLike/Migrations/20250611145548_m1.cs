@@ -246,12 +246,13 @@ namespace BoardGameGeekLike.Migrations
                     Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DefaultPlayersCount = table.Column<int>(type: "int", nullable: true),
-                    StartingLifePoints = table.Column<int>(type: "int", nullable: true),
+                    PlayersStartingLifePoints = table.Column<int>(type: "int", nullable: true),
                     MaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AutoEndMatch = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LifeCounterManagersCount = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {

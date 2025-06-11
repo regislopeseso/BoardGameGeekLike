@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250609205955_m1")]
+    [Migration("20250611145548_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -117,13 +117,16 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("FixedMaxLife")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("LifeCounterManagersCount")
+                        .HasColumnType("int");
+
                     b.Property<int?>("MaxLifePoints")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("StartingLifePoints")
+                    b.Property<int?>("PlayersStartingLifePoints")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")

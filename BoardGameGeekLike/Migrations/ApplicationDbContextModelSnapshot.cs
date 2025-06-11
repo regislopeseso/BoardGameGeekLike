@@ -114,13 +114,16 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("FixedMaxLife")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("LifeCounterManagersCount")
+                        .HasColumnType("int");
+
                     b.Property<int?>("MaxLifePoints")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("StartingLifePoints")
+                    b.Property<int?>("PlayersStartingLifePoints")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
