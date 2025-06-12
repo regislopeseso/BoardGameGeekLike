@@ -13,18 +13,18 @@ namespace BoardGameGeekLike.Models.Entities
 
         public string? PlayerName { get; set; }
 
-        public int? StartingLife { get; set; }
+        public int? StartingLifePoints { get; set; }
 
-        public int? CurrentLife { get; set; }
+        public int? CurrentLifePoints { get; set; }
 
-        public int? MaxLife { get; set; }
+        public bool FixedMaxLifePointsMode { get; set; }
+        public int? MaxLifePoints { get; set; }
 
         [ForeignKey("LifeCounterManager")]
         public int LifeCounterManagerId { get; set; }
 
         public LifeCounterManager? LifeCounterManager { get; set; }
 
-        public bool FixedMaxLife { get; set; }
 
         public bool IsDefeated { get; set; } = false;
     }

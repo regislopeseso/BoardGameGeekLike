@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersGetLifeCounterDetailsResponse
+    public class UsersGetLifeCounterTemplateDetailsResponse
     {
         public string? Name { get; set; }
         public int? DefaultPlayersCount { get; set; }

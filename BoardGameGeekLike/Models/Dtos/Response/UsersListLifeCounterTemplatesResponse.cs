@@ -1,8 +1,8 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersListLifeCountersResponse
+    public class UsersListLifeCounterTemplatesResponse
     {
         public required int? LifeCounterId { get; set; }
-        public required string LifeCounterName { get; set; }
+        public required string LifeCounterTemplateName { get; set; }
     }
 }

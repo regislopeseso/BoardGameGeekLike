@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersNewLifeCounterResponse
+    public class UsersCreateLifeCounterTemplateResponse
     {
         public required int LifeCounterId { get; set; }
     }

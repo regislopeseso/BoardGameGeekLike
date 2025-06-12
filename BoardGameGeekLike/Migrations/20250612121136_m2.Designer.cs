@@ -4,6 +4,7 @@ using BoardGameGeekLike.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250612121136_m2")]
+    partial class m2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,6 +111,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("AutoEndMode")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("DefaultPlayersCount")
+                        .HasColumnType("int");
+
                     b.Property<bool>("FixedMaxLifePointsMode")
                         .HasColumnType("tinyint(1)");
 
@@ -116,9 +122,6 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
-
-                    b.Property<int?>("PlayersCount")
-                        .HasColumnType("int");
 
                     b.Property<int?>("PlayersMaxLifePoints")
                         .HasColumnType("int");
@@ -165,10 +168,10 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<string>("LifeCounterName")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("PlayersCount")
+                    b.Property<int?>("PlayerMaxLifePoints")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PlayersMaxLifePoints")
+                    b.Property<int?>("PlayersCount")
                         .HasColumnType("int");
 
                     b.Property<long?>("StartingTime")

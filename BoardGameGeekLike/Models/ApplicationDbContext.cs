@@ -19,7 +19,7 @@ namespace BoardGameGeekLike.Models
 
         public DbSet<Session> Sessions {get; set;}
 
-        public DbSet<LifeCounter> LifeCounters { get; set; }
+        public DbSet<LifeCounterTemplate> LifeCounterTemplates { get; set; }
 
         public DbSet<LifeCounterManager> LifeCounterManagers { get; set; }
 
