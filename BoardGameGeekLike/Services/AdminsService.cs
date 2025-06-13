@@ -568,7 +568,8 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext
                       .BoardGames
                       .Where(a => a.Id == request!.BoardGameId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));           
+
 
             return (null, "Board game deleted successfully");
         }

@@ -8,6 +8,7 @@
         public int? NewPlayersStartingLifePoints { get; set; }
         public bool? FixedMaxLifePointsMode { get; set; }
         public int? NewPlayersMaxLifePoints { get; set; }
+        public bool? AutoDefeatMode { get; set; }
         public bool? AutoEndMode { get; set; }
     }
 }

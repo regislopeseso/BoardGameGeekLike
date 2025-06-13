@@ -13,8 +13,10 @@ namespace BoardGameGeekLike.Models.Entities
 
         public string? LifeCounterManagerName { get; set; }          
         
-        public int? PlayersCount { get; set; }       
-                     
+        public int? PlayersCount { get; set; }
+
+        public int? PlayersStartingLifePoints { get; set; }
+
         public bool? FixedMaxLifePointsMode { get; set; }
 
         public int? PlayersMaxLifePoints { get; set; }

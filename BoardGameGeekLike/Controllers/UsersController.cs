@@ -160,6 +160,8 @@ namespace BoardGameGeekLike.Controllers
         //
         //--* end of USER'S PROFILE *--//       
            
+
+
         // BOARD GAMES
         //
         [Authorize(Roles = "Developer, Administrator, User")]
@@ -333,20 +335,6 @@ namespace BoardGameGeekLike.Controllers
         }
         
         [HttpGet]
-        public async Task<IActionResult> ListLifeCounterTemplates(UsersListLifeCounterTemplatesRequest? request)
-        {
-            var (content, message) = await this._usersService.ListLifeCounterTemplates(request);
-
-            var response = new Response<List<UsersListLifeCounterTemplatesResponse>>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> CountLifeCounterTemplates(UsersCountLifeCounterTemplatesRequest? request)
         {
             var (content, message) = await this._usersService.CountLifeCountersTemplates(request);
@@ -359,6 +347,34 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
 
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLastLifeCounterTemplateId(UsersGetLastLifeCounterTemplateIdRequest? request)
+        {
+            var (content, message) = await this._usersService.GetLastLifeCounterTemplateId(request);
+
+            var response = new Response<UsersGetLastLifeCounterTemplateIdResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ListLifeCounterTemplates(UsersListLifeCounterTemplatesRequest? request)
+        {
+            var (content, message) = await this._usersService.ListLifeCounterTemplates(request);
+
+            var response = new Response<List<UsersListLifeCounterTemplatesResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
         }
 
         [HttpGet]
@@ -441,20 +457,6 @@ namespace BoardGameGeekLike.Controllers
             var (content, message) = await this._usersService.GetLifeCounterManagerDetails(request);
 
             var response = new Response<UsersGetLifeCounterManagerDetailsResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetLastLifeCounterManagerDetails(UsersGetLastLifeCounterManagerDetailsRequest? request)
-        {
-            var (content, message) = await this._usersService.GetLastLifeCounterManagerDetails(request);
-
-            var response = new Response<UsersGetLastLifeCounterManagerDetailsResponse>
             {
                 Content = content,
                 Message = message

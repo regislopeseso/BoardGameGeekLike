@@ -14,7 +14,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? PlayersStartingLifePoints { get; set; }
 
-        public int? PlayersCount { get; set; }
+        public int? PlayersCount { get; set; } 
 
         public bool? FixedMaxLifePointsMode { get; set; }
 
@@ -24,7 +24,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public bool? AutoEndMode { get; set; } 
 
-        public int? LifeCounterManagersCount { get; set; }
+        public int? LifeCounterManagersCount { get; set; } = 0;
 
         public List<LifeCounterManager>? LifeCounterManagers { get; set; }
 
