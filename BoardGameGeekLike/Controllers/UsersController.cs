@@ -18,6 +18,9 @@ namespace BoardGameGeekLike.Controllers
         {
             this._usersService = usersService;
         }
+        
+        // USER'S PROFILE
+        //
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> SignUp([FromForm] UsersSignUpRequest? request)
@@ -154,7 +157,11 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
+        //
+        //--* end of USER'S PROFILE *--//       
+           
+        // BOARD GAMES
+        //
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
         public async Task<IActionResult> LogSession([FromForm] UsersLogSessionRequest? request)
@@ -287,11 +294,30 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        //
+        //--* end of BOARD GAMES *--//
+
+
+
+        // LIFE COUNTERS
+        //
+        // 1º LIFE COUNTER QUICK START
+        [HttpPost]
+        public async Task<IActionResult> QuickStartLifeCounter([FromBody] UsersQuickStartLifeCounterRequest? request)
+        {
+            var (content, message) = await this._usersService.QuickStartLifeCounter(request);
+
+            var response = new Response<UsersQuickStartLifeCounterResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         //
-        // LIFE COUNTERS
-
-        // 1º LIFE COUNTER TEMPLATES
+        // 2º LIFE COUNTER TEMPLATES
         [HttpPost]
         public async Task<IActionResult> CreateLifeCounterTemplate([FromForm] UsersCreateLifeCounterTemplateRequest? request)
         {
@@ -336,11 +362,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetLifeCounterTemplateDetails([FromQuery] UsersGetLifeCounterDetailsRequest? request)
+        public async Task<IActionResult> GetLifeCounterTemplateDetails([FromQuery] UsersGetLifeCounterTemplateDetailsRequest? request)
         {
             var (content, message) = await this._usersService.GetLifeCounterTemplateDetails(request);
 
-            var response = new Response<UsersGetLifeCounterDetailsResponse>
+            var response = new Response<UsersGetLifeCounterTemplateDetailsResponse>
             {
                 Content = content,
                 Message = message
@@ -348,9 +374,9 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-
-        // 2º LIFE COUNTER MANAGERS
+        
+        //
+        // 3º LIFE COUNTER MANAGERS
         [HttpPost]
         public async Task<IActionResult> StartLifeCounterManager([FromForm] UsersStartLifeCounterManagerRequest request)
         {
@@ -364,80 +390,13 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetLastLifeCounterManager(UsersGetLastLifeCounterManagerRequest? request)
+        
+        [HttpPut]
+        public async Task<IActionResult> EditLifeCounterManager([FromBody] UsersEditLifeCounterManagerRequest? request)
         {
-            var (content, message) = await this._usersService.GetLastLifeCounterManager(request);
+            var (content, message) = await this._usersService.EditLifeCounterManager(request);
 
-            var response = new Response<UsersGetLastLifeCounterManagerResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-
-
-        // 3º LIFE COUNTER PLAYERS
-       
-
-       
-        [HttpGet]
-        public async Task<IActionResult> GetLifeCounterPlayersDetails([FromQuery] UsersGetLifeCounterPlayersDetailsRequest? request)
-        {
-            var (content, message) = await this._usersService.GetLifeCounterPlayersDetails(request);
-
-            var response = new Response<UsersGetLifeCounterPlayersDetailsResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> IncreaseLifePoints([FromForm] UsersIncreaseLifePointsRequest request)
-        {
-            var (content, message) = await this._usersService.IncreaseLifePoints(request);
-
-            var response = new Response<UsersIncreaseLifePointsResponse>()
-            {
-                Content = content,
-                Message = message
-            };
-
-            await Task.Delay(300);
-
-            return new JsonResult(response);
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> DecreaseLifePoints([FromForm] UsersDecreaseLifePointsRequest request)
-        {
-            var (content, message) = await this._usersService.DecreaseLifePoints(request);
-
-            var response = new Response<UsersDecreaseLifePointsResponse>()
-            {
-                Content = content,
-                Message = message
-            };
-
-            await Task.Delay(300);
-
-            return new JsonResult(response);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> CheckForLifeCounterManagerEnd([FromQuery] UsersCheckForLifeCounterManagerEndRequest? request)
-        {
-            var (content, message) = await this._usersService.CheckForLifeCounterManagerEnd(request);
-
-            var response = new Response<UsersCheckForLifeCounterManagerEndResponse>
+            var response = new Response<UsersEditLifeCounterManagerResponse>
             {
                 Content = content,
                 Message = message
@@ -462,12 +421,12 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> EditLifeCounterManager([FromBody] UsersEditLifeCounterManagerRequest? request)
+        [HttpGet]
+        public async Task<IActionResult> CheckForLifeCounterManagerEnd([FromQuery] UsersCheckForLifeCounterManagerEndRequest? request)
         {
-            var (content, message) = await this._usersService.EditLifeCounterManager(request);
+            var (content, message) = await this._usersService.CheckForLifeCounterManagerEnd(request);
 
-            var response = new Response<UsersEditLifeCounterManagerResponse>
+            var response = new Response<UsersCheckForLifeCounterManagerEndResponse>
             {
                 Content = content,
                 Message = message
@@ -504,6 +463,55 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        //
+        // 4º LIFE COUNTER PLAYERS
+        [HttpGet]
+        public async Task<IActionResult> GetLifeCounterPlayersDetails([FromQuery] UsersGetLifeCounterPlayersDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.GetLifeCounterPlayersDetails(request);
 
+            var response = new Response<UsersGetLifeCounterPlayersDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> IncreaseLifePoints([FromForm] UsersIncreaseLifePointsRequest request)
+        {
+            var (content, message) = await this._usersService.IncreaseLifePoints(request);
+
+            var response = new Response<UsersIncreaseLifePointsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> DecreaseLifePoints([FromForm] UsersDecreaseLifePointsRequest request)
+        {
+            var (content, message) = await this._usersService.DecreaseLifePoints(request);
+
+            var response = new Response<UsersDecreaseLifePointsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
+        
+        //
+        //--* end of LIFE COUNTERS *--//
     }
 }

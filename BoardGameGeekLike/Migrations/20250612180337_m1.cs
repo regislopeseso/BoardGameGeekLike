@@ -238,27 +238,28 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "LifeCounters",
+                name: "LifeCounterTemplates",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
+                    LifeCounterTemplateName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    DefaultPlayersCount = table.Column<int>(type: "int", nullable: true),
                     PlayersStartingLifePoints = table.Column<int>(type: "int", nullable: true),
-                    MaxLifePoints = table.Column<int>(type: "int", nullable: true),
-                    FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AutoEndMatch = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    PlayersCount = table.Column<int>(type: "int", nullable: true),
+                    FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    PlayersMaxLifePoints = table.Column<int>(type: "int", nullable: true),
+                    AutoDefeatMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    AutoEndMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    LifeCounterManagersCount = table.Column<int>(type: "int", nullable: true),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    LifeCounterManagersCount = table.Column<int>(type: "int", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LifeCounters", x => x.Id);
+                    table.PrimaryKey("PK_LifeCounterTemplates", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_LifeCounters_AspNetUsers_UserId",
+                        name: "FK_LifeCounterTemplates_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
@@ -303,17 +304,20 @@ namespace BoardGameGeekLike.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    LifeCounterName = table.Column<string>(type: "longtext", nullable: true)
+                    LifeCounterManagerName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    UserId = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    LifeCounterId = table.Column<int>(type: "int", nullable: true),
                     PlayersCount = table.Column<int>(type: "int", nullable: true),
+                    FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    PlayersMaxLifePoints = table.Column<int>(type: "int", nullable: true),
+                    AutoDefeatMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    AutoEndMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     StartingTime = table.Column<long>(type: "bigint", nullable: true),
                     EndingTime = table.Column<long>(type: "bigint", nullable: true),
                     Duration_minutes = table.Column<int>(type: "int", nullable: true),
-                    AutoEndMode = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LifeCounterTemplateId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -324,9 +328,9 @@ namespace BoardGameGeekLike.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_LifeCounterManagers_LifeCounters_LifeCounterId",
-                        column: x => x.LifeCounterId,
-                        principalTable: "LifeCounters",
+                        name: "FK_LifeCounterManagers_LifeCounterTemplates_LifeCounterTemplate~",
+                        column: x => x.LifeCounterTemplateId,
+                        principalTable: "LifeCounterTemplates",
                         principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -424,11 +428,11 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     PlayerName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    StartingLife = table.Column<int>(type: "int", nullable: true),
-                    CurrentLife = table.Column<int>(type: "int", nullable: true),
-                    MaxLife = table.Column<int>(type: "int", nullable: true),
+                    StartingLifePoints = table.Column<int>(type: "int", nullable: true),
+                    CurrentLifePoints = table.Column<int>(type: "int", nullable: true),
+                    FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    MaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     LifeCounterManagerId = table.Column<int>(type: "int", nullable: false),
-                    FixedMaxLife = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsDefeated = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
@@ -491,9 +495,9 @@ namespace BoardGameGeekLike.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LifeCounterManagers_LifeCounterId",
+                name: "IX_LifeCounterManagers_LifeCounterTemplateId",
                 table: "LifeCounterManagers",
-                column: "LifeCounterId");
+                column: "LifeCounterTemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LifeCounterManagers_UserId",
@@ -506,8 +510,8 @@ namespace BoardGameGeekLike.Migrations
                 column: "LifeCounterManagerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LifeCounters_UserId",
-                table: "LifeCounters",
+                name: "IX_LifeCounterTemplates_UserId",
+                table: "LifeCounterTemplates",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -574,7 +578,7 @@ namespace BoardGameGeekLike.Migrations
                 name: "boardgames");
 
             migrationBuilder.DropTable(
-                name: "LifeCounters");
+                name: "LifeCounterTemplates");
 
             migrationBuilder.DropTable(
                 name: "categories");

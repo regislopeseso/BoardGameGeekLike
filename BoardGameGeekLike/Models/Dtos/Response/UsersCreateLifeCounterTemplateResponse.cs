@@ -2,6 +2,6 @@
 {
     public class UsersCreateLifeCounterTemplateResponse
     {
-        public required int LifeCounterId { get; set; }
+        public int? LifeCounterTemplateId { get; set; }
     }
 }

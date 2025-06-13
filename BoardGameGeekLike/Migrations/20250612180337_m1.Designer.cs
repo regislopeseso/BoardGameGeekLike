@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250612135505_m4")]
-    partial class m4
+    [Migration("20250612180337_m1")]
+    partial class m1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -100,45 +100,6 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("categories");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounter", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("AutoEndMode")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("FixedMaxLifePointsMode")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int?>("LifeCounterManagersCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("PlayersCount")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PlayersMaxLifePoints")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PlayersStartingLifePoints")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("LifeCounters");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
                 {
                     b.Property<int>("Id")
@@ -147,7 +108,10 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AutoEndMode")
+                    b.Property<bool?>("AutoDefeatMode")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("AutoEndMode")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("Duration_minutes")
@@ -162,11 +126,11 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("IsFinished")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("LifeCounterId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LifeCounterName")
+                    b.Property<string>("LifeCounterManagerName")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("LifeCounterTemplateId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("PlayersCount")
                         .HasColumnType("int");
@@ -182,7 +146,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LifeCounterId");
+                    b.HasIndex("LifeCounterTemplateId");
 
                     b.HasIndex("UserId");
 
@@ -223,6 +187,48 @@ namespace BoardGameGeekLike.Migrations
                     b.HasIndex("LifeCounterManagerId");
 
                     b.ToTable("LifeCounterPlayers");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("AutoDefeatMode")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("AutoEndMode")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("FixedMaxLifePointsMode")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("LifeCounterManagersCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LifeCounterTemplateName")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("PlayersCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlayersMaxLifePoints")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlayersStartingLifePoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LifeCounterTemplates");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>
@@ -548,26 +554,17 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounter", b =>
-                {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
-                        .WithMany("LifeCounters")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
                 {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.LifeCounter", "LifeCounter")
-                        .WithMany("LifeCounterManagerInstances")
-                        .HasForeignKey("LifeCounterId");
+                    b.HasOne("BoardGameGeekLike.Models.Entities.LifeCounterTemplate", "LifeCounterTemplate")
+                        .WithMany("LifeCounterManagers")
+                        .HasForeignKey("LifeCounterTemplateId");
 
                     b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
-                        .WithMany("lifeCounterManagers")
+                        .WithMany("LifeCounterManagers")
                         .HasForeignKey("UserId");
 
-                    b.Navigation("LifeCounter");
+                    b.Navigation("LifeCounterTemplate");
 
                     b.Navigation("User");
                 });
@@ -581,6 +578,15 @@ namespace BoardGameGeekLike.Migrations
                         .IsRequired();
 
                     b.Navigation("LifeCounterManager");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterTemplate", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
+                        .WithMany("LifeCounterTemplates")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
@@ -695,21 +701,21 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("BoardGames");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounter", b =>
-                {
-                    b.Navigation("LifeCounterManagerInstances");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
                 {
                     b.Navigation("LifeCounterPlayers");
                 });
 
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterTemplate", b =>
+                {
+                    b.Navigation("LifeCounterManagers");
+                });
+
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
                 {
-                    b.Navigation("LifeCounters");
+                    b.Navigation("LifeCounterManagers");
 
-                    b.Navigation("lifeCounterManagers");
+                    b.Navigation("LifeCounterTemplates");
                 });
 #pragma warning restore 612, 618
         }

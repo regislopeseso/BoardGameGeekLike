@@ -2,6 +2,6 @@
 {
     public class UsersCountLifeCounterTemplatesResponse
     {
-        public int? LifeCountersCount {  get; set; }    
+        public int? LifeCounterTemplatesCount {  get; set; }    
     }
 }

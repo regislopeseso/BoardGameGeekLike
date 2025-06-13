@@ -2,7 +2,7 @@
 {
     public class UsersListLifeCounterTemplatesResponse
     {
-        public required int? LifeCounterId { get; set; }
+        public required int? LifeCounterTemplateId { get; set; }
         public required string LifeCounterTemplateName { get; set; }
     }
 }

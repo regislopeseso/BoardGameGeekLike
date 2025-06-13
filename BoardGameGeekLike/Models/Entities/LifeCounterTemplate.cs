@@ -16,15 +16,18 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? PlayersCount { get; set; }
 
-        public bool FixedMaxLifePointsMode { get; set; }
+        public bool? FixedMaxLifePointsMode { get; set; }
 
-        public int? PlayersMaxLifePoints { get; set; } 
+        public int? PlayersMaxLifePoints { get; set; }
 
-        public bool AutoEndMode { get; set; }
+        public bool? AutoDefeatMode { get; set; }
 
-        public List<LifeCounterManager>? LifeCounterManagerInstances { get; set; }
+        public bool? AutoEndMode { get; set; } 
 
-        public int? LifeCounterManagersCount { get; set; } = 0;
+        public int? LifeCounterManagersCount { get; set; }
+
+        public List<LifeCounterManager>? LifeCounterManagers { get; set; }
+
 
         [ForeignKey(nameof(User))]
         public string? UserId { get; set; }
