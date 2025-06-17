@@ -2,6 +2,6 @@
 {
     public class UsersGetSessionsRequest
     {
-        public int BoardGameId { get; set; }
+        public int? BoardGameId { get; set; }
     }
 }

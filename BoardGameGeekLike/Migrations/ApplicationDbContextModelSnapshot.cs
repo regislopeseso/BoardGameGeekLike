@@ -161,6 +161,9 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool?>("AutoDefeatMode")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int?>("CurrentLifePoints")
                         .HasColumnType("int");
 

@@ -451,6 +451,24 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> FinishLifeCounterManager([FromForm] UsersFinishLifeCounterManagerRequest request)
+        {
+            var (content, message) = await this._usersService.FinishLifeCounterManager(request);
+
+            var response = new Response<UsersFinishLifeCounterManagerResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
+
+
+
         [HttpGet]
         public async Task<IActionResult> GetLifeCounterManagerDetails([FromQuery] UsersGetLifeCounterManagerDetailsRequest? request)
         {

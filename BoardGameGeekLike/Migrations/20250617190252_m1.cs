@@ -307,6 +307,7 @@ namespace BoardGameGeekLike.Migrations
                     LifeCounterManagerName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     PlayersCount = table.Column<int>(type: "int", nullable: true),
+                    PlayersStartingLifePoints = table.Column<int>(type: "int", nullable: true),
                     FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     PlayersMaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     AutoDefeatMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
@@ -433,6 +434,7 @@ namespace BoardGameGeekLike.Migrations
                     FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     MaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     LifeCounterManagerId = table.Column<int>(type: "int", nullable: false),
+                    AutoDefeatMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     IsDefeated = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>

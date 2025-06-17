@@ -2,10 +2,6 @@
 {
     public class UsersQuickStartLifeCounterResponse
     {
-        public int? LifeCounterManagerId { get; set; }
-
-        public string? LifeCounterManagerName { get; set; }
-
-        public List<UsersQuickStartLifeCounterResponse_players>? LifeCounterPlayers {get; set;}
+        public int? LifeCounterManagerId { get; set; }      
     }
 }

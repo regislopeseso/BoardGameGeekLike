@@ -25,6 +25,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public LifeCounterManager? LifeCounterManager { get; set; }
 
+        public bool? AutoDefeatMode { get; set; }
 
         public bool IsDefeated { get; set; } = false;
     }

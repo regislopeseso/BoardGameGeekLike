@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250612180337_m1")]
+    [Migration("20250617190252_m1")]
     partial class m1
     {
         /// <inheritdoc />
@@ -138,6 +138,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("PlayersMaxLifePoints")
                         .HasColumnType("int");
 
+                    b.Property<int?>("PlayersStartingLifePoints")
+                        .HasColumnType("int");
+
                     b.Property<long?>("StartingTime")
                         .HasColumnType("bigint");
 
@@ -160,6 +163,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("AutoDefeatMode")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("CurrentLifePoints")
                         .HasColumnType("int");

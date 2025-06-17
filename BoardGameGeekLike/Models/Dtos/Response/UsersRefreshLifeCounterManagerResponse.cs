@@ -2,5 +2,6 @@
 {
     public class UsersRefreshLifeCounterManagerResponse
     {
+        public bool? IsLifeCounterAlreadyFinished { get; set; }
     }
 }
