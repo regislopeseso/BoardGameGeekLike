@@ -14,5 +14,7 @@
         public bool? AutoDefeatMode {  get; set; }
 
         public bool? AutoEndMode { get; set; }
+
+        public bool? IsFinished { get; set; }
     }
 }

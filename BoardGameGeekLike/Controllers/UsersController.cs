@@ -499,6 +499,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetLifeCounterPlayerDetails([FromQuery] UsersGetLifeCounterPlayerDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.GetLifeCounterPlayerDetails(request);
+
+            var response = new Response<UsersGetLifeCounterPlayerDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> IncreaseLifePoints([FromForm] UsersIncreaseLifePointsRequest request)
         {
