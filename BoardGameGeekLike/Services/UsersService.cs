@@ -2202,6 +2202,7 @@ namespace BoardGameGeekLike.Services
                 player.StartingLifePoints = request.NewPlayersStartingLifePoints;
                 player.FixedMaxLifePointsMode = request.FixedMaxLifePointsMode!.Value;
                 player.MaxLifePoints = request.NewPlayersMaxLifePoints;
+                player.AutoDefeatMode = request.AutoDefeatMode!.Value;
             }
 
             if (request.NewPlayersCount > lifeCounterManagerDB.PlayersCount)
@@ -2215,13 +2216,21 @@ namespace BoardGameGeekLike.Services
                         StartingLifePoints = request.NewPlayersStartingLifePoints,
                         CurrentLifePoints = request.NewPlayersStartingLifePoints,
                         FixedMaxLifePointsMode = request.FixedMaxLifePointsMode!.Value,
-                        MaxLifePoints = request.NewPlayersMaxLifePoints
+                        MaxLifePoints = request.NewPlayersMaxLifePoints,
+                        AutoDefeatMode = request.AutoDefeatMode!.Value, 
                     });
                 }
             }           
 
             lifeCounterManagerDB.PlayersCount = request.NewPlayersCount;
             lifeCounterManagerDB.AutoDefeatMode = request.AutoDefeatMode;
+
+            foreach (var player in playersDB)
+            {
+                if(request.AutoDefeatMode == false) player.IsDefeated = false;
+                if(request.AutoDefeatMode == true && player.CurrentLifePoints == 0) player.IsDefeated = true;
+            }         
+
             lifeCounterManagerDB.AutoEndMode = request.AutoEndMode!.Value;
 
             await this._daoDbContext.SaveChangesAsync();
@@ -2768,7 +2777,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: this life counter manager was already finished");
             }
 
-            if (lifeCounterPlayerDB.IsDefeated == true)
+            if (lifeCounterPlayerDB.AutoDefeatMode == true && lifeCounterPlayerDB.IsDefeated == true)
             {
                 return (null, $"Error: {lifeCounterPlayerDB.PlayerName} has been already defeated");
             }            
