@@ -2222,6 +2222,14 @@ namespace BoardGameGeekLike.Services
             }           
 
             lifeCounterManagerDB.PlayersCount = request.NewPlayersCount;
+
+            lifeCounterManagerDB.FixedMaxLifePointsMode = request.FixedMaxLifePointsMode;
+            
+            if(request.FixedMaxLifePointsMode == true)
+            {
+                lifeCounterManagerDB.PlayersMaxLifePoints = request.NewPlayersMaxLifePoints;
+            }
+
             lifeCounterManagerDB.AutoDefeatMode = request.AutoDefeatMode;
 
             foreach (var player in playersDB)
@@ -2768,22 +2776,29 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, $"Error: {lifeCounterPlayerDB.PlayerName} has been already defeated");
             }
+            
+            int? updatedLifePoints = 0;
+            var text = "";
           
             if (lifeCounterPlayerDB.FixedMaxLifePointsMode == true &&
                 (lifeCounterPlayerDB.CurrentLifePoints == lifeCounterPlayerDB.MaxLifePoints ||
                 lifeCounterPlayerDB.CurrentLifePoints + request.LifePointsToIncrease > lifeCounterPlayerDB.MaxLifePoints))
             {
-               
-                return (null, $"Error, player is already at maximum life points for this game ({lifeCounterPlayerDB.MaxLifePoints})");
-            }
+                updatedLifePoints = lifeCounterPlayerDB.MaxLifePoints;
 
-            var updatedLifePoints = lifeCounterPlayerDB.CurrentLifePoints + request.LifePointsToIncrease;
+                text = $"{lifeCounterPlayerDB.PlayerName} life points updated successfully. Max life points reached: {updatedLifePoints}";
+            }
+            else
+            {
+                updatedLifePoints = lifeCounterPlayerDB.CurrentLifePoints + request.LifePointsToIncrease;
+                text = $"{lifeCounterPlayerDB.PlayerName} life points updated successfully. Current life points: {updatedLifePoints}";
+            }
 
             lifeCounterPlayerDB.CurrentLifePoints = updatedLifePoints;
 
             await this._daoDbContext.SaveChangesAsync();
 
-            return (new UsersIncreaseLifePointsResponse { UpdatedLifePoints = updatedLifePoints }, $"{lifeCounterPlayerDB.PlayerName} life points updated successfully. Current life points: {updatedLifePoints}");
+            return (new UsersIncreaseLifePointsResponse { UpdatedLifePoints = updatedLifePoints }, text);
         }
         private static (bool, string) IncreaseLifePoints_Validation(UsersIncreaseLifePointsRequest request)
         {
@@ -2882,7 +2897,182 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-      
+        public async Task<(UsersGetPlayersCountResponse?, string)> GetPlayersCount(UsersGetPlayersCountRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (requestIsValid, message) = GetPlayersCount_Validation(request);
+
+            if (requestIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var playersCountDB = await this._daoDbContext
+                .LifeCounterManagers               
+                .Where(a => a.UserId == userId &&
+                           a.Id == request.LifeCounterManagerId)
+                .Select(a => a.PlayersCount)
+                .FirstOrDefaultAsync();
+
+            if (playersCountDB == null || playersCountDB < 0)
+            {
+                return (null, $"Error, PlayersCount request failed, returning: {playersCountDB}");
+            }
+    
+            return (new UsersGetPlayersCountResponse { PlayersCount = playersCountDB }, "Players count fetched successfully)");
+        }
+        private static (bool, string) GetPlayersCount_Validation(UsersGetPlayersCountRequest request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterManagerId.HasValue == false || request.LifeCounterManagerId < 1)
+            {
+                return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterManagerId}");
+            }        
+
+            return (true, string.Empty);
+        }
+
+
+
+        public async Task<(UsersChangePlayerNameResponse?, string)> ChangePlayerName(UsersChangePlayerNameRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (requestIsValid, message) = ChangePlayerName_Validation(request);
+
+            if (requestIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterPlayerDB_isValid = await this._daoDbContext
+                .LifeCounterPlayers
+                .AnyAsync(a => a.LifeCounterManager!.UserId == userId && a.Id == request.LifeCounterPlayerId);                         
+
+            if (lifeCounterPlayerDB_isValid == false)
+            {
+                return (null, $"Error, invalid requested LifeCounterManager, returning: {lifeCounterPlayerDB_isValid}");
+            }
+
+            var isNewNameValid = await this._daoDbContext
+                .LifeCounterPlayers
+                .AnyAsync(a =>
+                     a.PlayerName!.ToLower().Trim() == request.PlayerNewName!.ToLower().Trim());
+
+            if(isNewNameValid == true)
+            {
+                return (null, "Error: requested name is already in use!");
+            }
+
+            await this._daoDbContext
+                .LifeCounterPlayers
+                .Where(a => a.LifeCounterManager!.UserId == userId && a.Id == request.LifeCounterPlayerId)
+                .ExecuteUpdateAsync(a => a.SetProperty(b => b.PlayerName, request.PlayerNewName));
+
+            return (new UsersChangePlayerNameResponse { }, "Life counter player name changed successfully.");
+        }
+        private static (bool, string) ChangePlayerName_Validation(UsersChangePlayerNameRequest request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterPlayerId.HasValue == false ||
+                (request.LifeCounterPlayerId.HasValue == true && request.LifeCounterPlayerId.Value < 1))
+            {
+                return (false, $"Error: requested LifeCounterPlayerId failed: request.LifeCounterPlayerId == {request.LifeCounterPlayerId}");
+
+            }
+
+            if (String.IsNullOrWhiteSpace(request.PlayerNewName) == true)
+            {
+                return (false, $"Error: requested PlayerNewName failed: String.IsNullOrWhiteSpace(request.PlayerNewName) == true? {String.IsNullOrWhiteSpace(request.PlayerNewName) == true}");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(UsersDeleteLifeCounterPlayerResponse?, string)> DeleteLifeCounterPlayer(UsersDeleteLifeCounterPlayerRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (requestIsValid, message) = DeleteLifeCounterPlayer_Validation(request);
+
+            if (requestIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterPlayerDB = await this._daoDbContext
+                .LifeCounterPlayers
+                .Include(a => a.LifeCounterManager)
+                .FirstOrDefaultAsync(a => a.LifeCounterManager!.UserId == userId && a.Id == request.LifeCounterPlayerId);
+
+            if (lifeCounterPlayerDB == null)
+            {
+                return (null, $"Error, invalid requested LifeCounterManager, returning: {lifeCounterPlayerDB}");
+            }
+
+            
+            var lifeCounterManagerDB = lifeCounterPlayerDB.LifeCounterManager;
+
+            if (lifeCounterManagerDB == null)
+            {
+                return (null, $"Error, LifeCounterManager request failed, returning: {lifeCounterManagerDB}");
+            }
+           
+            if( lifeCounterManagerDB.PlayersCount <= 1)
+            {
+                return (null, "Error: a life counter manager must host at least one player");
+            }
+            
+            this._daoDbContext.LifeCounterPlayers.Remove(lifeCounterPlayerDB);
+
+            lifeCounterManagerDB.PlayersCount--;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersDeleteLifeCounterPlayerResponse { }, "Life counter player name changed successfully.");
+        }
+        private static (bool, string) DeleteLifeCounterPlayer_Validation(UsersDeleteLifeCounterPlayerRequest request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterPlayerId.HasValue == false ||
+                (request.LifeCounterPlayerId.HasValue == true && request.LifeCounterPlayerId.Value < 1))
+            {
+                return (false, $"Error: requested LifeCounterPlayerId failed: request.LifeCounterPlayerId == {request.LifeCounterPlayerId}");
+
+            }           
+
+            return (true, string.Empty);
+        }
+
+
         //
         //--* end of LIFE COUNTERS *--//
     }

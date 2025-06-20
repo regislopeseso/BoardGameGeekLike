@@ -544,7 +544,53 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
+        [HttpGet]
+        public async Task<IActionResult> GetPlayersCount([FromQuery] UsersGetPlayersCountRequest? request)
+        {
+            var (content, message) = await this._usersService.GetPlayersCount(request);
+
+            var response = new Response<UsersGetPlayersCountResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePlayerName([FromForm] UsersChangePlayerNameRequest request)
+        {
+            var (content, message) = await this._usersService.ChangePlayerName(request);
+
+            var response = new Response<UsersChangePlayerNameResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteLifeCounterPlayer([FromQuery] UsersDeleteLifeCounterPlayerRequest request)
+        {
+            var (content, message) = await this._usersService.DeleteLifeCounterPlayer(request);
+
+            var response = new Response<UsersDeleteLifeCounterPlayerResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
+
         //
         //--* end of LIFE COUNTERS *--//
     }
