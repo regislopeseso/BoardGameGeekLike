@@ -14,6 +14,6 @@
 
         public bool? AutoDefeatMode { get; set; }
 
-        public bool? AutoEndMatch { get; set; }
+        public bool? AutoEndMatchMode { get; set; }
     }
 }

@@ -1728,7 +1728,7 @@ namespace BoardGameGeekLike.Services
                     FixedMaxLifePointsMode = false,
                     PlayersMaxLifePoints = null,
                     AutoDefeatMode = false,
-                    AutoEndMatch = false,
+                    AutoEndMatchMode = false,
                 };
             }
             else
@@ -1760,7 +1760,7 @@ namespace BoardGameGeekLike.Services
                 FixedMaxLifePointsMode = request.FixedMaxLifePointsMode,
                 PlayersMaxLifePoints = request.PlayersMaxLifePoints,
                 AutoDefeatMode = request.AutoDefeatMode,
-                AutoEndMode = request.AutoEndMatch,
+                AutoEndMode = request.AutoEndMatchMode,
 
                 UserId = userId,
             };
@@ -1812,6 +1812,7 @@ namespace BoardGameGeekLike.Services
             {
                 return (false,
                    "Error: FixedMaxLifePointsMode is null! " +
+                   $"request.FixedMaxLifePointsMode.HasValue == false: {request.FixedMaxLifePointsMode.HasValue == false}"+
                    $"request.FixedMaxLifePointsMode: {request.FixedMaxLifePointsMode}");
             }
 
@@ -1836,11 +1837,11 @@ namespace BoardGameGeekLike.Services
                    $"request.AutoDefeatMode: {request.AutoDefeatMode}");
             }
 
-            if (request.AutoEndMatch.HasValue == false || request.AutoEndMatch == null)
+            if (request.AutoEndMatchMode.HasValue == false || request.AutoEndMatchMode == null)
             {
                 return (false,
                    "Error: AutoEndMatch is null! " +
-                   $"request.AutoEndMatch: {request.AutoEndMatch}");
+                   $"request.AutoEndMatch: {request.AutoEndMatchMode}");
             }
 
             return (true, String.Empty);
@@ -1910,7 +1911,7 @@ namespace BoardGameGeekLike.Services
             return (new UsersGetLastLifeCounterTemplateIdResponse
             {
                 LastLifeCounterTemplateId = lifeCounterTemplateDB.Id,
-            }, "LifeCounterTemplate details fetched successfully");
+            }, "Last LifeCounterTemplateId fetched successfully");
         }
         private static (bool, string) GetLastLifeCounterTemplateId_Validation(UsersGetLastLifeCounterTemplateIdRequest? request)
         {
@@ -1961,7 +1962,7 @@ namespace BoardGameGeekLike.Services
         {
             if (request != null)
             {
-                return (false, $"Error: request is not null: {request}");
+                return (false, $"Error: request is NOT null but it MUST be null!");
             }
 
             return (true, string.Empty);
@@ -2147,7 +2148,9 @@ namespace BoardGameGeekLike.Services
 
             if (request.LifeCounterTemplateId == null || request.LifeCounterTemplateId.HasValue == false)
             {
-                return (false, $"Error: requested LifeCounterId failed: {request.LifeCounterTemplateId}");
+                return (false, $"Error: requested LifeCounterManagerId failed:" +
+                    $" request.LifeCounterTemplateId == null -> {request.LifeCounterTemplateId == null} or  " +
+                    $"request.LifeCounterTemplateId.HasValue == false -> {request.LifeCounterTemplateId.HasValue == false}");
             }          
 
             return (true, string.Empty);
