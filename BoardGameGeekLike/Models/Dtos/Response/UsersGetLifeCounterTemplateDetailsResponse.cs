@@ -4,9 +4,9 @@
     {
         public string? LifeCounterTemplateName { get; set; }
 
-        public int? PlayersCount { get; set; }
 
         public int? PlayersStartingLifePoints { get; set; }
+        public int? PlayersCount { get; set; }
 
         public bool? FixedMaxLifePointsMode { get; set; }
 

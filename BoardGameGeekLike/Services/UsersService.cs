@@ -1808,15 +1808,14 @@ namespace BoardGameGeekLike.Services
                     $"request.PlayersCount: {request.PlayersCount}");
             }
 
-            if (request.FixedMaxLifePointsMode.HasValue == false || request.PlayersMaxLifePoints == null)
+            if (request.FixedMaxLifePointsMode.HasValue == false)
             {
                 return (false,
                    "Error: FixedMaxLifePointsMode is null! " +
-                   $"request.FixedMaxLifePointsMode.HasValue == false: {request.FixedMaxLifePointsMode.HasValue == false}"+
-                   $"request.FixedMaxLifePointsMode: {request.FixedMaxLifePointsMode}");
+                   $"request.FixedMaxLifePointsMode.HasValue == false: {request.FixedMaxLifePointsMode.HasValue == false}");
             }
 
-            if (request.PlayersMaxLifePoints.HasValue == false || request.PlayersMaxLifePoints == null)
+            if (request.FixedMaxLifePointsMode == true && (request.PlayersMaxLifePoints.HasValue == false || request.PlayersMaxLifePoints == null))
             {
                 return (false,
                    "Error: PlayersMaxLifePoints is null! " +

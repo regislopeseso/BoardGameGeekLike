@@ -60,7 +60,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddIdentity<User, IdentityRole>(options => 
 {
     // Lockout settings
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(0);
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 3;
     options.Lockout.AllowedForNewUsers = true;
 
@@ -90,7 +90,7 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // optional timeout
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(480); // optional timeout
     options.SlidingExpiration = false;
     options.Cookie.IsEssential = true;
     options.Cookie.Expiration = null; // <-- this ensures it's a session cookie
