@@ -392,7 +392,22 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
+       
+        [HttpPut]
+        public async Task<IActionResult> EditLifeCounterTemplate([FromBody] UsersEditLifeCounterTemplateRequest? request)
+        {
+            var (content, message) = await this._usersService.EditLifeCounterTemplate(request);
+
+            var response = new Response<UsersEditLifeCounterTemplateResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         //
         // 3º LIFE COUNTER MANAGERS
         [HttpPost]

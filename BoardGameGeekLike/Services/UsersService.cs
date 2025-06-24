@@ -1728,7 +1728,7 @@ namespace BoardGameGeekLike.Services
                     FixedMaxLifePointsMode = false,
                     PlayersMaxLifePoints = null,
                     AutoDefeatMode = false,
-                    AutoEndMatchMode = false,
+                    AutoEndMode = false,
                 };
             }
             else
@@ -1760,7 +1760,7 @@ namespace BoardGameGeekLike.Services
                 FixedMaxLifePointsMode = request.FixedMaxLifePointsMode,
                 PlayersMaxLifePoints = request.PlayersMaxLifePoints,
                 AutoDefeatMode = request.AutoDefeatMode,
-                AutoEndMode = request.AutoEndMatchMode,
+                AutoEndMode = request.AutoEndMode,
 
                 UserId = userId,
             };
@@ -1836,11 +1836,11 @@ namespace BoardGameGeekLike.Services
                    $"request.AutoDefeatMode: {request.AutoDefeatMode}");
             }
 
-            if (request.AutoEndMatchMode.HasValue == false || request.AutoEndMatchMode == null)
+            if (request.AutoEndMode.HasValue == false || request.AutoEndMode == null)
             {
                 return (false,
                    "Error: AutoEndMatch is null! " +
-                   $"request.AutoEndMatch: {request.AutoEndMatchMode}");
+                   $"request.AutoEndMatch: {request.AutoEndMode}");
             }
 
             return (true, String.Empty);
@@ -2020,6 +2020,146 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
+
+        public async Task<(UsersEditLifeCounterTemplateResponse?, string)> EditLifeCounterTemplate(UsersEditLifeCounterTemplateRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = EditLifeCounterTemplate_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterTemplateDB = await this._daoDbContext
+                .LifeCounterTemplates
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.Id == request!.LifeCounterTemplateId);
+
+            if (lifeCounterTemplateDB == null)
+            {
+                return (null, $"Error: life counter template request failed: {lifeCounterTemplateDB}");
+            }
+
+            var nameAlreadyInUse = await this._daoDbContext
+                .LifeCounterTemplates
+                .AnyAsync(a => a.UserId == userId && 
+                               a.LifeCounterTemplateName!.ToLower().Trim() == request!.LifeCounterTemplateName!.ToLower().Trim() && 
+                               a.Id != request.LifeCounterTemplateId);
+
+            if (nameAlreadyInUse == true)
+            {
+                return (null, $"Error: requested Life Counter Template NAME is already in use, please choose a different name: {request!.LifeCounterTemplateName}");
+            }
+
+            lifeCounterTemplateDB.LifeCounterTemplateName = request!.LifeCounterTemplateName;
+            lifeCounterTemplateDB.PlayersStartingLifePoints = request.PlayersStartingLifePoints;
+            lifeCounterTemplateDB.PlayersCount = request.PlayersCount;
+            lifeCounterTemplateDB.FixedMaxLifePointsMode = request.FixedMaxLifePointsMode;
+            lifeCounterTemplateDB.PlayersMaxLifePoints = request.PlayersMaxLifePoints;
+            lifeCounterTemplateDB.AutoDefeatMode = request.AutoDefeatMode;
+            lifeCounterTemplateDB.AutoEndMode = request.AutoEndMode;
+
+            await this._daoDbContext.SaveChangesAsync();    
+
+            return (new UsersEditLifeCounterTemplateResponse
+            {
+                LifeCounterTemplateId = lifeCounterTemplateDB.Id,
+            }, "LifeCounterTemplate edited successfully");
+        }
+        private static (bool, string) EditLifeCounterTemplate_Validation(UsersEditLifeCounterTemplateRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterTemplateId == null || request.LifeCounterTemplateId.HasValue == false || request.LifeCounterTemplateId < 1)
+            {
+                return (false, $"Error: requested LifeCounterTemplateId failed: {request.LifeCounterTemplateId}");
+            }
+
+            if (String.IsNullOrWhiteSpace(request!.LifeCounterTemplateName) == true)
+            {
+                return (false,
+                   "Error: LifeCounterTemplateName is null or empty! " +
+                   $"request.LifeCounterTemplateName: {request.LifeCounterTemplateName}");
+            }
+
+            if (request.PlayersStartingLifePoints.HasValue == false || request.PlayersStartingLifePoints == null)
+            {
+                return (false,
+                   "Error: StartingLifePoints is null! " +
+                   $"request.PlayersStartingLifePoints: {request.PlayersStartingLifePoints}");
+            }
+
+            if (request.PlayersStartingLifePoints < 0)
+            {
+                return (false,
+                    "Error: StartingLifePoints cannot be less than 0! " +
+                    $"request.PlayersStartingLifePoints: {request.PlayersStartingLifePoints}");
+            }
+
+            if (request.PlayersCount.HasValue == false || request.PlayersCount == null)
+            {
+                return (false,
+                   "Error: PlayersCount is null! " +
+                   $"request.PlayersCount: {request.PlayersCount}");
+            }
+
+            if (request.PlayersCount < 1 || request.PlayersCount > 6)
+            {
+                return (false,
+                    "Error: PlayersCount cannot be less than 1 or more than 6! " +
+                    $"request.PlayersCount: {request.PlayersCount}");
+            }
+
+            if (request.FixedMaxLifePointsMode.HasValue == false)
+            {
+                return (false,
+                   "Error: FixedMaxLifePointsMode is null! " +
+                   $"request.FixedMaxLifePointsMode.HasValue == false: {request.FixedMaxLifePointsMode.HasValue == false}");
+            }
+
+            if (request.FixedMaxLifePointsMode == true && (request.PlayersMaxLifePoints.HasValue == false || request.PlayersMaxLifePoints == null))
+            {
+                return (false,
+                   "Error: PlayersMaxLifePoints is null! " +
+                   $"request.PlayersMaxLifePoints: {request.PlayersMaxLifePoints}");
+            }
+
+            if (request.PlayersMaxLifePoints < 1 || request.PlayersMaxLifePoints > 999)
+            {
+                return (false,
+                    "Error: PlayersMaxLifePoints cannot be less than 1 or more than 999! " +
+                    $"request.PlayersMaxLifePoints: {request.PlayersMaxLifePoints}");
+            }
+
+            if (request.AutoDefeatMode.HasValue == false || request.AutoDefeatMode == null)
+            {
+                return (false,
+                   "Error: AutoDefeatMode is null! " +
+                   $"request.AutoDefeatMode: {request.AutoDefeatMode}");
+            }
+
+            if (request.AutoEndMode.HasValue == false || request.AutoEndMode == null)
+            {
+                return (false,
+                   "Error: AutoEndMatch is null! " +
+                   $"request.AutoEndMatch: {request.AutoEndMode}");
+            }
+
+
+            return (true, string.Empty);
+        }
+
+
 
         //
         // 3º LIFE COUNTER MANAGERS
