@@ -3097,6 +3097,62 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+
+        public async Task<(UsersRestoreLifeCounterPlayerResponse?, string)> RestoreLifeCounterPlayer(UsersRestoreLifeCounterPlayerRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (requestIsValid, message) = RestoreLifeCounterPlayer_Validation(request);
+
+            if (requestIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var lifeCounterPlayerDB = await this._daoDbContext
+                .LifeCounterPlayers
+                .Include(a => a.LifeCounterManager)
+                .Where(a => a.Id == request!.LifeCounterPlayerId &&
+                    a.LifeCounterManager!.UserId == userId)
+                .AnyAsync();
+
+            if (lifeCounterPlayerDB == false)
+            {
+                return (null, $"Error, invalid requested LifeCounterPlayer, returning: {lifeCounterPlayerDB}");
+            }
+
+
+            await this._daoDbContext
+                .LifeCounterPlayers
+                .Where(a => a.Id == request!.LifeCounterPlayerId &&
+                            a.LifeCounterManager!.UserId == userId)
+                .ExecuteUpdateAsync(a => a
+                    .SetProperty(b => b.CurrentLifePoints, 1)
+                    .SetProperty(b => b.IsDefeated, false));
+
+            return (new UsersRestoreLifeCounterPlayerResponse {  }, "Player restored successfully");
+        }
+        private static (bool, string) RestoreLifeCounterPlayer_Validation(UsersRestoreLifeCounterPlayerRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, $"Error: request failed: {request}");
+            }
+
+            if (request.LifeCounterPlayerId.HasValue == false || request.LifeCounterPlayerId < 1)
+            {
+                return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterPlayerId}");
+            }        
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(UsersGetPlayersCountResponse?, string)> GetPlayersCount(UsersGetPlayersCountRequest request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);

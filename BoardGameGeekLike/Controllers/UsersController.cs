@@ -576,6 +576,23 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> RestoreLifeCounterPlayer([FromForm] UsersRestoreLifeCounterPlayerRequest request)
+        {
+            var (content, message) = await this._usersService.RestoreLifeCounterPlayer(request);
+
+            var response = new Response<UsersRestoreLifeCounterPlayerResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
+
+            return new JsonResult(response);
+        }
+
+
         [HttpGet]
         public async Task<IActionResult> GetPlayersCount([FromQuery] UsersGetPlayersCountRequest? request)
         {

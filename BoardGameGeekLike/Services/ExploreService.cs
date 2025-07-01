@@ -1,7 +1,10 @@
 ﻿using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
+using BoardGameGeekLike.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Claims;
 
 namespace BoardGameGeekLike.Services
 {
@@ -127,7 +130,6 @@ namespace BoardGameGeekLike.Services
 
             return (content, "Board Games listed found successfully");
         }
-
         private static (bool, string) FindBoardGame_Validation(ExploreFindBoardGameRequest? request)
         {
             if (request == null)
@@ -188,6 +190,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(ExploreShowBoardGameDetailsResponse?, string)> ShowBoardGameDetails(ExploreShowBoardGameDetailsRequest? request)
         {
@@ -304,7 +307,6 @@ namespace BoardGameGeekLike.Services
 
             return (content, "Board game details shown sucessfully");
         }
-
         private static (bool, string) ShowBoardGameDetails_Validation(ExploreShowBoardGameDetailsRequest? request)
         {
             if (request == null)
@@ -324,6 +326,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(List<ExploreListBoardGamesResponse>?, string)> ListBoardGames(ExploreListBoardGamesRequest? request)
         {
@@ -369,7 +372,6 @@ namespace BoardGameGeekLike.Services
             return (ratedBoardGames, "Board games successfully listed by rate");
 
         }
-        
         private static (bool, string) ListBoardGames_Validation(ExploreListBoardGamesRequest? request)
         {
             if(request != null)
@@ -379,6 +381,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(ExploreBoardGamesRankingsResponse?, string)> BoardGamesRankings(ExploreBoardGamesRankingsRequest? request)
         {
@@ -471,7 +474,6 @@ namespace BoardGameGeekLike.Services
 
             return (content, "Board games ranked successfully");
         }
-
         private static (bool, string) BoardGamesRankings_Validation(ExploreBoardGamesRankingsRequest? request)
         {
             if (request != null)
@@ -481,6 +483,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+
 
         public async Task<(ExploreCategoriesRankingResponse?, string)> CategoriesRanking(ExploreCategoriesRankingRequest? request)
         {
@@ -600,7 +603,6 @@ namespace BoardGameGeekLike.Services
 
             return (content, "Categories ranking successfully");
         }
-
         private static (bool, string) CategoriesRanking_Validation(ExploreCategoriesRankingRequest? request)
         {
             if (request != null)
@@ -610,5 +612,74 @@ namespace BoardGameGeekLike.Services
 
             return (true, String.Empty);
         }
+
+
+        public async Task<(ExploreQuickStartLifeCounterResponse?, string)> QuickStartLifeCounter(ExploreQuickStartLifeCounterRequest? request)
+        {
+            var (isValid, message) = QuickStartLifeCounter_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var expandableLifeCounterManager = await this._daoDbContext
+                .LifeCounterManagers
+                .Where(a => a.LifeCounterTemplate == null && a.UserId == null && a.Duration_minutes >= 2880)               
+                .ToListAsync();
+
+            var newExpandableLifeCounterManager = new LifeCounterManager
+            {
+                LifeCounterManagerName = "Life Counter",
+                PlayersCount = 1,
+                PlayersStartingLifePoints = 10,
+                FixedMaxLifePointsMode = false,
+                PlayersMaxLifePoints = null,
+                AutoDefeatMode = false,
+                AutoEndMode = false,
+                StartingTime = null,
+                EndingTime = null,
+                Duration_minutes = null,
+                LifeCounterPlayers = new List<LifeCounterPlayer>(),
+                UserId = null,
+                LifeCounterTemplateId = null
+            };
+
+            var players = new List<LifeCounterPlayer>()
+            {
+                new LifeCounterPlayer
+                {
+
+
+                    PlayerName = "Player 1",
+                    StartingLifePoints = 10,
+                    CurrentLifePoints = 10,
+                    FixedMaxLifePointsMode = false,
+                    MaxLifePoints = null,
+                    LifeCounterManagerId = 1,
+                    AutoDefeatMode = false,
+                    IsDefeated  = false
+                }
+            };
+
+            newExpandableLifeCounterManager.LifeCounterPlayers = players;
+
+            this._daoDbContext.LifeCounterManagers.RemoveRange(expandableLifeCounterManager);
+            this._daoDbContext.LifeCounterManagers.Add(newExpandableLifeCounterManager);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, "");
+        }
+        private static (bool, string) QuickStartLifeCounter_Validation(ExploreQuickStartLifeCounterRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, $"Error: request is not null however it must be null");
+            }
+
+            return (true, string.Empty);
+        }
+
     }
 }

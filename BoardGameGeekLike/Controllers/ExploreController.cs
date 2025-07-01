@@ -87,5 +87,21 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> QuickStartLifeCounter([FromBody] ExploreQuickStartLifeCounterRequest? request)
+        {
+            var (content, message) = await this._exploreService.QuickStartLifeCounter(request);
+
+            var response = new Response<ExploreQuickStartLifeCounterResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
     }
 }
