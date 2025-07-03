@@ -11,7 +11,6 @@ namespace BoardGameGeekLike.Models.Entities
         public int Id { get; set; }
 
         public string? LifeCounterTemplateName { get; set; }
-
         public int? PlayersStartingLifePoints { get; set; }
 
         public int? PlayersCount { get; set; } 

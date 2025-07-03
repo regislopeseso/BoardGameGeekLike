@@ -4,5 +4,6 @@
     {
         public required int? LifeCounterTemplateId { get; set; }
         public required string LifeCounterTemplateName { get; set; }
+
     }
 }
