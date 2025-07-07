@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersGetLastUnfinishedLifeCounterManagerRequest
+    public class UsersSyncLifeCounterDataRequest
     {
     }
 }

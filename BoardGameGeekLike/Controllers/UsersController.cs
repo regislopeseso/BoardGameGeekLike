@@ -304,6 +304,7 @@ namespace BoardGameGeekLike.Controllers
         // LIFE COUNTERS
         //
         // 1º LIFE COUNTER QUICK START
+        //O endpoint abaixo deixará de existir...
         [HttpPost]
         public async Task<IActionResult> QuickStartLifeCounter([FromBody] UsersQuickStartLifeCounterRequest? request)
         {
@@ -319,7 +320,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         //
-        // 2º LIFE COUNTER TEMPLATES
+        // 2º LIFE COUNTER TEMPLATES    
         [HttpPost]
         public async Task<IActionResult> CreateLifeCounterTemplate([FromForm] UsersCreateLifeCounterTemplateRequest? request)
         {
@@ -351,6 +352,7 @@ namespace BoardGameGeekLike.Controllers
 
         }
 
+        // O endpoint abaixo deixará de existir...
         [HttpGet]
         public async Task<IActionResult> GetLastLifeCounterTemplateId(UsersGetLastLifeCounterTemplateIdRequest? request)
         {
@@ -365,6 +367,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        //O endpoint abaixo deixará de existir...
         [HttpGet]
         public async Task<IActionResult> ListLifeCounterTemplates(UsersListLifeCounterTemplatesRequest? request)
         {
@@ -426,20 +429,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetLastUnfinishedLifeCounterManager(UsersGetLastUnfinishedLifeCounterManagerRequest? request)
-        {
-            var (content, message) = await this._usersService.GetLastUnfinishedLifeCounterManager(request);
-
-            var response = new Response<UsersGetLastUnfinishedLifeCounterManagerResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
+   
 
         [HttpPut]
         public async Task<IActionResult> EditLifeCounterManager([FromBody] UsersEditLifeCounterManagerRequest? request)
@@ -455,6 +445,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        // O endpoint abaixo deixará de existir...
         [HttpGet]
         public async Task<IActionResult> ListUnfinishedLifeCounterManagers(UsersListUnfinishedLifeCounterManagersRequest? request)
         {

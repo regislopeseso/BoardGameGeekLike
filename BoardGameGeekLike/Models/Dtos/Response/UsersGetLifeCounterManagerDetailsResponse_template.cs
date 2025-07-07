@@ -1,9 +1,12 @@
-﻿namespace BoardGameGeekLike.Models.Dtos.Response
+﻿using BoardGameGeekLike.Models.Entities;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersGetLastUnfinishedLifeCounterManagerResponse_template
+    public class UsersGetLifeCounterManagerDetailsResponse_template
     {
         public int LifeCounterTemplateId { get; set; }
-        
+
         public string? LifeCounterTemplateName { get; set; }
 
         public int? PlayersStartingLifePoints { get; set; }
@@ -12,7 +15,7 @@
 
         public bool? FixedMaxLifePointsMode { get; set; }
 
-        public int? PlayersMaxLifePointsMode { get; set; }
+        public int? PlayersMaxLifePoints { get; set; }
 
         public bool? AutoDefeatMode { get; set; }
 
