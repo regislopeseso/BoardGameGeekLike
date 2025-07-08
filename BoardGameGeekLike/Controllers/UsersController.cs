@@ -561,7 +561,7 @@ namespace BoardGameGeekLike.Controllers
                 Message = message
             };
 
-            await Task.Delay(300);
+            // await Task.Delay(300);
 
             return new JsonResult(response);
         }
@@ -577,7 +577,7 @@ namespace BoardGameGeekLike.Controllers
                 Message = message
             };
 
-            await Task.Delay(300);
+            // await Task.Delay(300);
 
             return new JsonResult(response);
         }

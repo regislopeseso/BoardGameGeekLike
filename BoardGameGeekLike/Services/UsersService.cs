@@ -3116,7 +3116,7 @@ namespace BoardGameGeekLike.Services
                 return (false, $"Error: requested LifeCounterPlayerId failed: {request.LifeCounterPlayerId}");
             }
 
-            if (request.LifePointsToDecrease.HasValue == false || (request.LifePointsToDecrease != 1 && request.LifePointsToDecrease != 10))
+            if (request.LifePointsToDecrease.HasValue == false)
             {
                 return (false, $"Error: invalid decrease amount request: {request.LifePointsToDecrease}");
             }
