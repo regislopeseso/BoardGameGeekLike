@@ -2691,44 +2691,74 @@ namespace BoardGameGeekLike.Services
 
             var (requestIsValid, message) = CheckForLifeCounterManagerEnd_Validation(request);
 
-            if (requestIsValid == false)
+            if (!requestIsValid)
             {
                 return (null, message);
             }
+
             var lifeCounterManagerDB = await this._daoDbContext
                 .LifeCounterManagers
                 .Include(a => a.LifeCounterPlayers)
-                .FirstOrDefaultAsync(a => a.UserId == userId & a.Id == request!.LifeCounterManagerId & a.AutoEndMode == true);
+                .FirstOrDefaultAsync(a =>
+                    a.UserId == userId &&
+                    a.Id == request!.LifeCounterManagerId &&
+                    a.AutoEndMode == true);
 
             if (lifeCounterManagerDB == null)
             {
                 return (null, "Error: LifeCounterManager request failed");
             }
 
+            if (!lifeCounterManagerDB.StartingTime.HasValue)
+            {
+                return (null, "Error: StartingTime is not set");
+            }
+
+            long rawDurationTicks;
+            double roundedDuration;
+
+            if (lifeCounterManagerDB.IsFinished == true)
+            {
+                rawDurationTicks = lifeCounterManagerDB.EndingTime!.Value - lifeCounterManagerDB.StartingTime.Value;
+                roundedDuration = Math.Round((double)(rawDurationTicks) / 600_000_000, 2);
+
+                return (new UsersCheckForLifeCounterManagerEndResponse
+                {
+                    IsFinished = true,
+                    Duration_minutes = roundedDuration,
+                }, "This life counter manager is finished");
+            }
+
             var lifeCounterPlayersDB = lifeCounterManagerDB.LifeCounterPlayers;
 
             if (lifeCounterPlayersDB == null || lifeCounterPlayersDB.Count <= 0)
             {
-                return (null, $"Error: lifeCounterPlayersDB request failed: {lifeCounterPlayersDB}");
+                return (null, "Error: lifeCounterPlayersDB request failed");
             }
 
-            var playersCount = lifeCounterManagerDB!.PlayersCount;
-
-            var defeatePlayers = lifeCounterPlayersDB.Where(a => a.IsDefeated == true).Count();
-
-            var isLifeCounterManagerEnded = (playersCount - defeatePlayers <= 1) == true;
-
-            if (isLifeCounterManagerEnded == false)
+            if (!lifeCounterManagerDB.PlayersCount.HasValue)
             {
-                return (new UsersCheckForLifeCounterManagerEndResponse()
-                , "This life counter manager is NOT finished");
+                return (null, "Error: PlayersCount is not set");
+            }
+
+            var playersCount = lifeCounterManagerDB.PlayersCount.Value;
+            var defeatedPlayers = lifeCounterPlayersDB.Count(a => a.IsDefeated == true);
+
+            var isLifeCounterManagerEnded = (playersCount - defeatedPlayers) <= 1;
+
+            if (!isLifeCounterManagerEnded)
+            {
+                return (new UsersCheckForLifeCounterManagerEndResponse(), "This life counter manager is NOT finished");
             }
 
             var currentTimeMark = DateTime.UtcNow.ToLocalTime().Ticks;
 
             lifeCounterManagerDB.IsFinished = true;
             lifeCounterManagerDB.EndingTime = currentTimeMark;
-            lifeCounterManagerDB.Duration_minutes = (int)Math.Ceiling((double)((currentTimeMark - lifeCounterManagerDB.StartingTime!.Value) / 600_000_000));
+
+            rawDurationTicks = currentTimeMark - lifeCounterManagerDB.StartingTime.Value;
+            roundedDuration = Math.Round((double)rawDurationTicks / 600_000_000, 2);
+            lifeCounterManagerDB.Duration_minutes = roundedDuration;
 
             foreach (var player in lifeCounterPlayersDB)
             {
@@ -2743,7 +2773,7 @@ namespace BoardGameGeekLike.Services
             return (new UsersCheckForLifeCounterManagerEndResponse
             {
                 IsFinished = true,
-                Duration_minutes = lifeCounterManagerDB.Duration_minutes,
+                Duration_minutes = roundedDuration,
             }, "This life counter manager is finished");
         }
         private static (bool, string) CheckForLifeCounterManagerEnd_Validation(UsersCheckForLifeCounterManagerEndRequest? request)
@@ -2806,7 +2836,7 @@ namespace BoardGameGeekLike.Services
 
             var currentTimeMark = DateTime.UtcNow.ToLocalTime().Ticks;
 
-            var duration = (int)Math.Ceiling((double)((currentTimeMark - lifeCounterManagerDB.StartingTime!.Value) / 600_000_000));
+            var duration = Math.Round((double)((currentTimeMark - lifeCounterManagerDB.StartingTime!.Value) / 60_000_000),2);
 
             lifeCounterManagerDB.IsFinished = true;
             lifeCounterManagerDB.EndingTime = currentTimeMark;

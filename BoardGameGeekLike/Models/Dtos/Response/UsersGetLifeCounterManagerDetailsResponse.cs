@@ -24,7 +24,7 @@
 
         public long? EndingTime { get; set; }
 
-        public int? Duration_minutes { get; set; }
+        public double? Duration_minutes { get; set; }
 
         public bool? IsFinished { get; set; }
     }

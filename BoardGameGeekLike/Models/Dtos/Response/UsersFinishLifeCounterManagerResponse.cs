@@ -3,6 +3,6 @@
     public class UsersFinishLifeCounterManagerResponse
     {
         public string? LifeCounterManagerName { get; set; }
-        public int? LifeCounterManager_Duration_minutes { get; set; }
+        public double? LifeCounterManager_Duration_minutes { get; set; }
     }
 }
