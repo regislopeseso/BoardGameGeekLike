@@ -2298,7 +2298,6 @@ namespace BoardGameGeekLike.Services
         }
 
 
-
         public async Task<(UsersEditLifeCounterManagerResponse?, string)> EditLifeCounterManager(UsersEditLifeCounterManagerRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -2449,6 +2448,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(UsersGetLifeCounterManagerDetailsResponse?, string)> GetLifeCounterManagerDetails(UsersGetLifeCounterManagerDetailsRequest? request)
         {

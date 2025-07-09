@@ -429,8 +429,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-   
-
         [HttpPut]
         public async Task<IActionResult> EditLifeCounterManager([FromBody] UsersEditLifeCounterManagerRequest? request)
         {
@@ -445,7 +443,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        // O endpoint abaixo deixará de existir...
         [HttpGet]
         public async Task<IActionResult> ListUnfinishedLifeCounterManagers(UsersListUnfinishedLifeCounterManagersRequest? request)
         {
