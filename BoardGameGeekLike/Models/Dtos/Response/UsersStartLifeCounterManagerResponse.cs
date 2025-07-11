@@ -16,6 +16,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         
         public int? PlayersCount { get; set; }
 
+        public int? FirstPlayerIndex { get; set; }
+
         public List<UsersStartLifeCounterManagerResponse_players>? LifeCounterPlayers { get; set; }
 
         public bool? FixedMaxLifePointsMode { get; set; }

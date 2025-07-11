@@ -1517,6 +1517,8 @@ namespace BoardGameGeekLike.Services
 
             var text = "";
 
+
+            int? lifeCounterTemplateId = 0;
             int? lifeCounterManagerId = 0;          
 
             if (doesAnyLifeCounterManagerExists == false)
@@ -1527,7 +1529,7 @@ namespace BoardGameGeekLike.Services
                 .LifeCounterTemplates
                 .AnyAsync(a => a.UserId == userId);
 
-                int? lifeCounterTemplateId;
+                
 
                 if (doesAnyLifeCounterTemplateExists == false)
                 {
@@ -1597,6 +1599,8 @@ namespace BoardGameGeekLike.Services
                 {
                     return (null, "Error: attempt to fetch the last life counter MANAGER failed, returning null");
                 }
+
+                lifeCounterTemplateId = lifeCounterManagerDB.LifeCounterTemplateId;
 
                 var playersDB = lifeCounterManagerDB.LifeCounterPlayers;
 
@@ -1680,6 +1684,7 @@ namespace BoardGameGeekLike.Services
 
             var content = new UsersQuickStartLifeCounterResponse
             {
+                LifeCounterTemplateId = lifeCounterTemplateId,
                 LifeCounterManagerId = lifeCounterManagerId,            
             };
 
@@ -2249,17 +2254,18 @@ namespace BoardGameGeekLike.Services
                 LifeCounterTemplateName = lifeCounterTemplateDB.LifeCounterTemplateName,
 
                 LifeCounterManagerId = newLifeCounterManager.Id,
-                LifeCounterManagerName = lifeCounterTemplateDB.LifeCounterTemplateName,
+                LifeCounterManagerName = newLifeCounterManager.LifeCounterManagerName,
 
-                PlayersStartingLifePoints = lifeCounterTemplateDB.PlayersStartingLifePoints,
-                PlayersCount = lifeCounterTemplateDB.PlayersCount,
+                PlayersStartingLifePoints = newLifeCounterManager.PlayersStartingLifePoints,
+                PlayersCount = newLifeCounterManager.PlayersCount,
+                FirstPlayerIndex = newLifeCounterManager.FirstPlayerIndex,
                 LifeCounterPlayers = [],
 
-                FixedMaxLifePointsMode = lifeCounterTemplateDB.FixedMaxLifePointsMode,
-                PlayersMaxLifePoints = lifeCounterTemplateDB.PlayersMaxLifePoints,
-                
-                AutoDefeatMode = lifeCounterTemplateDB.AutoDefeatMode,
-                AutoEndMode = lifeCounterTemplateDB.AutoEndMode
+                FixedMaxLifePointsMode = newLifeCounterManager.FixedMaxLifePointsMode,
+                PlayersMaxLifePoints = newLifeCounterManager.PlayersMaxLifePoints,
+
+                AutoDefeatMode = newLifeCounterManager.AutoDefeatMode,
+                AutoEndMode = newLifeCounterManager.AutoEndMode
             };
 
             foreach (var newPlayer in newPlayers)
