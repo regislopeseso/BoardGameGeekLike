@@ -15,6 +15,8 @@ namespace BoardGameGeekLike.Models.Entities
         
         public int? PlayersCount { get; set; }
 
+        public int? FirstPlayerIndex {get; set; }
+
         public int? PlayersStartingLifePoints { get; set; }
 
         public bool? FixedMaxLifePointsMode { get; set; }

@@ -8,6 +8,8 @@
 
         public int? PlayersCount { get; set; }
 
+        public int? FirstPlayerIndex { get; set; }
+
         public List<UsersGetLifeCounterManagerDetailsResponse_players>? LifeCounterPlayers { get; set; }
 
         public int? PlayersStartingLifePoints { get; set; }
