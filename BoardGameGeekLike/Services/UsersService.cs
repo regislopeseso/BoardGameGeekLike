@@ -2796,7 +2796,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersFinishLifeCounterManagerResponse?, string)> FinishLifeCounterManager(UsersFinishLifeCounterManagerRequest? request)
+        public async Task<(UsersDeleteLifeCounterManagerResponse?, string)> DeleteLifeCounterManager(UsersDeleteLifeCounterManagerRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -2805,7 +2805,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = FinishLifeCounterManager_Validation(request);
+            var (isValid, message) = DeleteLifeCounterManager_Validation(request);
 
             if (isValid == false)
             {
@@ -2825,13 +2825,13 @@ namespace BoardGameGeekLike.Services
             }
 
 
-            return (new UsersFinishLifeCounterManagerResponse
+            return (new UsersDeleteLifeCounterManagerResponse
             {
 
             }, $"Life Counter Manager deleted successfully,");
                 
         }
-        private static (bool, string) FinishLifeCounterManager_Validation(UsersFinishLifeCounterManagerRequest? request)
+        private static (bool, string) DeleteLifeCounterManager_Validation(UsersDeleteLifeCounterManagerRequest? request)
         {
             if (request == null)
             {

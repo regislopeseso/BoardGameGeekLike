@@ -502,11 +502,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> FinishLifeCounterManager([FromForm] UsersFinishLifeCounterManagerRequest request)
+        public async Task<IActionResult> DeleteLifeCounterManager([FromForm] UsersDeleteLifeCounterManagerRequest request)
         {
-            var (content, message) = await this._usersService.FinishLifeCounterManager(request);
+            var (content, message) = await this._usersService.DeleteLifeCounterManager(request);
 
-            var response = new Response<UsersFinishLifeCounterManagerResponse>()
+            var response = new Response<UsersDeleteLifeCounterManagerResponse>()
             {
                 Content = content,
                 Message = message
