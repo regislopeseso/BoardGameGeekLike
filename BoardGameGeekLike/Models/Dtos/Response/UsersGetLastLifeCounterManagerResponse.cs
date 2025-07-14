@@ -1,24 +1,18 @@
-﻿using BoardGameGeekLike.Models.Entities;
-
-namespace BoardGameGeekLike.Models.Dtos.Response
+﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersStartLifeCounterManagerResponse
+    public class UsersGetLastLifeCounterManagerResponse
     {
-        public int? LifeCounterTemplateId { get; set; }
-        
-        public string? LifeCounterTemplateName { get; set; }
-
         public int? LifeCounterManagerId { get; set; }
-        
+
         public string? LifeCounterManagerName { get; set; }
 
-        public int? PlayersStartingLifePoints { get; set; }
-        
         public int? PlayersCount { get; set; }
 
         public int? FirstPlayerIndex { get; set; }
 
-        public List<UsersStartLifeCounterManagerResponse_players>? LifeCounterPlayers { get; set; }
+        public List<UsersGetLastLifeCounterManagerResponse_players>? LifeCounterPlayers { get; set; }
+
+        public int? PlayersStartingLifePoints { get; set; }
 
         public bool? FixedMaxLifePointsMode { get; set; }
 
@@ -30,5 +24,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public long? StartingTime { get; set; }
 
+   
     }
 }
