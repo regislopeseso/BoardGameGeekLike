@@ -18,6 +18,7 @@ namespace BoardGameGeekLike.Models.Entities
         public int? CurrentLifePoints { get; set; }
 
         public bool FixedMaxLifePointsMode { get; set; }
+
         public int? MaxLifePoints { get; set; }
 
         [ForeignKey(nameof(LifeCounterManager))]       

@@ -304,7 +304,21 @@ namespace BoardGameGeekLike.Controllers
         // LIFE COUNTERS
         //
         // 1º LIFE COUNTER QUICK START
-        //O endpoint abaixo deixará de existir...
+        [HttpPost]
+        public async Task<IActionResult> SyncLifeCounterData([FromBody] UsersSyncLifeCounterDataRequest? request)
+        {
+            var (content, message) = await this._usersService.SyncLifeCounterData(request);
+
+            var response = new Response<UsersSyncLifeCounterDataResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> QuickStartLifeCounter([FromBody] UsersQuickStartLifeCounterRequest? request)
         {
@@ -354,11 +368,11 @@ namespace BoardGameGeekLike.Controllers
 
        
         [HttpGet]
-        public async Task<IActionResult> GetLastLifeCounterTemplateId(UsersGetLastLifeCounterTemplateIdRequest? request)
+        public async Task<IActionResult> GetLastLifeCounterTemplateId(UsersGetLastLifeCounterTemplateRequest? request)
         {
-            var (content, message) = await this._usersService.GetLastLifeCounterTemplateId(request);
+            var (content, message) = await this._usersService.GetLastLifeCounterTemplate(request);
 
-            var response = new Response<UsersGetLastLifeCounterTemplateIdResponse>
+            var response = new Response<UsersGetLastLifeCounterTemplateResponse>
             {
                 Content = content,
                 Message = message
@@ -369,7 +383,7 @@ namespace BoardGameGeekLike.Controllers
 
       
         [HttpGet]
-        public async Task<IActionResult> ListLifeCounterTemplates(UsersListLifeCounterTemplatesRequest? request)
+        public async Task<IActionResult> ListLifeCounterTemplates( UsersListLifeCounterTemplatesRequest? request)
         {
             var (content, message) = await this._usersService.ListLifeCounterTemplates(request);
 
@@ -407,6 +421,23 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteLifeCounterTemplate([FromQuery] UsersDeleteLifeCounterTemplateRequest request)
+        {
+            var (content, message) = await this._usersService.DeleteLifeCounterTemplate(request);
+
+            var response = new Response<UsersDeleteLifeCounterTemplateResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(300);
 
             return new JsonResult(response);
         }
@@ -458,7 +489,7 @@ namespace BoardGameGeekLike.Controllers
         }
         
         [HttpGet]
-        public async Task<IActionResult> ListUnfinishedLifeCounterManagers(UsersListUnfinishedLifeCounterManagersRequest? request)
+        public async Task<IActionResult> ListUnfinishedLifeCounterManagers([FromQuery] UsersListUnfinishedLifeCounterManagersRequest? request)
         {
             var (content, message) = await this._usersService.ListUnfinishedLifeCounterManagers(request);
 
@@ -515,8 +546,8 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteLifeCounterManager([FromForm] UsersDeleteLifeCounterManagerRequest request)
+        [HttpDelete]
+        public async Task<IActionResult> DeleteLifeCounterManager([FromQuery] UsersDeleteLifeCounterManagerRequest request)
         {
             var (content, message) = await this._usersService.DeleteLifeCounterManager(request);
 

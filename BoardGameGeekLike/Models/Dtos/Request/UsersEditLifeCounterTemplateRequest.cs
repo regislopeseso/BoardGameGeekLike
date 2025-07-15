@@ -4,15 +4,15 @@
     {
         public int? LifeCounterTemplateId { get; set; }
 
-        public string? LifeCounterTemplateName { get; set; }
+        public string? NewLifeCounterTemplateName { get; set; }
 
-        public int? PlayersStartingLifePoints { get; set; }
+        public int? NewPlayersStartingLifePoints { get; set; }
 
-        public int? PlayersCount { get; set; } 
+        public int? NewPlayersCount { get; set; } 
 
         public bool? FixedMaxLifePointsMode { get; set; }
 
-        public int? PlayersMaxLifePoints { get; set; }
+        public int? NewPlayersMaxLifePoints { get; set; }
 
         public bool? AutoDefeatMode { get; set; }
 

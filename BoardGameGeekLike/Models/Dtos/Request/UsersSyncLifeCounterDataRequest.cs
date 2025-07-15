@@ -2,5 +2,7 @@
 {
     public class UsersSyncLifeCounterDataRequest
     {
+        public List<UsersSyncLifeCounterDataRequest_template>? LifeCounterTemplates { get; set; }
+        
     }
 }
