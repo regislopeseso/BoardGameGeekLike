@@ -1,7 +1,7 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersSyncLifeCounterDataRequest_manager
-    {
+    {      
         public string? LifeCounterManagerName { get; set; }
 
         public int? PlayersCount { get; set; }

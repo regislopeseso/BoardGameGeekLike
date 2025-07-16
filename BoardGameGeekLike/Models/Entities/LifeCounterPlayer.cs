@@ -21,13 +21,14 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? MaxLifePoints { get; set; }
 
+        public bool? AutoDefeatMode { get; set; }
+
+        public bool IsDefeated { get; set; } = false;
+ 
+        
         [ForeignKey(nameof(LifeCounterManager))]       
         public int LifeCounterManagerId { get; set; }
 
         public LifeCounterManager? LifeCounterManager { get; set; }
-
-        public bool? AutoDefeatMode { get; set; }
-
-        public bool IsDefeated { get; set; } = false;
     }
 }

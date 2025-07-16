@@ -26,6 +26,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? LifeCounterManagersCount { get; set; } = 0;
 
+
         public List<LifeCounterManager>? LifeCounterManagers { get; set; }
 
 

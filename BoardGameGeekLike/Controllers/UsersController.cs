@@ -303,7 +303,7 @@ namespace BoardGameGeekLike.Controllers
 
         // LIFE COUNTERS
         //
-        // 1º LIFE COUNTER QUICK START
+        // 1º LIFE COUNTER SYNC DATA
         [HttpPost]
         public async Task<IActionResult> SyncLifeCounterData([FromBody] UsersSyncLifeCounterDataRequest? request)
         {
@@ -318,7 +318,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
+        // 2º LIFE COUNTER QUICK START
         [HttpPost]
         public async Task<IActionResult> QuickStartLifeCounter([FromBody] UsersQuickStartLifeCounterRequest? request)
         {
@@ -334,7 +334,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         //
-        // 2º LIFE COUNTER TEMPLATES    
+        // 3º LIFE COUNTER TEMPLATES    
         [HttpPost]
         public async Task<IActionResult> CreateLifeCounterTemplate([FromForm] UsersCreateLifeCounterTemplateRequest? request)
         {
@@ -443,7 +443,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         //
-        // 3º LIFE COUNTER MANAGERS
+        // 4º LIFE COUNTER MANAGERS
         [HttpPost]
         public async Task<IActionResult> StartLifeCounterManager([FromForm] UsersStartLifeCounterManagerRequest request)
         {
@@ -563,7 +563,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         //
-        // 4º LIFE COUNTER PLAYERS
+        // 5º LIFE COUNTER PLAYERS
         [HttpGet]
         public async Task<IActionResult> GetLifeCounterPlayersDetails([FromQuery] UsersGetLifeCounterPlayersDetailsRequest? request)
         {
@@ -688,7 +688,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         //
-        // 5º LIFE COUNTER STATISTICS
+        // 6º LIFE COUNTER STATISTICS
         [HttpGet]
         public async Task<IActionResult> GetLifeCounterStatistics(UsersGetLifeCounterStatisticsRequest? request)
         {

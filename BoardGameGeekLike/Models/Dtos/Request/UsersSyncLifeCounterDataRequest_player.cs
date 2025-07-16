@@ -1,7 +1,7 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersSyncLifeCounterDataRequest_player
-    {
+    {       
         public string? PlayerName { get; set; }
 
         public int? StartingLifePoints { get; set; }

@@ -38,9 +38,11 @@ namespace BoardGameGeekLike.Models.Entities
 
         public List<LifeCounterPlayer>? LifeCounterPlayers { get; set; }
 
+
         [ForeignKey(nameof(User))]
         public string? UserId { get; set; }
         public User? User { get; set; }
+
 
         [ForeignKey(nameof(LifeCounterTemplate))]
         public int? LifeCounterTemplateId { get; set; }

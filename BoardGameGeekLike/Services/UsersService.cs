@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using System.Linq;
 using System.Numerics;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
@@ -1509,16 +1510,172 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }
-            
+
+            var templates = request!.LifeCounterTemplates;
+
+            foreach (var template in templates!)
+            {
+                var templateName = template.LifeCounterTemplateName!.Trim();
+
+
+                var templateDB = await this._daoDbContext
+                    .LifeCounterTemplates
+                    .Include(a => a.LifeCounterManagers!)
+                    .ThenInclude(a => a.LifeCounterPlayers)
+                    .FirstOrDefaultAsync(a => a.UserId == userId &&
+                                         a.LifeCounterTemplateName!.Trim() == templateName);
+
+
+                var newManagers = new List<LifeCounterManager>();
+
+                foreach (var manager in template.LifeCounterManagers!)
+                {
+                    var managerName = manager.LifeCounterManagerName!.Trim();
+
+                    var managerDB = await this._daoDbContext
+                    .LifeCounterManagers
+                    .FirstOrDefaultAsync(a => a.UserId == userId &&
+                                        a.LifeCounterManagerName!.Trim() == managerName);
+
+                    var importedPlayers = manager.LifeCounterPlayers;
+
+                    var newPlayers = new List<LifeCounterPlayer>();
+
+                    foreach (var player in importedPlayers!)
+                    {
+                        newPlayers.Add(new LifeCounterPlayer
+                        {
+                            PlayerName = player.PlayerName,
+                            CurrentLifePoints = player.CurrentLifePoints,
+                            IsDefeated = player.IsDefeated,
+
+                            StartingLifePoints = manager.PlayersStartingLifePoints,
+                            FixedMaxLifePointsMode = manager.FixedMaxLifePointsMode!.Value,
+                            MaxLifePoints = manager.PlayersMaxLifePoints,
+                            AutoDefeatMode = manager.AutoDefeatMode,
+                        });
+                    }
+
+                    if (managerDB == null)
+                    {
+                        var newManager = new LifeCounterManager
+                        {
+                            LifeCounterManagerName = manager.LifeCounterManagerName,
+                            PlayersStartingLifePoints = manager.PlayersStartingLifePoints,
+                            PlayersCount = manager.PlayersCount,
+                            FirstPlayerIndex = manager.FirstPlayerIndex,
+                            FixedMaxLifePointsMode = manager.FixedMaxLifePointsMode,
+                            PlayersMaxLifePoints = manager.PlayersMaxLifePoints,
+                            AutoDefeatMode = manager.AutoDefeatMode,
+                            AutoEndMode = manager.AutoEndMode,
+                            StartingTime = manager.StartingTime,
+                            EndingTime = manager.EndingTime,
+                            Duration_minutes = manager.Duration_minutes,
+                            IsFinished = manager.IsFinished,
+
+                            LifeCounterPlayers = newPlayers,
+
+                            UserId = userId,
+                        };
+
+                        newManagers.Add(newManager);
+                    }
+                    else
+                    {
+                        if (managerDB.LifeCounterPlayers == null || managerDB.LifeCounterPlayers.Count < 1)
+                        {
+                            managerDB.LifeCounterPlayers = newPlayers;
+                            managerDB.PlayersCount = newPlayers.Count;
+                        }
+                        else
+                        {
+                            foreach (var newPlayer in newPlayers)
+                            {
+                                var newPlayerName = newPlayer.PlayerName!.Trim();
+
+                                bool alreadyExists = managerDB.LifeCounterPlayers
+                                    .Any(p => p.PlayerName!.Trim() == newPlayerName);
+
+                                if (alreadyExists == false)
+                                {
+                                    managerDB.LifeCounterPlayers.Add(newPlayer);
+
+                                    if (managerDB.LifeCounterPlayers.Count == 6)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            managerDB.PlayersCount = managerDB.LifeCounterPlayers.Count;
+                        }
+                    }
+
+                    if (templateDB == null)
+                    {
+                        var newTemplate = new LifeCounterTemplate
+                        {
+                            LifeCounterTemplateName = template.LifeCounterTemplateName,
+                            PlayersStartingLifePoints = template.PlayersStartingLifePoints,
+                            PlayersCount = template.PlayersCount,
+                            FixedMaxLifePointsMode = template.FixedMaxLifePointsMode,
+                            PlayersMaxLifePoints = template.PlayersMaxLifePoints,
+                            AutoDefeatMode = template.AutoDefeatMode,
+                            AutoEndMode = template.AutoEndMode,
+                            LifeCounterManagersCount = template.LifeCounterManagersCount,
+
+                            LifeCounterManagers = newManagers,
+
+                            UserId = userId
+                        };
+
+                        this._daoDbContext.LifeCounterTemplates.Add(newTemplate);
+                    }
+                    else
+                    {
+                        if (templateDB.LifeCounterManagers == null || templateDB.LifeCounterManagers.Count < 1)
+                        {
+                            templateDB.LifeCounterManagers = newManagers;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < newManagers.Count; i++)
+                            {
+                                var newMangerName = newManagers[i].LifeCounterManagerName!.Trim();
+
+                                var managersToBeAdded = new List<LifeCounterManager>() { };
+
+                                foreach (var existingManager in templateDB.LifeCounterManagers!)
+                                {
+                                    var existingManagerName = existingManager.LifeCounterManagerName!.Trim();
+
+                                    if (newMangerName != existingManagerName)
+                                    {
+                                        managersToBeAdded.Add(newManagers[i]);
+                                    }
+                                }
+                                templateDB.LifeCounterManagers.AddRange(managersToBeAdded);
+                            }
+
+                        }
+                    }
+                }
+            }
+
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, String.Empty);
+            return (new UsersSyncLifeCounterDataResponse(), "Life Counter Data sucessfully synced");
         }
         private static (bool, string) SyncLifeCounterData_Validation(UsersSyncLifeCounterDataRequest? request)
         {
-            if (request != null)
+            if (request == null)
             {
-                return (false, $"Error: request is not null however it must be null");
+                return (false, $"Error: request is null.");
+            }
+
+            if(request.LifeCounterTemplates == null || request.LifeCounterTemplates.Count == 0)
+            {
+                return (false, $"Error: requested life counter templates are null.");
             }
 
             return (true, string.Empty);
@@ -1565,7 +1722,7 @@ namespace BoardGameGeekLike.Services
 
                 if (doesAnyLifeCounterTemplateExists == false)
                 {
-                    //  No life counter manager exists AND no life counter TEMPLATE exists, THEN:
+                    //  No life counter player exists AND no life counter TEMPLATE exists, THEN:
                     //  => Call Create LifeCounter Template and Create Life Counter Manager...
 
                     // Creating a new default Life Counter TEMPLATE:
@@ -1584,7 +1741,7 @@ namespace BoardGameGeekLike.Services
                 }
                 else
                 {
-                    //  No life counter manager exists BUT at least one life counter TEMPLATE exists, THEN:
+                    //  No life counter player exists BUT at least one life counter TEMPLATE exists, THEN:
                     //  => Call Create Life Counter Manager and create one for the newest created template...
 
                     // Fechting the id of the most recently life counter TEMPLATE created:
@@ -2342,6 +2499,7 @@ namespace BoardGameGeekLike.Services
             }           
 
             lifeCounterManagerDB.LifeCounterManagerName = request!.NewLifeCounterManagerName;
+            lifeCounterManagerDB.PlayersStartingLifePoints = request!.NewPlayersStartingLifePoints;
 
             var playersDB = lifeCounterManagerDB.LifeCounterPlayers;
 
