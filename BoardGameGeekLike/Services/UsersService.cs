@@ -722,6 +722,9 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: user not found");
             }
 
+            // User details table title
+            sb.AppendLine("TABLE #1: USER DETAILS");
+
             // User details table header + data
             sb.AppendLine("User Name;Sign Up Date;BirthDate;Gender");
             sb.AppendLine($"\"{userDB.Name}\";{userDB.SignUpDate:yyyy-MM-dd};{userDB.BirthDate:yyyy-MM-dd};{userDB.Gender}");
@@ -729,27 +732,33 @@ namespace BoardGameGeekLike.Services
 
             var lifeCounterTemplatesDB = userDB.LifeCounterTemplates;
 
-            if (lifeCounterTemplatesDB != null)
+            if (lifeCounterTemplatesDB != null && lifeCounterTemplatesDB.Count > 0)
             {
                 // Blank line between tables
                 sb.AppendLine("");
+
+                // Life Counter Templates table title
+                sb.AppendLine("TABLE #2: LIFE COUNTER TEMPLATES");
 
                 // Life Counter Templates table header
                 sb.AppendLine("Life Counter Template Name;Players Starting Life Points;Players Count;Fixed Max Life Points Mode; Players Max Life Points;Auto Defeat Mode;Auto End Mode;Life Counter Managers Count");
 
                 foreach (var template in lifeCounterTemplatesDB)
                 {
-                    sb.AppendLine($"\"{template.LifeCounterTemplateName}\";{template.PlayersStartingLifePoints};{template.PlayersCount};{template.FixedMaxLifePointsMode};{template.PlayersMaxLifePoints};{template.AutoDefeatMode};{template.AutoEndMode};{template.LifeCounterManagersCount}");
+                    sb.AppendLine($"\"{template.LifeCounterTemplateName}\";{template.PlayersStartingLifePoints};{template.PlayersCount};{template.FixedMaxLifePointsMode};{template.PlayersMaxLifePoints};{template.AutoDefeatMode};{template.AutoEndMode}  ;{template.LifeCounterManagersCount}");
                 }
             }
 
 
             var lifeCounterManagersDB = userDB.LifeCounterManagers;
 
-            if (lifeCounterManagersDB != null)
+            if (lifeCounterManagersDB != null && lifeCounterManagersDB.Count > 0)
             {
                 // Blank line between tables
                 sb.AppendLine("");
+
+                // Life Counter Managers table title
+                sb.AppendLine("TABLE #3: LIFE COUNTER MANAGERS");
 
                 // Life Counter Managers table header
                 sb.AppendLine("Life Counter Template Name; Life Counter Manager Name;Players Starting Life Points;Players Count;First Player Index;Fixed Max Life Points Mode;Players Max Life Points;Auto Defeat Mode;Auto End Mode;Starting Time Mark;Ending Time Mark;Duration (minutes);Is Finished");
@@ -765,10 +774,13 @@ namespace BoardGameGeekLike.Services
 
             var lifeCounterPlayersDB = userDB.LifeCounterManagers!.SelectMany(a => a.LifeCounterPlayers!).ToList();
 
-            if(lifeCounterPlayersDB != null)
+            if(lifeCounterPlayersDB != null && lifeCounterPlayersDB.Count > 0)
             {
                 // Blank line between tables
                 sb.AppendLine("");
+
+                // Life Counter Players table title
+                sb.AppendLine("TABLE #4: LIFE COUNTER PLAYERS");
 
                 // Life Counter Players table header
                 sb.AppendLine("Player Name;Starting Life Points;Current Life Points;Fixed Max Life Points Mode;Max Life Points;Auto Defeat Mode;Auto End Mode;Is Defeated");
@@ -791,10 +803,13 @@ namespace BoardGameGeekLike.Services
             var boardGamesDB = sessionsDB.Select(a => a.BoardGame).ToList();
             
 
-            if (boardGamesDB != null && sessionsDB != null)
+            if (boardGamesDB != null && (sessionsDB != null && sessionsDB.Count > 0))
             {
                 // Blank line between tables
                 sb.AppendLine("");
+
+                // Board Games Sessions table title
+                sb.AppendLine("TABLE #5: BOARD GAME SESSIONS");
 
                 // Logged Board Game Sessions table header
                 sb.AppendLine("Board Game Name;Date;Players Count;Duration (minutes);Is Deleted;");
@@ -818,10 +833,13 @@ namespace BoardGameGeekLike.Services
                 .Where(a => a.UserId == userId)
                 .ToListAsync();
 
-            if (boardGamesDB != null && ratingsDB != null)
+            if (boardGamesDB != null && (ratingsDB != null && ratingsDB.Count > 0))
             {
                 // Blank line between tables
                 sb.AppendLine("");
+
+                // Board Games Ratings table title
+                sb.AppendLine("TABLE #6: BOARD GAME RATINGS");
 
                 // Rated Board Games table header
                 sb.AppendLine("Board Game Name;Rate");
@@ -856,10 +874,193 @@ namespace BoardGameGeekLike.Services
         }
         private static (bool, string) ExportUserData_Validation(UsersExportUserDataRequest? request)
         {
-           
-
+           if(request != null)
+           {
+               return (false, "Request must be null!");
+           }
 
             return (true, String.Empty);
+        }
+
+
+        public async Task<(UsersImportUserDataResponse?, string)> ImportUserData(UsersImportUserDataRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return (null, "Error: User is not authenticated");
+
+            var userDB = await this._daoDbContext
+                .Users
+                .Include(a => a.LifeCounterTemplates)
+                .FirstOrDefaultAsync(a => a.Id == userId);
+
+            if (userDB == null)
+                return (null, "Error: User was not found");
+
+            var (isValid, message) = ImportUserData_Validation(request);
+            
+            if (!isValid)
+                return (null, message);
+
+            byte[] csvBytes;
+            try
+            {
+                csvBytes = Convert.FromBase64String(request.Base64CsvData);
+            }
+            catch
+            {
+                return (null, "Error: Invalid Base64 CSV data.");
+            }
+
+            var encoding = Encoding.UTF8;
+            if (csvBytes.Length >= 3 && csvBytes[0] == 0xEF && csvBytes[1] == 0xBB && csvBytes[2] == 0xBF)
+            {
+                csvBytes = csvBytes[3..]; // Remove BOM
+            }
+
+            var sections = new Dictionary<int, List<string>>();
+            int currentTable = -1;
+
+            using (var reader = new StreamReader(new MemoryStream(csvBytes), encoding))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = await reader.ReadLineAsync();
+                    if (line == null) continue;
+
+                    if (line.StartsWith("TABLE #"))
+                    {
+                        var numberMatch = Regex.Match(line, @"TABLE\s+#(\d+)");
+                        if (numberMatch.Success)
+                        {
+                            currentTable = int.Parse(numberMatch.Groups[1].Value);
+                            sections[currentTable] = new List<string>();
+                        }
+                        continue;
+                    }
+
+                    if (currentTable != -1)
+                    {
+                        sections[currentTable].Add(line);
+                    }
+                }
+            }
+
+            if (!sections.TryGetValue(1, out var userDetailsSection) || userDetailsSection.Count < 2)
+                return (null, "Error: Missing or invalid user section (Table #1)");
+
+            var importedUserDetails = ParseUser(userDetailsSection);
+
+            userDB.Name = importedUserDetails.Name;
+            userDB.SignUpDate = importedUserDetails.SignUpDate!.Value;
+            userDB.BirthDate = importedUserDetails.BirthDate!.Value;
+            userDB.Gender = importedUserDetails.Gender!.Value;
+            userDB.IsDeleted = false;
+
+            if (!sections.TryGetValue(2, out var userTemplatesSection) || userTemplatesSection.Count < 2)
+                return (null, "Error: Missing or invalid user section (Table #1)");
+
+            var importedLifeCounterTemplates = ParseLifeCounterTemplates(userTemplatesSection);
+
+            userDB.LifeCounterTemplates = [];
+            
+            var lifeCounterTemplatesDB = userDB.LifeCounterTemplates;
+
+            foreach(var template in importedLifeCounterTemplates)
+            {
+                lifeCounterTemplatesDB.Add(new LifeCounterTemplate
+                {
+                    LifeCounterTemplateName = template.LifeCounterTemplateName,
+                    PlayersStartingLifePoints = template.PlayersStartingLifePoints,
+                    PlayersCount = template.PlayersCount,
+                    FixedMaxLifePointsMode =  template.FixedMaxLifePointsMode,
+                    PlayersMaxLifePoints = template.PlayersMaxLifePoints,
+                    AutoDefeatMode = template.AutoDefeatMode,
+                    AutoEndMode = template.AutoEndMode,
+                    LifeCounterManagersCount = template.LifeCounterManagersCount
+                });
+            }         
+
+            //await _daoDbContext.LifeCounterTemplates.AddRangeAsync(templates);
+
+            //var managers = ParseManagers(sections.GetValueOrDefault(3), userId);
+            //await _daoDbContext.LifeCounterManagers.AddRangeAsync(managers);
+
+            //var players = ParsePlayers(sections.GetValueOrDefault(4));
+            //await _daoDbContext.LifeCounterPlayers.AddRangeAsync(players);
+
+            //var sessions = ParseSessions(sections.GetValueOrDefault(5), userId);
+            //await _daoDbContext.Sessions.AddRangeAsync(sessions);
+
+            //var ratings = ParseRatings(sections.GetValueOrDefault(6), userId);
+            //await _daoDbContext.Ratings.AddRangeAsync(ratings);
+
+            await _daoDbContext.SaveChangesAsync();
+
+            var response = new UsersImportUserDataResponse();
+            return (response, "User data imported successfully."); ;
+        }
+        private static (bool, string) ImportUserData_Validation(UsersImportUserDataRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Request is null!");
+            }
+
+            return (true, String.Empty);
+        }
+        private UsersImportUserDataResponse_userDetails ParseUser(List<string>? lines)
+        {
+            if (lines == null || lines.Count < 2)
+                throw new Exception("Invalid user section");
+
+            var header = lines[0]; // skip or validate
+
+            var data = lines[1].Split(';');
+
+            if (data.Length < 4)
+                throw new Exception("User data row is incomplete.");
+
+
+            return new UsersImportUserDataResponse_userDetails
+            {
+                Name = data[0].Trim('"'),
+                SignUpDate = DateOnly.Parse(data[1]),
+                BirthDate = DateOnly.Parse(data[2]),
+                Gender = Enum.Parse<Gender>(data[3].Trim('"'))
+            };
+        }
+        private List<UsersImportUserDataResponse_userLifeCounterTemplates> ParseLifeCounterTemplates(List<string>? lines)
+        {
+            if (lines == null || lines.Count < 2)
+                throw new Exception("Invalid user section");       
+
+            var importedLifeCounterTemplates = new List<UsersImportUserDataResponse_userLifeCounterTemplates>();
+
+            // Skip header line at index 0
+            for (int i = 1; i < lines.Count - 1; i++)
+            {
+                var line = lines[i];
+                var data = line.Split(';');
+
+                if (data.Length < 7)
+                    throw new Exception($"Template data row is incomplete at line {i + 1}.");
+
+                importedLifeCounterTemplates.Add(new UsersImportUserDataResponse_userLifeCounterTemplates
+                {
+                    LifeCounterTemplateName = data[0].Trim('"'),
+                    PlayersStartingLifePoints = int.Parse(data[1]),
+                    PlayersCount = int.Parse(data[2]),
+                    FixedMaxLifePointsMode = bool.Parse(data[3]),
+                    PlayersMaxLifePoints = int.TryParse(data[4], out int playersMaxLifePoints) ? playersMaxLifePoints : null,
+                    AutoDefeatMode = bool.Parse(data[5]),
+                    AutoEndMode = bool.Parse(data[6]),
+                    LifeCounterManagersCount = int.Parse(data[7])
+                });
+            }
+
+            return importedLifeCounterTemplates;
         }
         //
         //--* end of USER'S PROFILE *--//

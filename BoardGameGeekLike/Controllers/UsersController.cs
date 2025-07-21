@@ -145,7 +145,7 @@ namespace BoardGameGeekLike.Controllers
         
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
-        public async Task<IActionResult> GetProfileDetails([FromQuery] UsersGetProfileDetailsRequest? request)
+        public async Task<IActionResult> GetProfileDetails([FromBody] UsersGetProfileDetailsRequest? request = null)
         {
             var (content, message) = await this._usersService.GetProfileDetails(request);
 
@@ -158,9 +158,27 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpPost]
+        public async Task<IActionResult> ImportUserData(UsersImportUserDataRequest? request)
+        {
+            var (content, message) = await this._usersService.ImportUserData(request);
+
+            var response = new Response<UsersImportUserDataResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpGet]
-        public async Task<IActionResult> ExportUserData([FromQuery] UsersExportUserDataRequest? request)
+        public async Task<IActionResult> ExportUserData([FromBody] UsersExportUserDataRequest? request = null)
         {
             var (content, message) = await this._usersService.ExportUserData(request);
 
