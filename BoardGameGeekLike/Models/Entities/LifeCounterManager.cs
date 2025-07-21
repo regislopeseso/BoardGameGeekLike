@@ -11,13 +11,13 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public string? LifeCounterManagerName { get; set; }          
+        public string? LifeCounterManagerName { get; set; }  
+        
+        public int? PlayersStartingLifePoints { get; set; }
         
         public int? PlayersCount { get; set; }
 
         public int? FirstPlayerIndex {get; set; }
-
-        public int? PlayersStartingLifePoints { get; set; }
 
         public bool? FixedMaxLifePointsMode { get; set; }
 

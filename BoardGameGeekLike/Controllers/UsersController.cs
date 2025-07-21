@@ -157,9 +157,26 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [Authorize(Roles = "Developer, Administrator, User")]
+        [HttpGet]
+        public async Task<IActionResult> ExportUserData([FromQuery] UsersExportUserDataRequest? request)
+        {
+            var (content, message) = await this._usersService.ExportUserData(request);
+
+            var response = new Response<UsersExportUserDataResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
         //
         //--* end of USER'S PROFILE *--//       
-           
+
 
 
         // BOARD GAMES

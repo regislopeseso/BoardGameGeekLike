@@ -11,6 +11,7 @@ using Microsoft.VisualBasic;
 using System.Linq;
 using System.Numerics;
 using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
 
 
@@ -686,6 +687,177 @@ namespace BoardGameGeekLike.Services
             {
                 return (false, "Error: request is NOT null. It must be null!");
             }         
+
+            return (true, String.Empty);
+        }
+
+
+        public async Task<(UsersExportUserDataResponse?, string)> ExportUserData(UsersExportUserDataRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ExportUserData_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var sb = new StringBuilder();
+
+            var userDB = await this._daoDbContext
+                .Users
+                .Include(a => a.LifeCounterTemplates)
+                .Include(a => a.LifeCounterManagers!)
+                .ThenInclude(a => a.LifeCounterPlayers)
+                .FirstOrDefaultAsync(a => a.Id == userId && a.IsDummy == false && a.IsDeleted == false);
+
+            if (userDB == null)
+            {
+                return (null, "Error: user not found");
+            }
+
+            // User details table header + data
+            sb.AppendLine("User Name;Sign Up Date;BirthDate;Gender");
+            sb.AppendLine($"\"{userDB.Name}\";{userDB.SignUpDate:yyyy-MM-dd};{userDB.BirthDate:yyyy-MM-dd};{userDB.Gender}");
+            
+
+            var lifeCounterTemplatesDB = userDB.LifeCounterTemplates;
+
+            if (lifeCounterTemplatesDB != null)
+            {
+                // Blank line between tables
+                sb.AppendLine("");
+
+                // Life Counter Templates table header
+                sb.AppendLine("Life Counter Template Name;Players Starting Life Points;Players Count;Fixed Max Life Points Mode; Players Max Life Points;Auto Defeat Mode;Auto End Mode;Life Counter Managers Count");
+
+                foreach (var template in lifeCounterTemplatesDB)
+                {
+                    sb.AppendLine($"\"{template.LifeCounterTemplateName}\";{template.PlayersStartingLifePoints};{template.PlayersCount};{template.FixedMaxLifePointsMode};{template.PlayersMaxLifePoints};{template.AutoDefeatMode};{template.AutoEndMode};{template.LifeCounterManagersCount}");
+                }
+            }
+
+
+            var lifeCounterManagersDB = userDB.LifeCounterManagers;
+
+            if (lifeCounterManagersDB != null)
+            {
+                // Blank line between tables
+                sb.AppendLine("");
+
+                // Life Counter Managers table header
+                sb.AppendLine("Life Counter Template Name; Life Counter Manager Name;Players Starting Life Points;Players Count;First Player Index;Fixed Max Life Points Mode;Players Max Life Points;Auto Defeat Mode;Auto End Mode;Starting Time Mark;Ending Time Mark;Duration (minutes);Is Finished");
+
+                foreach (var manager in lifeCounterManagersDB)
+                {
+                    var templateName = lifeCounterTemplatesDB!.Where(a => a.Id == manager.LifeCounterTemplateId).Select(a => a.LifeCounterTemplateName).FirstOrDefault();
+
+                    sb.AppendLine($"\"{templateName}\";\"{manager.LifeCounterManagerName}\";{manager.PlayersStartingLifePoints};{manager.PlayersCount};{manager.FirstPlayerIndex};{manager.FixedMaxLifePointsMode};{manager.PlayersMaxLifePoints};{manager.AutoDefeatMode};{manager.AutoEndMode};{manager.StartingTime};{manager.EndingTime};{manager.Duration_minutes};{manager.IsFinished}");
+                }
+            }
+
+
+            var lifeCounterPlayersDB = userDB.LifeCounterManagers!.SelectMany(a => a.LifeCounterPlayers!).ToList();
+
+            if(lifeCounterPlayersDB != null)
+            {
+                // Blank line between tables
+                sb.AppendLine("");
+
+                // Life Counter Players table header
+                sb.AppendLine("Player Name;Starting Life Points;Current Life Points;Fixed Max Life Points Mode;Max Life Points;Auto Defeat Mode;Auto End Mode;Is Defeated");
+
+                foreach (var player in lifeCounterPlayersDB)
+                {
+                    var managerName = lifeCounterManagersDB!.Where(a => a.Id == player.LifeCounterManagerId).Select(a => a.LifeCounterManagerName).FirstOrDefault();
+
+                    sb.AppendLine($"\"{managerName}\";\"{player.PlayerName}\";{player.StartingLifePoints};{player.CurrentLifePoints};{player.FixedMaxLifePointsMode};{player.MaxLifePoints};{player.AutoDefeatMode};{player.AutoDefeatMode};{player.IsDefeated}");
+                }
+            }
+
+            var sessionsDB = await this._daoDbContext
+                .Sessions
+                .Where(a => a.UserId == userId)
+                .Include(a => a.BoardGame)
+                .ToListAsync();
+
+            // Board games table header
+            var boardGamesDB = sessionsDB.Select(a => a.BoardGame).ToList();
+            
+
+            if (boardGamesDB != null && sessionsDB != null)
+            {
+                // Blank line between tables
+                sb.AppendLine("");
+
+                // Logged Board Game Sessions table header
+                sb.AppendLine("Board Game Name;Date;Players Count;Duration (minutes);Is Deleted;");
+
+                foreach (var session in sessionsDB)
+                {
+                    var boardGamePlayed = boardGamesDB.FirstOrDefault(a => a.Id == session.BoardGameId);
+                    var boardGameName = boardGamePlayed!.Name;
+
+                    var date = session.Date;
+                    var playersCount = session.PlayersCount;
+                    var duration = session.Duration_minutes;
+                    var isDeleted = session.IsDeleted;                    
+
+                    sb.AppendLine($"\"{boardGameName}\";{date};{playersCount};{duration};{isDeleted}");
+                }
+            }
+
+            var ratingsDB = await this._daoDbContext
+                .Ratings
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
+
+            if (boardGamesDB != null && ratingsDB != null)
+            {
+                // Blank line between tables
+                sb.AppendLine("");
+
+                // Rated Board Games table header
+                sb.AppendLine("Board Game Name;Rate");
+
+                foreach (var rating in ratingsDB)
+                {
+                    var boardGamePlayed = boardGamesDB.FirstOrDefault(a => a.Id == rating.BoardGameId);
+                    var boardGameName = boardGamePlayed!.Name;
+
+                    var rate = rating.Rate;
+                  
+
+                    sb.AppendLine($"\"{boardGameName}\";{rate}");
+                }
+            }
+
+
+            // Encode CSV with UTF-8 BOM to avoid Excel encoding issues
+            var csvString = sb.ToString();
+            var bom = Encoding.UTF8.GetPreamble();
+            var bytes = bom.Concat(Encoding.UTF8.GetBytes(csvString)).ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+
+            var response = new UsersExportUserDataResponse
+            {
+                FileName = "user-data.csv",
+                Base64Data = base64,
+                ContentType = "text/csv"
+            };
+
+            return (response, string.Empty);
+        }
+        private static (bool, string) ExportUserData_Validation(UsersExportUserDataRequest? request)
+        {
+           
+
 
             return (true, String.Empty);
         }
