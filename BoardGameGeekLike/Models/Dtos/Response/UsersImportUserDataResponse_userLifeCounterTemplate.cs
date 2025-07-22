@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersImportUserDataResponse_userLifeCounterTemplates
+    public class UsersImportUserDataResponse_userLifeCounterTemplate
     {
         public string? LifeCounterTemplateName { get; set; }
 

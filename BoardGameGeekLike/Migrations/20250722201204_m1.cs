@@ -306,15 +306,16 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     LifeCounterManagerName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    PlayersCount = table.Column<int>(type: "int", nullable: true),
                     PlayersStartingLifePoints = table.Column<int>(type: "int", nullable: true),
+                    PlayersCount = table.Column<int>(type: "int", nullable: true),
+                    FirstPlayerIndex = table.Column<int>(type: "int", nullable: true),
                     FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     PlayersMaxLifePoints = table.Column<int>(type: "int", nullable: true),
                     AutoDefeatMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     AutoEndMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     StartingTime = table.Column<long>(type: "bigint", nullable: true),
                     EndingTime = table.Column<long>(type: "bigint", nullable: true),
-                    Duration_minutes = table.Column<int>(type: "int", nullable: true),
+                    Duration_minutes = table.Column<double>(type: "double", nullable: true),
                     IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -433,9 +434,9 @@ namespace BoardGameGeekLike.Migrations
                     CurrentLifePoints = table.Column<int>(type: "int", nullable: true),
                     FixedMaxLifePointsMode = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     MaxLifePoints = table.Column<int>(type: "int", nullable: true),
-                    LifeCounterManagerId = table.Column<int>(type: "int", nullable: false),
                     AutoDefeatMode = table.Column<bool>(type: "tinyint(1)", nullable: true),
-                    IsDefeated = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    IsDefeated = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    LifeCounterManagerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
