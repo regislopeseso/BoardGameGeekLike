@@ -8,11 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace BoardGameGeekLike.Services
@@ -160,7 +162,7 @@ namespace BoardGameGeekLike.Services
                 return (false, $"Error: invalid Gender. It must be one of the following: {validOption}");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -282,7 +284,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: UserPassword is missing");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -621,7 +623,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: requested password is empty");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -688,7 +690,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is NOT null. It must be null!");
             }         
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -710,6 +712,8 @@ namespace BoardGameGeekLike.Services
 
             var sb = new StringBuilder();
 
+            var errorsReport = new List<string>();         
+           
             var userDB = await this._daoDbContext
                 .Users
                 .Include(a => a.LifeCounterTemplates)
@@ -724,49 +728,367 @@ namespace BoardGameGeekLike.Services
 
             // User details table title
             sb.AppendLine("TABLE #1: USER DETAILS");
+            // User details table header
+            sb.AppendLine("Name;Email;BirthDate;Gender;Sign Up Date;Errors Report");
 
-            // User details table header + data
-            sb.AppendLine("User Name;Sign Up Date;BirthDate;Gender");
+            var userName = userDB.Name;      
+            if (string.IsNullOrWhiteSpace(userName) == true)
+            {
+                errorsReport.Add("#Error: user name is missing!...");               
+            } else
+            {
+                userName = userName.Trim().ToUpper();
+
+                if (userName.Length > 30)
+                {
+                    errorsReport.Add("#Error: user name cannot be longer than 30 characters!...");                    
+                }
+
+                var forbiddenCharacters = @"['"";,]";
+                bool isUserNameInvalid = Regex.IsMatch(userName, forbiddenCharacters);
+
+                if (isUserNameInvalid == true)
+                {
+                    errorsReport.Add("Error: user name may contain " +
+                     "neither '(single quotes) nor  \"(double quotes) nor ,(commas) nor ;(semi-colons)...");                    
+                }
+            }
+
+            var userEmail = userDB.Email;         
+            if (string.IsNullOrWhiteSpace(userEmail) == true)
+            {
+                errorsReport.Add("#Error: user email is missing!...");                
+            }
+            else
+            {
+                userEmail = userEmail.Trim().ToUpper();
+
+                if (userEmail.Length > 50)
+                {
+                    errorsReport.Add("#Error: user email cannot be longer than 50 characters!...");
+                }
+
+                var invalidEmailFormat = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+                bool isUserEmailValid = Regex.IsMatch(userEmail, invalidEmailFormat);
+
+                if (isUserEmailValid == false)
+                {
+                    errorsReport.Add("#Error: user email format is invalid!...");                   
+                }
+            }
+
+            var userBirthDate_DateOnly = userDB.BirthDate;           
+            if (userBirthDate_DateOnly == null)
+            {
+                errorsReport.Add("#Error: user birth date is missing!...");   
+            }
+            else
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+
+                int age = today.Year - userBirthDate_DateOnly.Year;
+                if (userBirthDate_DateOnly > today.AddYears(-age)) age--; // adjust if birthday hasn't occurred yet this year
+
+                if (age < 12 || age > 90)
+                {
+                    errorsReport.Add("#Error: user age must be between 12 and 90 years!...");
+                }
+            }
+            var userBirthDate = userBirthDate_DateOnly == null ? "" : userBirthDate_DateOnly.ToString("yyyy-MM-dd");
+
+            var userGender = userDB.Gender;           
+            if(userGender == null)
+            {
+                errorsReport.Add("#Error: user gender is missing!...");               
+            }
+            if (Enum.IsDefined(userGender) == false)
+            {
+                errorsReport.Add("#Error: user gender must be either male (0) or female (1)!...");               
+            }
+
+            var userSignUpDate_DateOnly = userDB.SignUpDate;           
+            if (userSignUpDate_DateOnly == null)
+            {
+                errorsReport.Add("#Error: user sign up date is missing!...");                
+            } 
+            var userSignUpDate = userSignUpDate_DateOnly.ToString("yyyy-MM-dd");
+
+            if (errorsReport == null || errorsReport.Count == 0)
+            {
+                errorsReport.Add("No errors found.");
+            }
+
+            sb.AppendLine($"\"{userName}\";{userEmail};{userBirthDate};{userGender};{userSignUpDate};{string.Join(" | ", errorsReport)}");
             
-            sb.AppendLine($"\"{userDB.Name}\";{userDB.SignUpDate:yyyy-MM-dd};{userDB.BirthDate:yyyy-MM-dd};{userDB.Gender}");
             
 
-            var lifeCounterTemplatesDB = userDB.LifeCounterTemplates;
-
+            var lifeCounterTemplatesDB = userDB.LifeCounterTemplates;            
+            
             // Blank line between tables
             sb.AppendLine("");
             
             // Life Counter Templates table title
-            sb.AppendLine("TABLE #2: LIFE COUNTER TEMPLATES");
-
+            sb.AppendLine("TABLE #2: LIFE COUNTER TEMPLATES");          
             // Life Counter Templates table header
-            sb.AppendLine("Life Counter Template Name;Players Starting Life Points;Players Count;Fixed Max Life Points Mode; Players Max Life Points;Auto Defeat Mode;Auto End Mode;Life Counter Managers Count");
+            sb.AppendLine("Life Counter Template Name;Players Starting Life Points;Players Count;Fixed Max Life Points Mode; Players Max Life Points;Auto Defeat Mode;Auto End Mode;Life Counter Managers Count; Errors Report");                
 
             if (lifeCounterTemplatesDB != null && lifeCounterTemplatesDB.Count > 0)
             {
                 foreach (var template in lifeCounterTemplatesDB)
                 {
-                    sb.AppendLine($"\"{template.LifeCounterTemplateName}\";{template.PlayersStartingLifePoints};{template.PlayersCount};{template.FixedMaxLifePointsMode};{template.PlayersMaxLifePoints};{template.AutoDefeatMode};{template.AutoEndMode}  ;{template.LifeCounterManagersCount}");
+                    // Clear the errors report for the next table
+                    errorsReport = new List<string>();
+
+                    var templateName = template.LifeCounterTemplateName;
+                    if(string.IsNullOrWhiteSpace(templateName) == true)
+                    {
+                        errorsReport.Add("#Error: Life Counter Template Name is missing!...");                       
+                    }
+                    else
+                    {
+                        templateName = templateName.Trim().ToUpper();
+                        if (templateName.Length > 30)
+                        {
+                            errorsReport.Add("#Error: Life Counter Template Name cannot be longer than 30 characters!...");                          
+                        }
+
+                        var forbiddenCharacters = @"['"";,]";
+
+                        bool isTemplateNameInvalid = Regex.IsMatch(templateName, forbiddenCharacters);
+
+                        if (isTemplateNameInvalid == true)
+                        {
+                            errorsReport.Add("Error: Life Counter Template Name may contain " +
+                                "neither '(single quotes) nor  \"(double quotes) nor ,(commas) nor ;(semi-colons)...");
+                        }
+                    }
+
+                    var templatePlayersStartingLifePoints = template.PlayersStartingLifePoints;
+                    if(templatePlayersStartingLifePoints == null || templatePlayersStartingLifePoints < 1)
+                    {
+                        errorsReport.Add("#Error: Players Starting Life Points must be greater than 0!...");
+                    }
+
+                    var templatePlayersCount = template.PlayersCount;
+                    if(templatePlayersCount == null || templatePlayersCount < 1)
+                    {
+                        errorsReport.Add("#Error: Players Count must be greater than 0!...");
+                    }
+
+                    var templateFixedMaxLifePointsMode = template.FixedMaxLifePointsMode;
+                    if(templateFixedMaxLifePointsMode == null)
+                    {
+                        errorsReport.Add("#Error: Fixed Max Life Points Mode is missing!...");
+                    }
+
+                    var templatePlayersMaxLifePoints = template.PlayersMaxLifePoints;
+                    if(templatePlayersMaxLifePoints != null && templateFixedMaxLifePointsMode == false)
+                    {
+                        errorsReport.Add("#Error: If Fixed Max Life mode is FALSE then Max Life Points cell must be empty!...");
+                    }
+                    if (templatePlayersMaxLifePoints != null && templateFixedMaxLifePointsMode == true && templatePlayersMaxLifePoints >= templatePlayersStartingLifePoints)
+                    {
+                        errorsReport.Add("#Error: Max Life Points may not be greater than nor equal to Players Starting Life Points!...");
+                    }
+                    if (templatePlayersMaxLifePoints == null && templateFixedMaxLifePointsMode == true)
+                    {
+                        errorsReport.Add("#Error: If Fixed Max Life mode is TRUE then Max Life Points cell must contain a value!...");
+                    }
+
+                    var templateAutoDefeatMode = template.AutoDefeatMode;
+                    if(templateAutoDefeatMode == null)
+                    {
+                        errorsReport.Add("#Error: Auto Defeat Mode is missing!...");
+                    }
+
+                    var templateAutoEndMode = template.AutoEndMode;
+                    if(templateAutoEndMode == null)
+                    {
+                        errorsReport.Add("#Error: Auto End Mode is missing!...");
+                    }
+                    if(templateAutoEndMode == true && templateAutoDefeatMode == false)
+                    {
+                        errorsReport.Add("#Error: Auto End Mode cannot be TRUE if Auto Defeat Mode is FALSE!...");
+                    }
+
+                    var templateLifeCounterManagersCount = template.LifeCounterManagersCount;
+                    if(templateLifeCounterManagersCount == null || templateLifeCounterManagersCount < 0)
+                    {
+                        errorsReport.Add("#Error: Life Counter Managers Count must be greater than or equal to 0!...");
+                    }
+
+                    if (errorsReport == null || errorsReport.Count == 0)
+                    {
+                        errorsReport.Add("No errors found.");
+                    }
+
+                    sb.AppendLine($"\"{templateName}\";{templatePlayersStartingLifePoints};{templatePlayersCount};{templateFixedMaxLifePointsMode};{templatePlayersMaxLifePoints};{templateAutoDefeatMode};{templateAutoEndMode}  ;{templateLifeCounterManagersCount};{string.Join(" | ", errorsReport)}");
                 }
             }
 
 
             var lifeCounterManagersDB = userDB.LifeCounterManagers;
 
+            // Clear the errors report for the next table
+            errorsReport = new List<string>();
             // Blank line between tables
             sb.AppendLine("");
             // Life Counter Managers table title
             sb.AppendLine("TABLE #3: LIFE COUNTER MANAGERS");
             // Life Counter Managers table header
-            sb.AppendLine("Life Counter Template Name; Life Counter Manager Name;Players Starting Life Points;Players Count;First Player Index;Fixed Max Life Points Mode;Players Max Life Points;Auto Defeat Mode;Auto End Mode;Starting Time Mark;Ending Time Mark;Duration (minutes);Is Finished");
+            sb.AppendLine("Life Counter Template Name; Life Counter Manager Name;Players Starting Life Points;Players Count;First Player Index;Fixed Max Life Points Mode;Players Max Life Points;Auto Defeat Mode;Auto End Mode;Starting Time Mark;Ending Time Mark;Duration (minutes);Is Finished; Errors Report");
 
             if (lifeCounterManagersDB != null && lifeCounterManagersDB.Count > 0)
             {          
                 foreach (var manager in lifeCounterManagersDB)
                 {
-                    var templateName = lifeCounterTemplatesDB!.Where(a => a.Id == manager.LifeCounterTemplateId).Select(a => a.LifeCounterTemplateName).FirstOrDefault();
+                    // Clear the errors report for the next table
+                    errorsReport = new List<string>();
 
-                    sb.AppendLine($"\"{templateName}\";\"{manager.LifeCounterManagerName}\";{manager.PlayersStartingLifePoints};{manager.PlayersCount};{manager.FirstPlayerIndex};{manager.FixedMaxLifePointsMode};{manager.PlayersMaxLifePoints};{manager.AutoDefeatMode};{manager.AutoEndMode};{manager.StartingTime};{manager.EndingTime};{manager.Duration_minutes};{manager.IsFinished}");
+                    var templateId = manager.LifeCounterTemplateId;
+                    if(templateId == null || templateId < 1)
+                    {
+                        return (null, "Error: Life Counter Template Id is missing or invalid");
+                    }
+
+                    var templateName = lifeCounterTemplatesDB!.Where(a => a.Id == manager.LifeCounterTemplateId).Select(a => a.LifeCounterTemplateName).FirstOrDefault();
+                    if(string.IsNullOrWhiteSpace(templateName) == true)
+                    {
+                        return (null, "Error: Life Counter Template Name is missing or invalid");
+                    }
+
+                    var managerName = manager.LifeCounterManagerName;
+                    if (string.IsNullOrWhiteSpace(managerName) == true)
+                    {
+                        errorsReport.Add("#Error: Life Counter Manager Name is missing!...");
+                    }
+                    else
+                    {
+                        managerName = managerName.Trim().ToUpper();
+                        if (managerName.Length > 30)
+                        {
+                            errorsReport.Add("#Error: Life Counter Manager Name cannot be longer than 30 characters!...");
+                        }
+
+                        var forbiddenCharacters = @"['"";,]";
+
+                        bool isManagerNameInvalid = Regex.IsMatch(managerName, forbiddenCharacters);
+
+                        if (isManagerNameInvalid == true)
+                        {
+                            errorsReport.Add("Error: Life Counter Manager Name may contain " +
+                                "neither '(single quotes) nor  \"(double quotes) nor ,(commas) nor ;(semi-colons)...");
+                        }
+                    }
+
+                    var managerPlayerStartingLifePoints = manager.PlayersStartingLifePoints;
+                    if (managerPlayerStartingLifePoints == null || managerPlayerStartingLifePoints < 1)
+                    {
+                        errorsReport.Add("#Error: Players Starting Life Points must be greater than 0!...");
+                    }
+
+                    var managerPlayersCount = manager.PlayersCount;
+                    if (managerPlayersCount == null || managerPlayersCount < 1)
+                    {
+                        errorsReport.Add("#Error: Players Count must be greater than 0!...");
+                    }
+
+                    var managerFirstPlayerIndex = manager.FirstPlayerIndex;
+                    if(managerFirstPlayerIndex == null || managerFirstPlayerIndex < 0 || managerFirstPlayerIndex > 5)
+                    {
+                        errorsReport.Add("#Error: First Player Index must be a value between 0 and 5!...");
+                    }
+
+                    var managerFixedMaxLifePointsMode = manager.FixedMaxLifePointsMode;
+                    if (managerFixedMaxLifePointsMode == null)
+                    {
+                        errorsReport.Add("#Error: Fixed Max Life Points Mode is missing!...");
+                    }
+
+                    var managerPlayersMaxLifePoints = manager.PlayersMaxLifePoints;
+                    if (managerPlayersMaxLifePoints != null && managerFixedMaxLifePointsMode == false)
+                    {
+                        errorsReport.Add("#Error: If Fixed Max Life mode is FALSE then Max Life Points cell must be empty!...");
+                    }
+                    if (managerPlayersMaxLifePoints != null && managerFixedMaxLifePointsMode == true && managerPlayersMaxLifePoints <= managerPlayerStartingLifePoints)
+                    {
+                        errorsReport.Add("#Error: Max Life Points may NOT be greater than NOR equal to Players Starting Life Points!...");
+                    }
+                    if (managerPlayersMaxLifePoints == null && managerFixedMaxLifePointsMode == true)
+                    {
+                        errorsReport.Add("#Error: If Fixed Max Life mode is TRUE then Max Life Points cell must contain a value!...");
+                    }
+
+                    var managerAutoDefeatMode = manager.AutoDefeatMode;
+                    if (managerAutoDefeatMode == null)
+                    {
+                        errorsReport.Add("#Error: Auto Defeat Mode is missing!...");
+                    }
+
+                    var managerAutoEndMode = manager.AutoEndMode;
+                    if (managerAutoEndMode == null)
+                    {
+                        errorsReport.Add("#Error: Auto End Mode is missing!...");
+                    }
+                    if (managerAutoEndMode == true && managerAutoEndMode == false)
+                    {
+                        errorsReport.Add("#Error: Auto End Mode cannot be TRUE if Auto Defeat Mode is FALSE!...");
+                    }
+
+                    var managerStartingTime_Ticks = manager.StartingTime;
+                    DateTime managerStartingTime_DateTime = new DateTime(managerStartingTime_Ticks!.Value);
+                    DateOnly managerStartingTime_DateOnly = DateOnly.FromDateTime(managerStartingTime_DateTime);
+                    if (managerStartingTime_Ticks == null || managerStartingTime_DateOnly < userSignUpDate_DateOnly)
+                    {
+                        errorsReport.Add("#Error: Invalid Starting Time mark!...");
+                    }                    
+                    var managerStartingTime = managerStartingTime_DateTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    var managerEndingTime_Ticks = manager.EndingTime;
+                    var managerEndingTime = "";
+                    if (managerEndingTime_Ticks != null && managerEndingTime_Ticks > 0)
+                    {
+                        DateTime managerEndingTime_DateTime = new DateTime(managerEndingTime_Ticks!.Value);
+                        DateTime today_and_now = DateTime.Today;
+                        DateOnly managerEndingTime_DateOnly = DateOnly.FromDateTime(managerEndingTime_DateTime);                    
+
+                        if (managerStartingTime_Ticks != null && managerEndingTime_Ticks < 0 || managerEndingTime_DateTime > managerStartingTime_DateTime || managerEndingTime_DateTime > today_and_now)
+                        {
+                            errorsReport.Add("#Error: Invalid Ending Time mark!...");
+                        }
+                        managerEndingTime = managerEndingTime_Ticks != null && managerEndingTime_Ticks > 0 ? managerEndingTime_DateTime.ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    }
+
+                    var managerDuration_minutes = manager.Duration_minutes;
+                    if (managerDuration_minutes != null && (managerEndingTime_Ticks == null || managerEndingTime == ""))
+                    {
+                        errorsReport.Add("#Error: If Ending Time cell is empty Duration must be empty also!...");
+                    }
+                    if (managerDuration_minutes == null && (managerEndingTime_Ticks != null || managerEndingTime_Ticks > 0))
+                    {
+                        errorsReport.Add("#Error: Duration must be greater than or equal to 0 minutes!...");
+                    }
+
+                    var managerIsFinished = manager.IsFinished;
+                    if(managerIsFinished == null)
+                    {
+                        errorsReport.Add("#Error: Is Finished data is missing!...");
+                    }
+                    if((managerIsFinished != null && managerIsFinished == true) && (managerEndingTime_Ticks == null || managerDuration_minutes == null))
+                    {
+                        errorsReport.Add("#Error: If Ending Time cell is empty and/or Duration cell is also empty then Is Finished cell must be empty as well!...");
+                    }
+                    if ((managerIsFinished == null || managerIsFinished == false) && (managerEndingTime_Ticks != null || managerDuration_minutes != null))
+                    {
+                        errorsReport.Add("#Error: If neither Ending Time cell is empty NOR Duration cell then Is Finished cell may not be empty nor false!...");
+                    }
+
+                    if (errorsReport == null || errorsReport.Count == 0)
+                    {
+                        errorsReport.Add("No errors found.");
+                    }
+
+                    sb.AppendLine($"\"{templateName}\";\"{managerName}\";{managerPlayerStartingLifePoints};{managerPlayersCount};{managerFirstPlayerIndex};{managerFixedMaxLifePointsMode};{managerPlayersMaxLifePoints};{managerAutoDefeatMode};{managerAutoEndMode};{managerStartingTime};{managerEndingTime};{managerDuration_minutes};{managerIsFinished};{string.Join(" | ", errorsReport)}");
                 }
             }
 
@@ -780,22 +1102,120 @@ namespace BoardGameGeekLike.Services
             sb.AppendLine("TABLE #4: LIFE COUNTER PLAYERS");
 
             // Life Counter Players table header
-            sb.AppendLine("Player Name;Starting Life Points;Current Life Points;Fixed Max Life Points Mode;Max Life Points;Auto Defeat Mode;Auto End Mode;Is Defeated");
+            sb.AppendLine("Life Counter Manager Name;Player Name;Starting Life Points;Current Life Points;Fixed Max Life Points Mode;Max Life Points;Auto Defeat Mode;Is Defeated; Errors Report");
             
             if(lifeCounterPlayersDB != null && lifeCounterPlayersDB.Count > 0)
             {
                 foreach (var player in lifeCounterPlayersDB)
                 {
-                    var managerName = lifeCounterManagersDB!.Where(a => a.Id == player.LifeCounterManagerId).Select(a => a.LifeCounterManagerName).FirstOrDefault();
+                    // Clear the errors report for the next table
+                    errorsReport = new List<string>();
 
-                    sb.AppendLine($"\"{managerName}\";\"{player.PlayerName}\";{player.StartingLifePoints};{player.CurrentLifePoints};{player.FixedMaxLifePointsMode};{player.MaxLifePoints};{player.AutoDefeatMode};{player.AutoDefeatMode};{player.IsDefeated}");
+                    var managerId = player.LifeCounterManagerId;
+                    if (managerId == null || managerId < 1)
+                    {
+                        return (null, "Error: Life Counter Manager Id is missing or invalid");
+                    }
+
+                    var managerName = lifeCounterManagersDB!.Where(a => a.Id == managerId).Select(a => a.LifeCounterManagerName).FirstOrDefault();
+                    if (string.IsNullOrWhiteSpace(managerName) == true)
+                    {
+                        return (null, "Error: Life Counter Manager Name is missing or invalid");
+                    }
+
+                    var lifeCounterPlayer_Name = player.PlayerName;                
+                    if (string.IsNullOrWhiteSpace(lifeCounterPlayer_Name) == true)
+                    {
+                        errorsReport.Add("#Error: Life Counter Template Name is missing!...");
+                    }
+                    else
+                    {
+                        lifeCounterPlayer_Name = lifeCounterPlayer_Name.Trim().ToUpper();
+                        if (lifeCounterPlayer_Name.Length > 30)
+                        {
+                            errorsReport.Add("#Error: Life Counter Template Name cannot be longer than 30 characters!...");
+                        }
+
+                        var forbiddenCharacters = @"['"";,]";
+
+                        bool isPlayerNameInvalid = Regex.IsMatch(lifeCounterPlayer_Name, forbiddenCharacters);
+
+                        if (isPlayerNameInvalid == true)
+                        {
+                            errorsReport.Add("Error: Life Counter Player Name may contain " +
+                                "neither '(single quotes) nor  \"(double quotes) nor ,(commas) nor ;(semi-colons)...");
+                        }
+                    }
+
+                    var lifeCounterPlayer_StartingLifePoints = player.StartingLifePoints;
+                    if (lifeCounterPlayer_StartingLifePoints == null || lifeCounterPlayer_StartingLifePoints < 1)
+                    {
+                        errorsReport.Add("#Error: Player Starting Life Points must be greater than 0!...");
+                    }
+
+                    var lifeCounterPlayer_CurrentLifePoints = player.CurrentLifePoints;
+                    if (lifeCounterPlayer_CurrentLifePoints == null)
+                    {
+                        errorsReport.Add("#Error: Player Current Life Points is missing!...");
+                    }
+
+                    var lifeCounterPlayer_FixedMaxLifePointsMode = player.FixedMaxLifePointsMode;
+                    if (lifeCounterPlayer_FixedMaxLifePointsMode == null)
+                    {
+                        errorsReport.Add("#Error: Fixed Max Life Points Mode is missing!...");
+                    }
+
+                    var lifeCounterPlayer_MaxLifePoints = player.MaxLifePoints;
+                    if (lifeCounterPlayer_MaxLifePoints != null && lifeCounterPlayer_FixedMaxLifePointsMode == false)
+                    {
+                        errorsReport.Add("#Error: If Fixed Max Life mode is FALSE then Max Life Points cell must be empty!...");
+                    }
+                    if (lifeCounterPlayer_MaxLifePoints != null && lifeCounterPlayer_FixedMaxLifePointsMode == true && lifeCounterPlayer_MaxLifePoints <= lifeCounterPlayer_MaxLifePoints)
+                    {
+                        errorsReport.Add("#Error: Max Life Points may NOT be lesser than NOR equal to Starting Life Points!...");
+                    }
+                    if (lifeCounterPlayer_MaxLifePoints == null && lifeCounterPlayer_FixedMaxLifePointsMode == true)
+                    {
+                        errorsReport.Add("#Error: If Fixed Max Life mode is TRUE then Max Life Points cell must contain a value!...");
+                    }
+
+                    var lifeCounterPlayer_AutoDefeatMode = player.AutoDefeatMode;
+                    if (lifeCounterPlayer_AutoDefeatMode == null)
+                    {
+                        errorsReport.Add("#Error: Auto Defeat Mode is missing!...");
+                    }
+                    if (lifeCounterPlayer_AutoDefeatMode != null && lifeCounterPlayer_AutoDefeatMode == true && lifeCounterPlayer_CurrentLifePoints < 0)
+                    {
+                        errorsReport.Add("#Error: If Auto Defeat Mode cell value is true then Current Life Points must be zero!...");
+                    }
+
+                    var lifeCounterPlayer_IsDefeated = player.IsDefeated;
+                    if (lifeCounterPlayer_IsDefeated == null)
+                    {
+                        errorsReport.Add("#Error: Is Defeated data is missing!...");
+                    }
+                    if(lifeCounterPlayer_IsDefeated == true && lifeCounterPlayer_AutoDefeatMode == false)
+                    {
+                        errorsReport.Add("#Error: If Auto Defeat Mode cell has the value false then Is Defeated cell value MUST be false!...");
+                    }
+                    if (lifeCounterPlayer_IsDefeated == false && lifeCounterPlayer_AutoDefeatMode == true && lifeCounterPlayer_CurrentLifePoints <=0)
+                    {
+                        errorsReport.Add("#Error: If Auto Defeat Mode cell has the value true and Current Life Points is less or equal to zero then Is Defeated cell value MUST be true!...");
+                    }
+
+                    if (errorsReport == null || errorsReport.Count == 0)
+                    {
+                        errorsReport.Add("No errors found.");
+                    }
+
+                    sb.AppendLine($"\"{managerName}\";\"{lifeCounterPlayer_Name}\";{lifeCounterPlayer_StartingLifePoints};{lifeCounterPlayer_CurrentLifePoints};{lifeCounterPlayer_FixedMaxLifePointsMode};{lifeCounterPlayer_MaxLifePoints};{lifeCounterPlayer_AutoDefeatMode};{lifeCounterPlayer_IsDefeated};{string.Join(" | ", errorsReport)}");
                 }
             }
 
             var sessionsDB = await this._daoDbContext
                 .Sessions
-                .Where(a => a.UserId == userId)
                 .Include(a => a.BoardGame)
+                .Where(a => a.UserId == userId)
                 .ToListAsync();
 
             // Board games table header
@@ -809,12 +1229,15 @@ namespace BoardGameGeekLike.Services
             sb.AppendLine("TABLE #5: BOARD GAME SESSIONS");
 
             // Logged Board Game Sessions table header
-            sb.AppendLine("Board Game Name;Date;Players Count;Duration (minutes);Is Deleted;");
+            sb.AppendLine("Board Game Name;Date;Players Count;Duration (minutes);Is Deleted;Errors Report");
             
             if (boardGamesDB != null && (sessionsDB != null && sessionsDB.Count > 0))
             {
                 foreach (var session in sessionsDB)
                 {
+                    // Clear the errors report for the next table
+                    errorsReport = new List<string>();
+
                     var boardGamePlayed = boardGamesDB.FirstOrDefault(a => a.Id == session.BoardGameId);
                     var boardGameName = boardGamePlayed!.Name;
 
@@ -867,7 +1290,7 @@ namespace BoardGameGeekLike.Services
 
             var response = new UsersExportUserDataResponse
             {
-                FileName = "user-data.csv",
+                FileName = "bgg_like_user_data.csv",
                 Base64Data = base64,
                 ContentType = "text/csv"
             };
@@ -881,7 +1304,7 @@ namespace BoardGameGeekLike.Services
                return (false, "Request must be null!");
            }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -910,7 +1333,7 @@ namespace BoardGameGeekLike.Services
             byte[] csvBytes;
             try
             {
-                csvBytes = Convert.FromBase64String(request.Base64CsvData);
+                csvBytes = Convert.FromBase64String(request!.Base64CsvData);
             }
             catch
             {
@@ -1190,7 +1613,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Request is null!");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
         private UsersImportUserDataResponse_userDetails ParseUser(List<string> lines)
         {
@@ -1430,7 +1853,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid BoarGameId (is less than 1)");
             }
 
-            if(String.IsNullOrWhiteSpace(request.Date) == false)
+            if(string.IsNullOrWhiteSpace(request.Date) == false)
             {
                 string datePattern = @"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$";
 
@@ -1485,7 +1908,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes = 1 day)");
             }
 
-            return (true, String.Empty);           
+            return (true, string.Empty);           
         }
         
 
@@ -1691,7 +2114,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid BoarGameId (is less than 1)");
             }
 
-            if(String.IsNullOrWhiteSpace(request.NewDate) == false)
+            if(string.IsNullOrWhiteSpace(request.NewDate) == false)
             {
                 string datePattern = @"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
 
@@ -1741,7 +2164,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid Duration_minutes (the maximum duration allowed is 1440 minutes)");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
     
 
@@ -1806,7 +2229,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid SessionId (is less than 1)");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -1900,7 +2323,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid BoardGameId (is less than 1)");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
      
 
@@ -2050,7 +2473,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid BoardGameId (is less than 1)");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
         
 
@@ -2132,7 +2555,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: invalid RateId (is less than 1)");
             }
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
         //
         //--* end of BOARD GAMES *--//        
@@ -2601,7 +3024,7 @@ namespace BoardGameGeekLike.Services
                 return (false, "Error: request is not null however it MUST be null");
             }          
 
-            return (true, String.Empty);
+            return (true, string.Empty);
         }
 
 
@@ -2846,7 +3269,7 @@ namespace BoardGameGeekLike.Services
                 return (false, $"Error: requested LifeCounterTemplateId failed: {request.LifeCounterTemplateId}");
             }
 
-            if (String.IsNullOrWhiteSpace(request!.NewLifeCounterTemplateName) == true)
+            if (string.IsNullOrWhiteSpace(request!.NewLifeCounterTemplateName) == true)
             {
                 return (false,
                    "Error: LifeCounterTemplateName is null or empty! " +
@@ -3326,7 +3749,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: requested LifeCounterManagerDB failed");
             }     
 
-            if (response.LifeCounterTemplateId == null || String.IsNullOrWhiteSpace(response.LifeCounterTemplateName) == true)
+            if (response.LifeCounterTemplateId == null || string.IsNullOrWhiteSpace(response.LifeCounterTemplateName) == true)
             {
                 return (null, "Error: requested LifeCounterTemplateDB failed");
             }         
@@ -4221,9 +4644,9 @@ namespace BoardGameGeekLike.Services
 
             }
 
-            if (String.IsNullOrWhiteSpace(request.PlayerNewName) == true)
+            if (string.IsNullOrWhiteSpace(request.PlayerNewName) == true)
             {
-                return (false, $"Error: requested PlayerNewName failed: String.IsNullOrWhiteSpace(request.PlayerNewName) == true? {String.IsNullOrWhiteSpace(request.PlayerNewName) == true}");
+                return (false, $"Error: requested PlayerNewName failed: String.IsNullOrWhiteSpace(request.PlayerNewName) == true? {string.IsNullOrWhiteSpace(request.PlayerNewName) == true}");
             }
 
             return (true, string.Empty);
