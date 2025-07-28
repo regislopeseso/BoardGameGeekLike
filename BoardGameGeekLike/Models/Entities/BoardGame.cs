@@ -30,6 +30,9 @@ namespace BoardGameGeekLike.Models.Entities
         [Column(TypeName = "decimal(2,1)")]
         public decimal AverageRating {get; set;}
 
+        [InverseProperty("BoardGame")]
+        public List<Rating>? Ratings { get; set; }
+
         public int RatingsCount {get; set;}
 
         public int AvgDuration_minutes { get; set; }
