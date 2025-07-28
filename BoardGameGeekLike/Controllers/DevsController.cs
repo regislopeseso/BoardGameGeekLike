@@ -23,6 +23,8 @@ namespace BoardGameGeekLike.Controllers
             this._devsService = devsService;     
         }
 
+        #region BoardGames
+
         [HttpPost]
         public async Task<IActionResult> Seed(DevsSeedRequest? request)
         {
@@ -50,6 +52,42 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        #endregion
+
+        #region Medieval Auto Battler
+
+        [HttpPost]
+        public async Task<IActionResult> MedievalAutoBattlerSeed(DevsMedievalAutoBattlerSeedRequest request)
+        {
+            var (content, message) = await this._devsService.MedievalAutoBattlerSeed(request);
+
+            var response = new Response<DevsMedievalAutoBattlerSeedResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> MedievalAutoBattlerSeedDeleteSeed(DevsMedievalAutoBattlerSeedDeleteSeedRequest? request)
+        {
+            var (content, message) = await this._devsService.MedievalAutoBattlerSeedDeleteSeed(request);
+
+            var response = new Response<DevsMedievalAutoBattlerSeedDeleteSeedResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
+        #endregion
 
     }
 }

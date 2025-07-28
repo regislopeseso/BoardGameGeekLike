@@ -24,5 +24,21 @@ namespace BoardGameGeekLike.Models
         public DbSet<LifeCounterManager> LifeCounterManagers { get; set; }
 
         public DbSet<LifeCounterPlayer> LifeCounterPlayers { get; set; }
+
+        public DbSet<Card> Cards { get; set; }
+
+        public DbSet<PlayerCardEntry> MPlayerCardEntry { get; set; }
+
+        public DbSet<Deck> Decks { get; set; }
+
+        public DbSet<PlayerDeckEntry> PlayerDeckEntries { get; set; }
+
+        public DbSet<PlayerSave> Saves { get; set; }
+
+        public DbSet<Npc> Npcs { get; set; }
+
+        public DbSet<NpcDeckEntry> NpcDeckEntries { get; set; }
+
+        public DbSet<Battle> Battles { get; set; }
     }
 }
