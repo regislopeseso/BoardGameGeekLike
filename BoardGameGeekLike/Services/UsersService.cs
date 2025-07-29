@@ -77,6 +77,7 @@ namespace BoardGameGeekLike.Services
             var userDB = await this._daoDbContext
                 .Users
                 .AsNoTracking()
+                .Where(a => a.Id == userId)
                 .Select(a => new DataBackUp_userObj
                 {
                     Name = a.Name,
@@ -1496,7 +1497,7 @@ namespace BoardGameGeekLike.Services
             // Skip header line at index 0
             for (int i = 1; i < lines.Count - 1; i++)
             {         
-                var data = lines[1].Split(';');
+                var data = lines[i].Split(';');
 
                 if (data.Length < 8)
                 {
@@ -1622,7 +1623,7 @@ namespace BoardGameGeekLike.Services
             // Skip header line at index 0
             for (int i = 1; i < lines.Count - 1; i++)
             {
-                var data = lines[1].Split(';');
+                var data = lines[i].Split(';');
 
                 if (data.Length < 5)
                 {
@@ -1657,7 +1658,7 @@ namespace BoardGameGeekLike.Services
             // Skip header line at index 0
             for (int i = 1; i < lines.Count - 1; i++)
             {
-                var data = lines[1].Split(';');
+                var data = lines[i].Split(';');
 
                 if (data.Length < 2)
                 {
