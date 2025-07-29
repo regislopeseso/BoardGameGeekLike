@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -21,17 +22,26 @@ namespace BoardGameGeekLike.Services
 {
     public class DevsService
     {
-        private readonly ApplicationDbContext _daoDbContext; 
+        private readonly ApplicationDbContext _daoDbContext;    
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DevsService(ApplicationDbContext daoDbContext)
+        public DevsService(ApplicationDbContext daoDbContext, IHttpContextAccessor httpContextAccessor)
         {
-            this._daoDbContext = daoDbContext;         
+            this._daoDbContext = daoDbContext;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         #region Board Games
 
-        public async Task<(DevsSeedResponse?, string)> Seed(DevsSeedRequest? request)
+        public async Task<(DevsBoardGamesSeedResponse?, string)> BoardGamesSeed(DevsBoardGamesSeedRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = Seed_Validation(request);
             
             if(isValid == false)
@@ -128,10 +138,10 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.SaveChangesAsync();
 
-            return(null, "Seeding was successful");
+            return(new DevsBoardGamesSeedResponse(), "Seeding was successful");
         }
 
-        private static (bool, string) Seed_Validation(DevsSeedRequest? request)
+        private static (bool, string) Seed_Validation(DevsBoardGamesSeedRequest? request)
         {
             if(request != null && request.CategoriesCount < 1)
             {
@@ -336,8 +346,15 @@ namespace BoardGameGeekLike.Services
             return newSessions;
         }
     
-        public async Task<(DevsDeleteSeedResponse?, string)> DeleteSeed(DevsDeleteSeedRequest? request)
+        public async Task<(DevsBoardGamesDeleteSeedResponse?, string)> BoardGamesDeleteSeed(DevsBoardGamesDeleteSeedRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             await this._daoDbContext
                 .BoardGames
                 .Where(a => a.IsDummy == true)
@@ -369,13 +386,20 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> MedievalAutoBattlerSeed(DevsMedievalAutoBattlerSeedRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (cardsSeedingResult, msg1) = await this.SeedCards();
             var (npcsSeedingResult, msg2) = await this.SeedNpcs();
 
             return (null, "Seeding was successful. " + msg1 + ". " + msg2);
         }
 
-        private async Task<(DevsSeedCardsResponse?, string)> SeedCards()
+        private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedCards()
         {
             var cardsSeed = new List<Card>();
 
@@ -407,7 +431,7 @@ namespace BoardGameGeekLike.Services
             return (null, $"{cardsSeed.Count} new cards haven been successfully seeded");
         }
 
-        private async Task<(DevsSeedNpcsResponse?, string)> SeedNpcs()
+        private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedNpcs()
         {
             var cardsDB = await _daoDbContext
                                     .Cards
@@ -722,8 +746,15 @@ namespace BoardGameGeekLike.Services
             }
         }
 
-        public async Task<(DevsMedievalAutoBattlerSeedDeleteSeedResponse?, string)> MedievalAutoBattlerSeedDeleteSeed(DevsMedievalAutoBattlerSeedDeleteSeedRequest request)
+        public async Task<(DevsMedievalAutoBattlerDeleteSeedResponse?, string)> MedievalAutoBattlerDeleteSeed(DevsMedievalAutoBattlerDeleteSeedRequest request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             await this._daoDbContext
                             .Npcs
                             .Where(a => a.IsDummy == true)
@@ -736,8 +767,6 @@ namespace BoardGameGeekLike.Services
 
             return (null, "Dummies deleted successfully");
         }
-
-
 
         #endregion
     }

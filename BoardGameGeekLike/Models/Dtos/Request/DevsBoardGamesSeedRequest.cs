@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class DevsSeedRequest
+    public class DevsBoardGamesSeedRequest
     {
         public int? CategoriesCount { get; set; } = 10;
 

@@ -2,7 +2,5 @@
 {
     public class DevsMedievalAutoBattlerSeedRequest
     {
-        public DevsSeedCardsRequest AdminSeedCardsRequest;
-        public DevsSeedNpcsRequest AdminSeedNpcsRequest;
     }
 }
