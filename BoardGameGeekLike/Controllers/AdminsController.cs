@@ -18,9 +18,8 @@ namespace BoardGameGeekLike.Controllers
             this._adminsService = adminsService;
         }
 
-        //
-        //  BOARD GAMES
-        //
+
+        #region Board Games 
 
         [HttpGet]
         public async Task<IActionResult> ListBoardGames(AdminsListBoardGamesRequest? request)
@@ -106,7 +105,7 @@ namespace BoardGameGeekLike.Controllers
             };
 
             return new JsonResult(response);
-        }
+        }        
 
         //
         //  CATEGORIES
@@ -289,5 +288,56 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        #endregion
+
+
+        #region Medieval Auto Battler
+        [HttpPost]
+        public async Task<IActionResult> CreateCard(AdminsCreateCardRequest request)
+        {
+            var (content, message) = await this._adminsService.CreateCard(request);
+
+            var response = new Response<AdminsCreateCardResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FilterCards(AdminsFilterCardsRequest request)
+        {
+            var (content, message) = await this._adminsService.FilterCards(request);
+
+            var response = new Response<List<AdminsFilterCardsResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllCards(AdminsGetAllCardsRequest request)
+        {
+            var (content, message) = await this._adminsService.GetAllCards(request);
+
+            var response = new Response<List<AdminsGetAllCardsResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
+
+        #endregion
     }
 }

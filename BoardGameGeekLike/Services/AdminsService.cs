@@ -2,6 +2,8 @@ using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
+using BoardGameGeekLike.Models.Enums;
+using BoardGameGeekLike.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +11,7 @@ using Microsoft.VisualBasic;
 using System.Security.Claims;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Constants = BoardGameGeekLike.Utilities.Constants;
 
 namespace BoardGameGeekLike.Services
 {
@@ -24,11 +27,10 @@ namespace BoardGameGeekLike.Services
             this._userManager = userManager;
             this._httpContextAccessor = httpContextAccessor;
         }
-        
-        //
-        //  BOARD GAMES
-        //
-        
+
+
+        #region Board Games        
+
         public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -119,7 +121,7 @@ namespace BoardGameGeekLike.Services
             if (categoryDB.IsDeleted == true)
             {
                 return (null, "Error: requested category was deleted");
-            }           
+            }
 
             var mechanicIdsDB = await this._daoDbContext
                 .Mechanics
@@ -361,7 +363,7 @@ namespace BoardGameGeekLike.Services
             var boardGameName_exists = await this._daoDbContext
                 .BoardGames
                 .AsNoTracking()
-                .AnyAsync(a => a.Id != request!.BoardGameId && 
+                .AnyAsync(a => a.Id != request!.BoardGameId &&
                     a.Name == request.BoardGameName!.Trim());
 
 
@@ -396,10 +398,10 @@ namespace BoardGameGeekLike.Services
             if (CategoryId_exists == false)
             {
                 return (null, "Error: requested category not found");
-            }                
-          
+            }
+
             var mechanicsDB = await this._daoDbContext
-                .Mechanics               
+                .Mechanics
                 .ToListAsync();
 
             if (mechanicsDB == null || mechanicsDB.Count == 0)
@@ -568,7 +570,7 @@ namespace BoardGameGeekLike.Services
             await this._daoDbContext
                       .BoardGames
                       .Where(a => a.Id == request!.BoardGameId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));           
+                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
 
 
             return (null, "Board game deleted successfully");
@@ -604,7 +606,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var (isValid, message) = RestoreBoardGame_Validation(request);
-            
+
             if (isValid == false)
             {
                 return (null, message);
@@ -653,11 +655,10 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        
+
         //
         //  CATEGORIES
         //
-        
         public async Task<(List<AdminsListCategoriesResponse>?, string)> ListCategories(AdminsListCategoriesRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -679,7 +680,7 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new AdminsListCategoriesResponse
                 {
                     CategoryId = a.Id,
-                    Name = a.Name,              
+                    Name = a.Name,
                     IsDeleted = a.IsDeleted
                 })
                 .OrderBy(a => a.IsDeleted)
@@ -983,7 +984,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        
+
         //
         //  MECHANICS
         //
@@ -1032,7 +1033,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-     
+
         public async Task<(AdminsAddMechanicResponse?, string)> AddMechanic(AdminsAddMechanicRequest? request)
         {
             var (isValid, message) = AddMechanic_Validation(request);
@@ -1311,5 +1312,270 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+    
+
+        #endregion
+
+
+        #region Medieval Auto Battler
+
+        public async Task<(AdminsCreateCardResponse?, string)> CreateCard(AdminsCreateCardRequest request)
+        {
+            var (isValid, message) = CreateIsValid(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var exists = await this._daoDbContext
+                                    .Cards
+                                    .AnyAsync(a => a.Name == request.CardName && a.IsDeleted == false);
+
+            if (exists == true)
+            {
+                return (null, $"Error: this card already exists: {request.CardName}");
+            }
+
+            var newCard = new Card
+            {
+                Name = request.CardName,
+                Power = request.CardPower,
+                UpperHand = request.CardUpperHand,
+                Level = Helper.GetCardLevel(request.CardPower, request.CardUpperHand),
+                Type = request.CardType,
+                IsDeleted = false,
+            };
+
+            this._daoDbContext.Add(newCard);
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, "New card created successfully");
+        }
+
+        private static (bool, string) CreateIsValid(AdminsCreateCardRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: no information provided");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CardName) == true)
+            {
+                return (false, "Error: invalid CardName");
+            }
+
+            if (request.CardPower < Constants.MinCardPower || request.CardPower > Constants.MaxCardPower)
+            {
+                return (false, $"Error: invalid CardPowe. It must be between {Constants.MinCardPower} and {Constants.MaxCardPower}");
+            }
+
+            if (request.CardUpperHand < Constants.MinCardUpperHand || request.CardUpperHand > Constants.MaxCardUpperHand)
+            {
+                return (false, $"Error: invalid CardUpperHand. It must be between {Constants.MinCardUpperHand} and {Constants.MaxCardUpperHand}");
+            }
+
+            if (Enum.IsDefined(request.CardType) == false)
+            {
+                var validTypes = string.Join(", ", Enum.GetValues(typeof(CardType))
+                                        .Cast<CardType>()
+                                        .Select(cardType => $"{cardType} ({(int)cardType})"));
+
+                return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(List<AdminsFilterCardsResponse>?, string)> FilterCards(AdminsFilterCardsRequest request)
+        {
+            var (filterIsValid, message) = FilterIsValid(request);
+
+            if (filterIsValid == false)
+            {
+                return (null, message);
+            }
+
+            var contentQueriable = this._daoDbContext
+                                       .Cards
+                                       .AsNoTracking()
+                                       .Where(a => a.IsDeleted == false);
+
+            message = "All cards listed successfully";
+
+            #region Filtering by CardName           
+            if (string.IsNullOrWhiteSpace(request.CardName) == false)
+            {
+                contentQueriable = contentQueriable.Where(a => a.Name.ToLower().Contains(request.CardName.ToLower()));
+
+                message = $"The card ->{request.CardName}<- has been successfully filtered";
+            }
+            #endregion
+
+            #region Filtering by CardId           
+            if (request.StartCardId.HasValue && request.EndCardId.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.Id >= request.StartCardId && a.Id <= request.EndCardId);
+
+                message = $"The cards ranging from id = {request.StartCardId} to id = {request.EndCardId} have been successfully filtered";
+
+                if (request.StartCardId == request.EndCardId)
+                {
+                    message = $"The card of id = {request.StartCardId} has been successfully filtered";
+                }
+            }
+            #endregion
+
+            #region Filtering by CardPower
+            if (request.CardPower.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.Power == request.CardPower);
+
+                message = $"The cards having power = {request.CardPower} have been successfully filtered";
+            }
+            #endregion
+
+            #region Filtering by CardUpperHand           
+            if (request.CardUpperHand.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.UpperHand == request.CardUpperHand);
+
+                message = $"The cards having upper hand = {request.CardUpperHand} have been successfully filtered";
+            }
+            #endregion
+
+            #region Filtering By CardLevel
+            if (request.CardLevel.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.Level == request.CardLevel);
+
+                message = $"The cards of level = {request.CardLevel} have been successfully filtered";
+            }
+            #endregion
+
+            #region Filtering by CardType          
+            if (request.CardType.HasValue == true)
+            {
+                contentQueriable = contentQueriable.Where(a => a.Type == request.CardType);
+
+                message = $"The cards of type = {request.CardType} have been successfully filtered";
+            }
+            #endregion
+
+            var content = await contentQueriable
+                                    .Select(a => new AdminsFilterCardsResponse
+                                    {
+                                        CardId = a.Id,
+                                        CardName = a.Name,
+                                        CardPower = a.Power,
+                                        CardUpperHand = a.UpperHand,
+                                        CardLevel = a.Level,
+                                        CardType = a.Type,
+                                    })
+                                    .OrderBy(a => a.CardId)
+                                    .ThenBy(a => a.CardName)
+                                    .ToListAsync();
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "Error: nothing found");
+            }
+
+            return (content, message);
+        }
+
+        public (bool, string) FilterIsValid(AdminsFilterCardsRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.CardName) == true &&
+               request.StartCardId == null && request.EndCardId == null &&
+               request.CardPower == null &&
+               request.CardUpperHand == null &&
+               request.CardLevel == null &&
+               request.CardType == null)
+            {
+                return (false, "Error: no filter added querying the cards");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CardName) == false && request.CardName.Trim().Length < 3)
+            {
+                return (false, "Error: invalid CardName. Filtering by name requires at least 3 characters");
+            }
+
+            if (request.StartCardId > request.EndCardId)
+            {
+                return (false, "Error: invalid CardIds. StartCardId cannot be greater than EndCardId");
+            }
+
+            if (request.StartCardId.HasValue == true && request.EndCardId.HasValue == false)
+            {
+                request.EndCardId = request.StartCardId + 99;
+            }
+
+            if (request.StartCardId.HasValue == false && request.EndCardId.HasValue == true)
+            {
+                request.StartCardId = request.EndCardId - 99;
+            }
+
+            if (request.EndCardId - request.StartCardId > 100)
+            {
+                return (false, "Error: invalid range. Only 100 cards can be loaded per query");
+            }
+
+            if (request.CardPower < Constants.MinCardPower || request.CardPower > Constants.MaxCardPower)
+            {
+                return (false, $"Error: invalid CardPower. It must be between {Constants.MinCardPower} and {Constants.MaxCardPower}");
+            }
+
+            if (request.CardUpperHand < Constants.MinCardUpperHand || request.CardUpperHand > Constants.MaxCardUpperHand)
+            {
+                return (false, $"Error: invalid CardUpperHand. It must be between {Constants.MinCardUpperHand} and {Constants.MaxCardUpperHand}");
+            }
+
+            if (request.CardLevel < Constants.MinCardLevel || request.CardLevel > Constants.MaxCardLevel)
+            {
+                return (false, $"Error: invalid CardLevel. It must be between {Constants.MinCardLevel} and {Constants.MaxCardLevel}");
+            }
+
+            if (request.CardType.HasValue == true && Enum.IsDefined(request.CardType.Value) == false)
+            {
+                var validTypes = string.Join(", ", Enum.GetValues(typeof(CardType))
+                                       .Cast<CardType>()
+                                       .Select(cardType => $"{cardType} ({(int)cardType})"));
+
+                return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(List<AdminsGetAllCardsResponse>?, string)> GetAllCards(AdminsGetAllCardsRequest request)
+        {
+            var content = await this._daoDbContext
+                                    .Cards
+                                    .AsNoTracking()
+                                    .Where(a => a.IsDeleted == false)
+                                    .Select(a => new AdminsGetAllCardsResponse
+                                    {
+                                        CardId = a.Id,
+                                        CardName = a.Name,
+                                        CardPower = a.Power,
+                                        CardUpperHand = a.UpperHand,
+                                        CardLevel = a.Level,
+                                        CardType = a.Type,
+                                    })
+                                    .OrderBy(a => a.CardId)
+                                    .ToListAsync();
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "Error: no cards were found");
+            }
+
+            return (content, "All cards listed successfully");
+        }
+
+        #endregion
+
     }
 }

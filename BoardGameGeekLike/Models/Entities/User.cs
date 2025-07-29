@@ -24,14 +24,23 @@ namespace BoardGameGeekLike.Models.Entities
 
         public bool IsDummy { get; set; } = false;
 
+        [InverseProperty("User")]
+        public List<Session>? Sessions { get; set; }
 
+
+        [InverseProperty("User")]
+        public List<Rating>? Ratings { get; set; }
+
+
+        [InverseProperty("User")]
         public List<PlayerSave>? PlayerSaves { get; set; }
 
 
+        [InverseProperty("User")]
         public List<LifeCounterTemplate>? LifeCounterTemplates { get; set; }
 
 
+        [InverseProperty("User")]
         public List<LifeCounterManager>? LifeCounterManagers { get; set; }
-
     }
 }

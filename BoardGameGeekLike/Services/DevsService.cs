@@ -394,6 +394,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var (cardsSeedingResult, msg1) = await this.SeedCards();
+
             var (npcsSeedingResult, msg2) = await this.SeedNpcs();
 
             return (null, "Seeding was successful. " + msg1 + ". " + msg2);

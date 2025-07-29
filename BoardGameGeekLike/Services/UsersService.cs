@@ -2225,8 +2225,13 @@ namespace BoardGameGeekLike.Services
             }
 
             var userDB = await this._daoDbContext
-                                   .Users
-                                   .FindAsync(userId);
+                .Users                               
+                .Include(a => a.Sessions)
+                .Include(a => a.Ratings)
+                .Include(a => a.LifeCounterTemplates)
+                .Include(a => a.LifeCounterManagers!)
+                .ThenInclude(a => a.LifeCounterPlayers)
+                .FirstOrDefaultAsync(a => a.Id == userId);
 
             if(userDB == null)
             {
@@ -2240,18 +2245,27 @@ namespace BoardGameGeekLike.Services
 
             var (remainingAttempts, text) = await this.ValidatePassword(userDB, request!.Password!);
 
-            if (remainingAttempts <= 3)
+            if (remainingAttempts < 3)
             {
                 return (new UsersDeleteProfileResponse
                 {
                     RemainingPasswordAttempts = remainingAttempts
                 }, text);
-            }             
-  
-            await this._daoDbContext
-                      .Users
-                      .Where(a => a.Id == userId)
-                      .ExecuteUpdateAsync(a => a.SetProperty(b => b.IsDeleted, true));
+            }
+
+            this._daoDbContext.Sessions.RemoveRange(userDB.Sessions!);
+
+            this._daoDbContext.Ratings.RemoveRange(userDB.Ratings!);
+
+            this._daoDbContext.LifeCounterPlayers.RemoveRange(userDB.LifeCounterManagers!.SelectMany(a => a.LifeCounterPlayers!));   
+
+            this._daoDbContext.LifeCounterManagers.RemoveRange(userDB.LifeCounterManagers!);
+
+            this._daoDbContext.LifeCounterTemplates.RemoveRange(userDB.LifeCounterTemplates!);
+
+            userDB.IsDeleted = true;
+
+            await this._daoDbContext.SaveChangesAsync();        
 
             await this.SignOut();
 
@@ -4354,7 +4368,6 @@ namespace BoardGameGeekLike.Services
         }
 
 
-
         public async Task<(UsersGetLastLifeCounterManagerResponse?, string)> GetLastLifeCounterManager(UsersGetLastLifeCounterManagerRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -4470,7 +4483,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
 
 
         public async Task<(List<UsersListUnfinishedLifeCounterManagersResponse>?, string)> ListUnfinishedLifeCounterManagers(UsersListUnfinishedLifeCounterManagersRequest? request)
