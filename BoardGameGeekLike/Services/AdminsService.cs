@@ -1549,7 +1549,7 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(List<AdminsGetAllCardsResponse>?, string)> GetAllCards(AdminsGetAllCardsRequest request)
+        public async Task<(List<AdminsGetAllCardsResponse>?, string)> GetAllCards(AdminsGetAllCardsRequest? request)
         {
             var content = await this._daoDbContext
                                     .Cards

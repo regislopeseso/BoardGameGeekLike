@@ -1201,7 +1201,7 @@ namespace BoardGameGeekLike.Services
             {
                 errorsReport.Add("#Error: Invalid Starting Time mark!...");
             }
-            var managerStartingTime = managerStartingTime_DateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            var managerStartingTime = managerStartingTime_DateTime.ToString("dd/MM/yyyy HH:mm:ss");
 
             var managerEndingTime_Ticks = manager.EndingTime;
             var managerEndingTime = "";

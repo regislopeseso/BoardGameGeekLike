@@ -322,7 +322,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllCards(AdminsGetAllCardsRequest request)
+        public async Task<IActionResult> GetAllCards(AdminsGetAllCardsRequest? request)
         {
             var (content, message) = await this._adminsService.GetAllCards(request);
 
