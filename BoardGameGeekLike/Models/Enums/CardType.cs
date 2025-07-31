@@ -2,7 +2,7 @@
 {
     public enum CardType
     {
-        None = 0,
+        Commom = 0,
         Archer = 1,   // > Spearman
         Cavalry = 2,  // > Archer
         Spearman = 3, // > Cavalry

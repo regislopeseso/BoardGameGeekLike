@@ -1387,6 +1387,176 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        public async Task<(AdminsShowCardDetailsResponse?, string)> ShowCardDetails(AdminsShowCardDetailsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowCardDetails_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCardDB = await this._daoDbContext
+                .Cards
+                .FindAsync(request!.CardId);
+
+            if( mabCardDB == null )
+            {
+                return (null, "Error: Medieval Auto Battler Card not found!");
+            }
+
+            var content = new AdminsShowCardDetailsResponse
+            {
+                CardName = mabCardDB.Name,
+                CardPower = mabCardDB.Power,
+                CardUpperHand = mabCardDB.UpperHand,
+                CardType = mabCardDB.Type,
+            };
+
+            return (content, "Medieval Auto Battler Card details fetched successfully!");
+        }
+        private static (bool, string) ShowCardDetails_Validation(AdminsShowCardDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is not null");
+            }
+
+            if(request.CardId <= 0)
+            {
+                return (false, "Error: invalid medieval auto battler CardId");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsEditCardResponse?, string)> EditCard(AdminsEditCardRequest request)
+        {
+            var (isValid, message) = EditIsValid(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var exist = await this._daoDbContext
+                                   .Cards
+                                   .AnyAsync(a => a.Name.ToLower() == request.CardName.Trim().ToLower());
+
+            if (exist == true)
+            {
+                return (null, $"Error: invalid CardName: ->{request.CardName}<- .A card with this name already exists");
+            }
+
+            var cardDB = await this._daoDbContext
+                                   .Cards
+                                   .FirstOrDefaultAsync(a => a.Id == request.CardId && a.IsDeleted == false);
+
+            if (cardDB == null)
+            {
+                return (null, $"Error: card not found");
+            }
+
+            cardDB.Name = request.CardName;
+            cardDB.Power = request.CardPower;
+            cardDB.UpperHand = request.CardUpperHand;
+            cardDB.Type = request.CardType;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, "Card updated successfully");
+        }
+
+        private static (bool, string) EditIsValid(AdminsEditCardRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: no information provided");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CardName) == true)
+            {
+                return (false, "Error: invalid CardName");
+            }
+
+            if (request.CardPower < Constants.MinCardPower || request.CardPower > Constants.MaxCardPower)
+            {
+                return (false, $"Error: invalid CardPower. It must be between {Constants.MinCardPower} and {Constants.MaxCardPower}");
+            }
+
+            if (request.CardUpperHand < Constants.MinCardUpperHand || request.CardUpperHand > Constants.MaxCardUpperHand)
+            {
+                return (false, $"Error: invalid CardUpperHand. It must be between {Constants.MinCardUpperHand} and {Constants.MaxCardUpperHand}");
+            }
+
+            if (Enum.IsDefined(request.CardType) == false)
+            {
+                var validTypes = string.Join(", ", Enum.GetValues(typeof(CardType))
+                                       .Cast<CardType>()
+                                       .Select(cardType => $"{cardType} ({(int)cardType})"));
+
+                return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsDestructCardResponse?, string)> DestructCard(AdminsDestructCardRequest? request)
+        {
+            var (isValid, message) = DestructCard_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var cardDB = await this._daoDbContext
+                .Cards
+                .FindAsync(request!.CardId);
+
+            if (cardDB == null)
+            {
+                return (null, "Error: card not found");
+            }           
+
+            var isCardDestructionSuccessfull = await this._daoDbContext
+                .Cards
+                .Where(a => a.Id == request.CardId)
+                .ExecuteDeleteAsync();
+
+            if(isCardDestructionSuccessfull <= 0)
+            {
+                return (null, "Error: failed to delete requested card");
+            }
+
+            return (new AdminsDestructCardResponse(), "Category deleted successfully");
+        }
+
+        private static (bool, string) DestructCard_Validation(AdminsDestructCardRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CardId.HasValue == false)
+            {
+                return (false, "Error: CardId is missing");
+            }
+
+            if (request.CardId < 1)
+            {
+                return (false, "Error: invalid CardId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
 
         public async Task<(List<AdminsFilterCardsResponse>?, string)> FilterCards(AdminsFilterCardsRequest request)
         {
@@ -1573,6 +1743,44 @@ namespace BoardGameGeekLike.Services
             }
 
             return (content, "All cards listed successfully");
+        }
+
+
+        public async Task<(List<AdminsListCardTypesResponse>?, string)> ListCardTypes(AdminsListCardTypesRequest? request)
+        {
+            var (isValid, message) = ListCardTypes_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var cardTypesDB = Enum.GetValues(typeof(CardType))
+                .Cast<CardType>()
+                .Select(a => new AdminsListCardTypesResponse
+                {
+                    CardTypeValue = (int)a,
+                    CardTypeName = a.ToString()
+                })
+                .ToList();
+
+            var content = cardTypesDB;
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "Error: no card types were found");
+            }
+
+            return (content, "All card types listed successfully");
+        }
+        private static (bool, string) ListCardTypes_Validation(AdminsListCardTypesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }          
+
+            return (true, string.Empty);
         }
 
         #endregion

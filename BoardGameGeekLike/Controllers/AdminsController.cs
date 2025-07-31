@@ -294,7 +294,7 @@ namespace BoardGameGeekLike.Controllers
 
         #region Medieval Auto Battler
         [HttpPost]
-        public async Task<IActionResult> CreateCard(AdminsCreateCardRequest request)
+        public async Task<IActionResult> CreateCard([FromForm] AdminsCreateCardRequest request)
         {
             var (content, message) = await this._adminsService.CreateCard(request);
 
@@ -308,11 +308,40 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FilterCards(AdminsFilterCardsRequest request)
+        public async Task<IActionResult> ShowCardDetails([FromQuery] AdminsShowCardDetailsRequest request)
         {
-            var (content, message) = await this._adminsService.FilterCards(request);
+            var (content, message) = await this._adminsService.ShowCardDetails(request);
 
-            var response = new Response<List<AdminsFilterCardsResponse>>()
+            var response = new Response<AdminsShowCardDetailsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> EditCard([FromBody] AdminsEditCardRequest request)
+        {
+            var (content, message) = await this._adminsService.EditCard(request);
+
+            var response = new Response<AdminsEditCardResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpDelete]
+        public async Task<IActionResult> DestructCard([FromBody] AdminsDestructCardRequest? request)
+        {
+            var (content, message) = await this._adminsService.DestructCard(request);
+
+            var response = new Response<AdminsDestructCardResponse>
             {
                 Content = content,
                 Message = message
@@ -335,8 +364,33 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ListCardTypes(AdminsListCardTypesRequest? request)
+        {
+            var (content, message) = await this._adminsService.ListCardTypes(request);
 
+            var response = new Response<List<AdminsListCardTypesResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
 
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FilterCards(AdminsFilterCardsRequest request)
+        {
+            var (content, message) = await this._adminsService.FilterCards(request);
+
+            var response = new Response<List<AdminsFilterCardsResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         #endregion
     }
