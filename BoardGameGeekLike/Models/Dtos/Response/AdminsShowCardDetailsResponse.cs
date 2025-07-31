@@ -13,5 +13,9 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public CardType? CardType { get; set; }
+
+        public int? CardTypeValue { get {
+                return (int?)CardType;
+            } }
     }
 }

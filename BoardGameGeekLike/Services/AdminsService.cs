@@ -1321,7 +1321,7 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(AdminsCreateCardResponse?, string)> CreateCard(AdminsCreateCardRequest request)
         {
-            var (isValid, message) = CreateIsValid(request);
+            var (isValid, message) = CreateCard_Validation(request);
 
             if (isValid == false)
             {
@@ -1330,11 +1330,11 @@ namespace BoardGameGeekLike.Services
 
             var exists = await this._daoDbContext
                                     .Cards
-                                    .AnyAsync(a => a.Name == request.CardName && a.IsDeleted == false);
+                                    .AnyAsync(a => a.Name.Trim().ToLower() == request.CardName.Trim().ToLower() && a.IsDeleted == false);
 
             if (exists == true)
             {
-                return (null, $"Error: this card already exists: {request.CardName}");
+                return (null, $"Error: requested name is already taken, please choose another!");
             }
 
             var newCard = new Card
@@ -1353,7 +1353,7 @@ namespace BoardGameGeekLike.Services
             return (null, "New card created successfully");
         }
 
-        private static (bool, string) CreateIsValid(AdminsCreateCardRequest request)
+        private static (bool, string) CreateCard_Validation(AdminsCreateCardRequest request)
         {
             if (request == null)
             {
@@ -1439,7 +1439,7 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(AdminsEditCardResponse?, string)> EditCard(AdminsEditCardRequest request)
         {
-            var (isValid, message) = EditIsValid(request);
+            var (isValid, message) = EditCard_Validation(request);
 
             if (isValid == false)
             {
@@ -1474,7 +1474,7 @@ namespace BoardGameGeekLike.Services
             return (null, "Card updated successfully");
         }
 
-        private static (bool, string) EditIsValid(AdminsEditCardRequest request)
+        private static (bool, string) EditCard_Validation(AdminsEditCardRequest request)
         {
             if (request == null)
             {
@@ -1721,6 +1721,13 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(List<AdminsGetAllCardsResponse>?, string)> GetAllCards(AdminsGetAllCardsRequest? request)
         {
+            var (isValid, message) = GetAllCards_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
             var content = await this._daoDbContext
                                     .Cards
                                     .AsNoTracking()
@@ -1744,9 +1751,18 @@ namespace BoardGameGeekLike.Services
 
             return (content, "All cards listed successfully");
         }
+        private static (bool, string) GetAllCards_Validation(AdminsGetAllCardsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
 
 
-        public async Task<(List<AdminsListCardTypesResponse>?, string)> ListCardTypes(AdminsListCardTypesRequest? request)
+        public (List<AdminsListCardTypesResponse>?, string) ListCardTypes(AdminsListCardTypesRequest? request)
         {
             var (isValid, message) = ListCardTypes_Validation(request);
 

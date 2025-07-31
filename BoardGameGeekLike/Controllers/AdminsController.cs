@@ -365,9 +365,9 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListCardTypes(AdminsListCardTypesRequest? request)
+        public IActionResult ListCardTypes(AdminsListCardTypesRequest? request)
         {
-            var (content, message) = await this._adminsService.ListCardTypes(request);
+            var (content, message) = this._adminsService.ListCardTypes(request);
 
             var response = new Response<List<AdminsListCardTypesResponse>>()
             {
