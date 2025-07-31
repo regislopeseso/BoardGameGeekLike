@@ -2,6 +2,23 @@
 {
     public static class Helper
     {
+        public static string BoolToEnabledDisabled(bool? value)
+        {
+            return value == true ? "ENABLED" : "DISABLED";
+        }
+
+        public static bool? ParseEnabledDisabledToBool(string? value)
+        {
+            var normalized = value?.Trim().ToLowerInvariant();
+
+            return normalized switch
+            {
+                "enabled" => true,
+                "disabled" => false,
+                _ => throw new FormatException($"Invalid value '{value}' — expected 'Enabled' or 'Disabled'")
+            };
+        }
+
         public static int GetCardLevel(int power, int upperHand)
         {
             return (int)Math.Ceiling((double)(power + upperHand) / 2);

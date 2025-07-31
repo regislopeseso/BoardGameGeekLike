@@ -30,7 +30,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public double? Duration_minutes { get; set; }
 
-        public bool IsFinished { get; set; } = false;
+        public bool? IsFinished { get; set; } = false;
 
 
         public List<int>? LifeCounterPlayerIds { get; set; }

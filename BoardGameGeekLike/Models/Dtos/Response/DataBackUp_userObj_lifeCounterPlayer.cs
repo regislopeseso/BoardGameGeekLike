@@ -13,12 +13,12 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? CurrentLifePoints { get; set; }
 
-        public bool FixedMaxLifePointsMode { get; set; }
+        public bool? FixedMaxLifePointsMode { get; set; }
 
         public int? MaxLifePoints { get; set; }
 
         public bool? AutoDefeatMode { get; set; }
 
-        public bool IsDefeated { get; set; } = false;
+        public bool? IsDefeated { get; set; } = false;
     }
 }

@@ -15,6 +15,9 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using BoardGameGeekLike.Utilities;
+using Constants = BoardGameGeekLike.Utilities.Constants;
+
 
 
 namespace BoardGameGeekLike.Services
@@ -69,10 +72,10 @@ namespace BoardGameGeekLike.Services
 
             //-*
             // User details table title
-            sb.AppendLine(";TABLE #1: USER DETAILS");
+            sb.AppendLine(Constants.User_ProfileDetails_TableTitle);
 
             // User details table header
-            sb.AppendLine(";Name;Email;BirthDate;Gender;Sign Up Date");
+            sb.AppendLine(Constants.User_ProfileDetails_TableHeaders);
 
             var userDB = await this._daoDbContext
                 .Users
@@ -107,10 +110,10 @@ namespace BoardGameGeekLike.Services
 
             //-*
             // Life Counter Templates table title
-            sb.AppendLine(";TABLE #2: LIFE COUNTER TEMPLATES");
+            sb.AppendLine(Constants.User_LifeCounter_Templates_TableTitle);
 
             // Life Counter Templates table header
-            sb.AppendLine(";Life Counter Template Name;Players Starting Life Points;Players Count;Fixed Max Life Points Mode; Players Max Life Points;Auto Defeat Mode;Auto End Mode;Life Counter Managers Count");
+            sb.AppendLine(Constants.User_LifeCounter_Templates_TableHeader);
 
             var lifeCounterTemplatesDB = await this._daoDbContext
            .LifeCounterTemplates
@@ -152,10 +155,10 @@ namespace BoardGameGeekLike.Services
 
             //-*
             // Life Counter Managers table title
-            sb.AppendLine(";TABLE #3: LIFE COUNTER MANAGERS");
+            sb.AppendLine(Constants.User_LifeCounter_Managers_TableTitle);
 
             // Life Counter Managers table header
-            sb.AppendLine(";Life Counter Template Name; Life Counter Manager Name;Players Starting Life Points;Players Count;First Player Index;Fixed Max Life Points Mode;Players Max Life Points;Auto Defeat Mode;Auto End Mode;Starting Time Mark;Ending Time Mark;Duration (minutes);Is Finished");
+            sb.AppendLine(Constants.User_LifeCounter_Managers_TableHeader);
 
 
             var lifeCounterManagersDB = await this._daoDbContext
@@ -204,10 +207,10 @@ namespace BoardGameGeekLike.Services
 
             //-*
             // Life Counter Players table title
-            sb.AppendLine(";TABLE #4: LIFE COUNTER PLAYERS");
+            sb.AppendLine(Constants.User_LifeCounter_Players_TableTitle);
 
             // Life Counter Players table header
-            sb.AppendLine(";Life Counter Manager Name;Player Name;Starting Life Points;Current Life Points;Fixed Max Life Points Mode;Max Life Points;Auto Defeat Mode;Is Defeated");
+            sb.AppendLine(Constants.User_LifeCounter_Players_TableHeader);
 
             // Flatten all player IDs from all managers
             var allPlayerIds = lifeCounterManagersDB
@@ -255,10 +258,10 @@ namespace BoardGameGeekLike.Services
 
             //-*
             // Board Games Sessions table title
-            sb.AppendLine(";TABLE #5: BOARD GAME SESSIONS");
+            sb.AppendLine(Constants.User_BoardGame_Sessions_TableTitle);
 
             // Logged Board Game Sessions table header
-            sb.AppendLine(";Board Game Name;Date;Players Count;Duration (minutes);Is Deleted");
+            sb.AppendLine(Constants.User_BoardGame_Sessions_TableHeader);
 
             var sessionsDB = await this._daoDbContext
                 .Sessions
@@ -297,10 +300,10 @@ namespace BoardGameGeekLike.Services
 
             //-*
             // Board Games Ratings table title
-            sb.AppendLine(";TABLE #6: BOARD GAME RATINGS");
+            sb.AppendLine(Constants.User_BoardGame_Ratings_TableTitle);
 
             // Rated Board Games table header
-            sb.AppendLine(";Board Game Name;Rate");
+            sb.AppendLine(Constants.User_BoardGame_Ratings_TableHeader);
 
             var ratingsDB = await this._daoDbContext
                 .Ratings
@@ -434,17 +437,17 @@ namespace BoardGameGeekLike.Services
 
 
             //*-
-            // Dealing with user'a Details
+            // Dealing with user'a Profile Details
             if (sections.TryGetValue(1, out var userDetailsSection) == false || userDetailsSection.Count < 2)
             {
                 return (null, "Error: Missing or invalid user section (Table #1)");
             }
 
-            // User details table title
-            sb.AppendLine(";TABLE #1: USER DETAILS");
+            // User's Profile Details table title
+            sb.AppendLine(Constants.User_ProfileDetails_TableTitle);
 
-            // User details table header
-            sb.AppendLine(";Name;Email;BirthDate;Gender;Sign Up Date");
+            // User's Details table header
+            sb.AppendLine(Constants.User_ProfileDetails_TableHeaders);
 
             var importedUserDetails = new DataBackUp_userObj();
             var profileDetails_Table_errorsReport = new List<string>();
@@ -452,30 +455,7 @@ namespace BoardGameGeekLike.Services
             (importedUserDetails, profileDetails_Table_errorsReport) = ParseUser(userDetailsSection, profileDetails_Table_errorsReport);
 
             if (importedUserDetails != null)
-            {
-
-                //var isUserNameUnavailable = await this._daoDbContext
-                //    .Users
-                //    .AsNoTracking()
-                //    .Where(a => a.Name == importedUserDetails.Name && a.Id != userId)
-                //    .AnyAsync();
-
-                //if (isUserNameUnavailable == true)
-                //{
-                //    profileDetails_Table_errorsReport.Add("#Error: User Name is not available it must be changed!");
-                //}               
-
-                //var isUserEmailAvailable = await this._daoDbContext
-                //    .Users
-                //    .AsNoTracking()
-                //    .Where(a => a.Email == importedUserDetails.Email && a.Id != userId)
-                //    .AnyAsync();
-
-                //if (isUserNameUnavailable == true)
-                //{
-                //    profileDetails_Table_errorsReport.Add("#Error: User mail is not available it must be changed!");
-                //}
-
+            {           
                 var rowData_user_profileDetails = UserData_Validation_ProfileDetails(importedUserDetails, profileDetails_Table_errorsReport);
 
                 if (profileDetails_Table_errorsReport.Count > 1 || rowData_user_profileDetails[0] != ';')
@@ -497,11 +477,11 @@ namespace BoardGameGeekLike.Services
             if (!sections.TryGetValue(2, out var userLifeCounterTemplatesSection) || userLifeCounterTemplatesSection.Count < 2)
                 return (null, "Error: Missing or invalid user section (Table #2)");
 
-            // Life Counter Templates table title
-            sb.AppendLine(";TABLE #2: LIFE COUNTER TEMPLATES");
+            // User's Life Counter Templates table title
+            sb.AppendLine(Constants.User_LifeCounter_Templates_TableTitle);
 
-            // Life Counter Templates table header
-            sb.AppendLine(";Life Counter Template Name;Players Starting Life Points;Players Count;Fixed Max Life Points Mode; Players Max Life Points;Auto Defeat Mode;Auto End Mode;Life Counter Managers Count");
+            // User's Life Counter Templates table header
+            sb.AppendLine(Constants.User_LifeCounter_Templates_TableHeader);
 
             var importedLifeCounterTemplates = new List<DataBackUp_userObj_lifeCounterTemplate>();
             var lifeCounter_templatesTable_errorsReport = new List<string>();
@@ -547,11 +527,11 @@ namespace BoardGameGeekLike.Services
             if (!sections.TryGetValue(3, out var userLifeCounterManagersSection) || userLifeCounterManagersSection.Count < 2)
                 return (null, "Error: Missing or invalid user section (Table #3)");
 
-            // Life Counter Managers table title
-            sb.AppendLine(";TABLE #3: LIFE COUNTER MANAGERS");
+            // User's Life Counter Managers table title
+            sb.AppendLine(Constants.User_LifeCounter_Managers_TableTitle);
 
-            // Life Counter Managers table header
-            sb.AppendLine(";Life Counter Template Name; Life Counter Manager Name;Players Starting Life Points;Players Count;First Player Index;Fixed Max Life Points Mode;Players Max Life Points;Auto Defeat Mode;Auto End Mode;Starting Time Mark;Ending Time Mark;Duration (minutes);Is Finished");
+            // User's Life Counter Managers table header
+            sb.AppendLine(Constants.User_LifeCounter_Managers_TableHeader);
 
             var importedLifeCounterManagers = new List<DataBackUp_userObj_lifeCounterManager>();
             var lifeCounter_managersTable_errorsReport = new List<string>();
@@ -597,11 +577,11 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: Missing or invalid user section (Table #4)");
             }
 
-            // Life Counter Players table title
-            sb.AppendLine(";TABLE #4: LIFE COUNTER PLAYERS");
+            // User's Life Counter Players table title
+            sb.AppendLine(Constants.User_LifeCounter_Players_TableTitle);
 
-            // Life Counter Players table header
-            sb.AppendLine(";Life Counter Manager Name;Player Name;Starting Life Points;Current Life Points;Fixed Max Life Points Mode;Max Life Points;Auto Defeat Mode;Is Defeated");
+            // User's Life Counter Players table header
+            sb.AppendLine(Constants.User_LifeCounter_Players_TableHeader);
 
             var importedLifeCounterPlayers = new List<DataBackUp_userObj_lifeCounterPlayer>();
             var lifeCounter_playersTable_errorsReport = new List<string>();
@@ -647,11 +627,11 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: Missing or invalid user section (Table #5)");
 
             //-*
-            // Board Games Sessions table title
-            sb.AppendLine(";TABLE #5: BOARD GAME SESSIONS");
+            // User's Board Games Sessions table title
+            sb.AppendLine(Constants.User_BoardGame_Sessions_TableTitle);
 
-            // Logged Board Game Sessions table header
-            sb.AppendLine(";Board Game Name;Date;Players Count;Duration (minutes);Is Deleted");
+            // User's Board Game Sessions table header
+            sb.AppendLine(Constants.User_BoardGame_Sessions_TableHeader);
 
             var importedBoarGameSessions = new List<DataBackUp_userObj_Sessions>();
             var boardGame_sessionsTable_errorsReport = new List<string>();
@@ -708,11 +688,11 @@ namespace BoardGameGeekLike.Services
             if (!sections.TryGetValue(6, out var userBoardGameRatings) || userBoardGameRatings.Count < 2)
                 return (null, "Error: Missing or invalid user section (Table #6)");
 
-            // Board Games Ratings table title
-            sb.AppendLine(";TABLE #6: BOARD GAME RATINGS");
+            // User's Board Games Ratings table title
+            sb.AppendLine(Constants.User_BoardGame_Ratings_TableTitle);
 
-            // Rated Board Games table header
-            sb.AppendLine(";Board Game Name;Rate");
+            // User's Rated Board Games table header
+            sb.AppendLine(Constants.User_BoardGame_Ratings_TableHeader);
 
             var importedBoardGameRatings = new List<DataBackUp_userObj_Ratings>();
             var boardGame_ratingsTable_errorsReport = new List<string>();
@@ -807,7 +787,7 @@ namespace BoardGameGeekLike.Services
                             StartingTime = importedLifeCounterManagers[j].StartingTime,
                             EndingTime = importedLifeCounterManagers[j].EndingTime,
                             Duration_minutes = importedLifeCounterManagers[j].Duration_minutes,
-                            IsFinished = importedLifeCounterManagers[j].IsFinished,
+                            IsFinished = importedLifeCounterManagers[j].IsFinished!.Value,
                             LifeCounterPlayers = new List<LifeCounterPlayer>()
                         };
 
@@ -820,10 +800,10 @@ namespace BoardGameGeekLike.Services
                                     PlayerName = player.PlayerName,
                                     StartingLifePoints = player.StartingLifePoints,
                                     CurrentLifePoints = player.CurrentLifePoints,
-                                    FixedMaxLifePointsMode = player.FixedMaxLifePointsMode,
+                                    FixedMaxLifePointsMode = player.FixedMaxLifePointsMode!.Value,
                                     MaxLifePoints = player.MaxLifePoints,
                                     AutoDefeatMode = player.AutoDefeatMode,
-                                    IsDefeated = player.IsDefeated
+                                    IsDefeated = player.IsDefeated!.Value
                                 });
                             }
                         }
@@ -856,9 +836,9 @@ namespace BoardGameGeekLike.Services
                     {
                         UserId = userId,
                         Date = a.Date,
-                        PlayersCount = a.PlayersCount,
-                        Duration_minutes = a.Duration_minutes,
-                        IsDeleted = a.IsDeleted
+                        PlayersCount = a.PlayersCount!.Value,
+                        Duration_minutes = a.Duration_minutes!.Value,
+                        IsDeleted = a.IsDeleted!.Value
                     })
                     .ToList();
 
@@ -893,7 +873,7 @@ namespace BoardGameGeekLike.Services
 
                 response = new UsersImportUserDataResponse
                 {
-                    FileName = "bgg_like_user_data.csv",
+                    FileName = "bgg_like_user_data_errors.csv",
                     Base64Data = base64,
                     ContentType = "text/csv"
                 };
@@ -903,7 +883,7 @@ namespace BoardGameGeekLike.Services
 
             await _daoDbContext.SaveChangesAsync();
 
-            return (null, "User data imported successfully."); ;
+            return (new UsersImportUserDataResponse(), "User data imported successfully."); ;
         }
         private static (bool, string) ImportUserData_Validation(UsersImportUserDataRequest? request)
         {
@@ -1088,7 +1068,7 @@ namespace BoardGameGeekLike.Services
                 errorsReport.Add("#Error: Life Counter Managers Count must be greater than or equal to 0!...");
             }
 
-            return $"{string.Join(" | ", errorsReport)};\"{templateName}\";{templatePlayersStartingLifePoints};{templatePlayersCount};{templateFixedMaxLifePointsMode};{templatePlayersMaxLifePoints};{templateAutoDefeatMode};{templateAutoEndMode}  ;{templateLifeCounterManagersCount}";
+            return $"{string.Join(" | ", errorsReport)};\"{templateName}\";{templatePlayersStartingLifePoints};{templatePlayersCount};{Helper.BoolToEnabledDisabled(templateFixedMaxLifePointsMode)};{templatePlayersMaxLifePoints};{Helper.BoolToEnabledDisabled(templateAutoDefeatMode)};{Helper.BoolToEnabledDisabled(templateAutoEndMode)}  ;{templateLifeCounterManagersCount}";
         }
         private static string UserData_Validation_LifeCounterManagers(DataBackUp_userObj_lifeCounterManager? manager, DateOnly? signUpDate, List<string> errorsReport)
         {
@@ -1247,7 +1227,7 @@ namespace BoardGameGeekLike.Services
                 errorsReport.Add("");
             }
 
-            return $"{string.Join(" | ", errorsReport)};\"{templateName}\";\"{managerName}\";{managerPlayerStartingLifePoints};{managerPlayersCount};{managerFirstPlayerIndex};{managerFixedMaxLifePointsMode};{managerPlayersMaxLifePoints};{managerAutoDefeatMode};{managerAutoEndMode};{managerStartingTime};{managerEndingTime};{managerDuration_minutes};{managerIsFinished}";
+            return $"{string.Join(" | ", errorsReport)};\"{templateName}\";\"{managerName}\";{managerPlayerStartingLifePoints};{managerPlayersCount};{managerFirstPlayerIndex};{Helper.BoolToEnabledDisabled(managerFixedMaxLifePointsMode)};{managerPlayersMaxLifePoints};{Helper.BoolToEnabledDisabled(managerAutoDefeatMode)};{Helper.BoolToEnabledDisabled(managerAutoEndMode)};{managerStartingTime};{managerEndingTime};{managerDuration_minutes};{Helper.BoolToEnabledDisabled(managerIsFinished)}";
         }
         private static string UserData_Validation_LifeCounterPlayers(DataBackUp_userObj_lifeCounterPlayer? player, List<string> errorsReport)
         {
@@ -1360,11 +1340,11 @@ namespace BoardGameGeekLike.Services
                 errorsReport.Add("");
             }
 
-            return $"{string.Join(" | ", errorsReport)};\"{managerName}\";\"{lifeCounterPlayer_Name}\";{lifeCounterPlayer_StartingLifePoints};{lifeCounterPlayer_CurrentLifePoints};{lifeCounterPlayer_FixedMaxLifePointsMode};{lifeCounterPlayer_MaxLifePoints};{lifeCounterPlayer_AutoDefeatMode};{lifeCounterPlayer_IsDefeated}";
+            return $"{string.Join(" | ", errorsReport)};\"{managerName}\";\"{lifeCounterPlayer_Name}\";{lifeCounterPlayer_StartingLifePoints};{lifeCounterPlayer_CurrentLifePoints};{Helper.BoolToEnabledDisabled(lifeCounterPlayer_FixedMaxLifePointsMode)};{lifeCounterPlayer_MaxLifePoints};{Helper.BoolToEnabledDisabled(lifeCounterPlayer_AutoDefeatMode)};{Helper.BoolToEnabledDisabled(lifeCounterPlayer_IsDefeated)}";
         }
         private static string UserData_Validation_BoardGameSessions(DataBackUp_userObj_Sessions? session, DateOnly? signUpDate, List<string> errorsReport)
         {
-            var boardGameName = session.BoardGameName;
+            var boardGameName = session!.BoardGameName;
             if (string.IsNullOrWhiteSpace(boardGameName) == true)
             {
                 errorsReport.Add("#Error: user name is missing!");
@@ -1418,7 +1398,7 @@ namespace BoardGameGeekLike.Services
                 errorsReport.Add("#Error: Is Deleted data is missing!...");
             }
 
-            return $"{string.Join(" | ", errorsReport)};\"{boardGameName}\";{date};{playersCount};{duration};{isDeleted}";
+            return $"{string.Join(" | ", errorsReport)};\"{boardGameName}\";{date};{playersCount};{duration};{Helper.BoolToEnabledDisabled(isDeleted)}";
         }
         private static string UserData_Validation_BoardGameRatings(DataBackUp_userObj_Ratings? rating, List<string> errorsReport)
         {
@@ -1510,10 +1490,10 @@ namespace BoardGameGeekLike.Services
                     LifeCounterTemplateName = data[1].Trim('"'),
                     PlayersStartingLifePoints = int.Parse(data[2]),
                     PlayersCount = int.Parse(data[3]),
-                    FixedMaxLifePointsMode = bool.Parse(data[4]),
+                    FixedMaxLifePointsMode = Helper.ParseEnabledDisabledToBool(data[4]),
                     PlayersMaxLifePoints = int.TryParse(data[5], out int playersMaxLifePoints) ? playersMaxLifePoints : null,
-                    AutoDefeatMode = bool.Parse(data[6]),
-                    AutoEndMode = bool.Parse(data[7]),
+                    AutoDefeatMode = Helper.ParseEnabledDisabledToBool(data[6]),
+                    AutoEndMode = Helper.ParseEnabledDisabledToBool(data[7]),
                     LifeCounterManagersCount = int.Parse(data[8])
                 });
             }
@@ -1544,12 +1524,12 @@ namespace BoardGameGeekLike.Services
 
                 long? startingTime = string.IsNullOrWhiteSpace(data[10]) == true ?
                     null :
-                    DateTime.ParseExact(data[10], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).Ticks;
+                    DateTime.ParseExact(data[10], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture).Ticks;
 
                 long? endingTime = string.IsNullOrWhiteSpace(data[11]) == true ?
                     null:
-                    DateTime.ParseExact(data[11], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).Ticks;
-
+                    DateTime.ParseExact(data[11], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture).Ticks;
+               
                 importedLifeCounterManagers.Add(new DataBackUp_userObj_lifeCounterManager
                 {
                     LifeCounterTemplateName = data[1].Trim('"'),
@@ -1557,14 +1537,14 @@ namespace BoardGameGeekLike.Services
                     PlayersStartingLifePoints = int.Parse(data[3]),
                     PlayersCount = int.Parse(data[4]),
                     FirstPlayerIndex = int.Parse(data[5]),
-                    FixedMaxLifePointsMode = bool.Parse(data[6]),
+                    FixedMaxLifePointsMode = Helper.ParseEnabledDisabledToBool(data[6]),
                     PlayersMaxLifePoints = int.TryParse(data[7], out int playersMaxLifePoints) ? playersMaxLifePoints : null,
-                    AutoDefeatMode = bool.Parse(data[8]),
-                    AutoEndMode = bool.Parse(data[9]),
+                    AutoDefeatMode = Helper.ParseEnabledDisabledToBool(data[8]),
+                    AutoEndMode = Helper.ParseEnabledDisabledToBool(data[9]),
                     StartingTime = startingTime,
                     EndingTime = endingTime,
                     Duration_minutes = double.TryParse(data[12], out double duration) ? duration : null,
-                    IsFinished = bool.Parse(data[13]),
+                    IsFinished = Helper.ParseEnabledDisabledToBool(data[13]),
                 });
             }
 
@@ -1600,10 +1580,10 @@ namespace BoardGameGeekLike.Services
                     PlayerName = data[2].Trim('"'),
                     StartingLifePoints = int.Parse(data[3]),
                     CurrentLifePoints = int.Parse(data[4]),
-                    FixedMaxLifePointsMode = bool.Parse(data[5]),
+                    FixedMaxLifePointsMode = Helper.ParseEnabledDisabledToBool(data[5]),
                     MaxLifePoints = int.TryParse(data[6], out int maxLifePoints) ? maxLifePoints : null,
-                    AutoDefeatMode = bool.Parse(data[7]),
-                    IsDefeated = bool.Parse(data[8]),
+                    AutoDefeatMode = Helper.ParseEnabledDisabledToBool(data[7]),
+                    IsDefeated = Helper.ParseEnabledDisabledToBool(data[8]),
                 });
             }
 
@@ -1638,7 +1618,7 @@ namespace BoardGameGeekLike.Services
                     Date = DateOnly.TryParse(data[2].Trim('"'), out var date) ? date : null,
                     PlayersCount = int.Parse(data[3]),
                     Duration_minutes = int.Parse(data[4]),
-                    IsDeleted = bool.Parse(data[5]),
+                    IsDeleted = Helper.ParseEnabledDisabledToBool(data[5]),
                 });
             }
 
