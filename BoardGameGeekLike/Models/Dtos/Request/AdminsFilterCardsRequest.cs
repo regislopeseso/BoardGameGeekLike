@@ -10,6 +10,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
         public int? CardPower { get; set; }
         public int? CardUpperHand { get; set; }
         public int? CardLevel { get; set; }
-        public CardType? CardType { get; set; }
+        public MabCardType? CardType { get; set; }
     }
 }

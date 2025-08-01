@@ -2,7 +2,7 @@
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class AdminsListCardTypesResponse
+    public class AdminsListMabCardTypesResponse
     {
         public int? CardTypeValue { get; set; }
 

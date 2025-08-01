@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Enums
 {
-    public enum CardType
+    public enum MabCardType
     {
         Commom = 0,
         Archer = 1,   // > Spearman

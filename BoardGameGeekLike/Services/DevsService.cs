@@ -404,7 +404,7 @@ namespace BoardGameGeekLike.Services
         {
             var cardsSeed = new List<Card>();
 
-            foreach (var cardType in new[] { CardType.Archer, CardType.Cavalry, CardType.Spearman })
+            foreach (var cardType in new[] { MabCardType.Archer, MabCardType.Cavalry, MabCardType.Spearman })
             {
                 for (int power = Constants.MinCardPower; power <= Constants.MaxCardPower; power++)
                 {

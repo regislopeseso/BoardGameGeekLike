@@ -2,7 +2,7 @@
 
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class AdminsCreateCardRequest
+    public class AdminsAddMabCardRequest
     {
         public string CardName { get; set; }
 
@@ -10,6 +10,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
 
         public int CardUpperHand { get; set; }
 
-        public CardType CardType { get; set; }
+        public MabCardType CardType { get; set; }
     }
 }

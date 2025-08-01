@@ -29,7 +29,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        #region Board Games        
+        #region Board Games (BG)      
 
         public async Task<(List<AdminsListBoardGamesResponse>?, string)> ListBoardGames(AdminsListBoardGamesRequest? request)
         {
@@ -1312,16 +1312,25 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-    
+
 
         #endregion
 
 
-        #region Medieval Auto Battler
+        #region Medieval Auto Battler (MAB)
 
-        public async Task<(AdminsCreateCardResponse?, string)> CreateCard(AdminsCreateCardRequest request)
+        // MAB CARDS
+
+        public async Task<(AdminsAddMabCardResponse?, string)> CreateMabCard(AdminsAddMabCardRequest request)
         {
-            var (isValid, message) = CreateCard_Validation(request);
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = CreateMabCard_Validation(request);
 
             if (isValid == false)
             {
@@ -1329,8 +1338,10 @@ namespace BoardGameGeekLike.Services
             }
 
             var exists = await this._daoDbContext
-                                    .Cards
-                                    .AnyAsync(a => a.Name.Trim().ToLower() == request.CardName.Trim().ToLower() && a.IsDeleted == false);
+                .Cards
+                .AnyAsync(a =>
+                    a.Name.Trim().ToLower() == request.CardName.Trim().ToLower() && 
+                    a.IsDeleted == false);
 
             if (exists == true)
             {
@@ -1348,12 +1359,17 @@ namespace BoardGameGeekLike.Services
             };
 
             this._daoDbContext.Add(newCard);
-            await this._daoDbContext.SaveChangesAsync();
 
-            return (null, "New card created successfully");
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
+
+            if(savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsAddMabCardResponse(), "New Mab Card added successfully");
         }
-
-        private static (bool, string) CreateCard_Validation(AdminsCreateCardRequest request)
+        private static (bool, string) CreateMabCard_Validation(AdminsAddMabCardRequest request)
         {
             if (request == null)
             {
@@ -1377,8 +1393,8 @@ namespace BoardGameGeekLike.Services
 
             if (Enum.IsDefined(request.CardType) == false)
             {
-                var validTypes = string.Join(", ", Enum.GetValues(typeof(CardType))
-                                        .Cast<CardType>()
+                var validTypes = string.Join(", ", Enum.GetValues(typeof(MabCardType))
+                                        .Cast<MabCardType>()
                                         .Select(cardType => $"{cardType} ({(int)cardType})"));
 
                 return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
@@ -1387,7 +1403,8 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(AdminsShowCardDetailsResponse?, string)> ShowCardDetails(AdminsShowCardDetailsRequest? request)
+
+        public async Task<(AdminsShowMabCardDetailsResponse?, string)> ShowMabCardDetails(AdminsShowMabCardDetailsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -1396,7 +1413,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = ShowCardDetails_Validation(request);
+            var (isValid, message) = ShowMabCardDetails_Validation(request);
 
             if (isValid == false)
             {
@@ -1410,19 +1427,17 @@ namespace BoardGameGeekLike.Services
             if( mabCardDB == null )
             {
                 return (null, "Error: Medieval Auto Battler Card not found!");
-            }
+            }                
 
-            var content = new AdminsShowCardDetailsResponse
+            return (new AdminsShowMabCardDetailsResponse
             {
                 CardName = mabCardDB.Name,
                 CardPower = mabCardDB.Power,
                 CardUpperHand = mabCardDB.UpperHand,
                 CardType = mabCardDB.Type,
-            };
-
-            return (content, "Medieval Auto Battler Card details fetched successfully!");
+            }, "Mab Card details fetched successfully!");
         }
-        private static (bool, string) ShowCardDetails_Validation(AdminsShowCardDetailsRequest? request)
+        private static (bool, string) ShowMabCardDetails_Validation(AdminsShowMabCardDetailsRequest? request)
         {
             if (request == null)
             {
@@ -1437,9 +1452,17 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(AdminsEditCardResponse?, string)> EditCard(AdminsEditCardRequest request)
+
+        public async Task<(AdminsEditMabCardResponse?, string)> EditMabCard(AdminsEditMabCardRequest request)
         {
-            var (isValid, message) = EditCard_Validation(request);
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = EditMabCard_Validation(request);
 
             if (isValid == false)
             {
@@ -1469,12 +1492,16 @@ namespace BoardGameGeekLike.Services
             cardDB.UpperHand = request.CardUpperHand;
             cardDB.Type = request.CardType;
 
-            await this._daoDbContext.SaveChangesAsync();
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
 
-            return (null, "Card updated successfully");
+            if (savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsEditMabCardResponse(), "Mab Card updated successfully");
         }
-
-        private static (bool, string) EditCard_Validation(AdminsEditCardRequest request)
+        private static (bool, string) EditMabCard_Validation(AdminsEditMabCardRequest request)
         {
             if (request == null)
             {
@@ -1498,8 +1525,8 @@ namespace BoardGameGeekLike.Services
 
             if (Enum.IsDefined(request.CardType) == false)
             {
-                var validTypes = string.Join(", ", Enum.GetValues(typeof(CardType))
-                                       .Cast<CardType>()
+                var validTypes = string.Join(", ", Enum.GetValues(typeof(MabCardType))
+                                       .Cast<MabCardType>()
                                        .Select(cardType => $"{cardType} ({(int)cardType})"));
 
                 return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
@@ -1508,9 +1535,10 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(AdminsDestructCardResponse?, string)> DestructCard(AdminsDestructCardRequest? request)
+
+        public async Task<(AdminsDeleteMabCardResponse?, string)> DeleteMabCard(AdminsDeleteMabCardRequest? request)
         {
-            var (isValid, message) = DestructCard_Validation(request);
+            var (isValid, message) = DeleteMabCard_Validation(request);
             if (isValid == false)
             {
                 return (null, message);
@@ -1523,22 +1551,20 @@ namespace BoardGameGeekLike.Services
             if (cardDB == null)
             {
                 return (null, "Error: card not found");
-            }           
-
-            var isCardDestructionSuccessfull = await this._daoDbContext
-                .Cards
-                .Where(a => a.Id == request.CardId)
-                .ExecuteDeleteAsync();
-
-            if(isCardDestructionSuccessfull <= 0)
-            {
-                return (null, "Error: failed to delete requested card");
             }
 
-            return (new AdminsDestructCardResponse(), "Category deleted successfully");
-        }
+            cardDB.IsDeleted = true;
 
-        private static (bool, string) DestructCard_Validation(AdminsDestructCardRequest? request)
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
+
+            if (savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsDeleteMabCardResponse(), "Mab Card deleted successfully");
+        }
+        private static (bool, string) DeleteMabCard_Validation(AdminsDeleteMabCardRequest? request)
         {
             if (request == null)
             {
@@ -1558,6 +1584,140 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        public async Task<(AdminsRestoreMabCardResponse?, string)> RestoreMabCard(AdminsRestoreMabCardRequest? request)
+        {
+            var (isValid, message) = RestoreMabCard_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var cardDB = await this._daoDbContext
+                .Cards
+                .FindAsync(request!.CardId);
+
+            if (cardDB == null)
+            {
+                return (null, "Error: card not found");
+            }
+
+            cardDB.IsDeleted = false;
+
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
+
+            if (savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsRestoreMabCardResponse(), "Mab Card restored successfully");
+        }
+        private static (bool, string) RestoreMabCard_Validation(AdminsRestoreMabCardRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.CardId.HasValue == false)
+            {
+                return (false, "Error: CardId is missing");
+            }
+
+            if (request.CardId < 1)
+            {
+                return (false, "Error: invalid CardId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(List<AdminsListMabCardsResponse>?, string)> ListMabCards(AdminsListMabCardsRequest? request)
+        {
+            var (isValid, message) = ListMabCards_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var content = await this._daoDbContext
+                .Cards
+                .AsNoTracking()                
+                .Select(a => new AdminsListMabCardsResponse
+                {
+                    CardId = a.Id,
+                    CardName = a.Name,
+                    CardPower = a.Power,
+                    CardUpperHand = a.UpperHand,
+                    CardLevel = a.Level,
+                    CardType = a.Type,
+                    IsDeleted = a.IsDeleted,
+                })
+                .OrderBy(a => a.IsDeleted)
+                .ThenBy(a => a.CardPower)
+                .ThenBy(a => a.CardName)
+                .ThenBy(a => a.CardType)
+                .ThenBy(a => a.CardUpperHand)
+                .ToListAsync();
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "Error: no cards were found");
+            }
+
+            return (content, "All cards listed successfully");
+        }
+        private static (bool, string) ListMabCards_Validation(AdminsListMabCardsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public (List<AdminsListMabCardTypesResponse>?, string) ListMabCardTypes(AdminsListMabCardTypesRequest? request)
+        {
+            var (isValid, message) = ListMabCardTypes_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var cardTypesDB = Enum.GetValues(typeof(MabCardType))
+                .Cast<MabCardType>()
+                .Select(a => new AdminsListMabCardTypesResponse
+                {
+                    CardTypeValue = (int)a,
+                    CardTypeName = a.ToString()
+                })
+                .ToList();
+
+            var content = cardTypesDB;
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "Error: no card types were found");
+            }
+
+            return (content, "All card types listed successfully");
+        }
+        private static (bool, string) ListMabCardTypes_Validation(AdminsListMabCardTypesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }          
+
+            return (true, string.Empty);
+        }
+
+        // Provavelmente esse endpoint será desnecessário...
         public async Task<(List<AdminsFilterCardsResponse>?, string)> FilterCards(AdminsFilterCardsRequest request)
         {
             var (filterIsValid, message) = FilterIsValid(request);
@@ -1654,7 +1814,6 @@ namespace BoardGameGeekLike.Services
 
             return (content, message);
         }
-
         public (bool, string) FilterIsValid(AdminsFilterCardsRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.CardName) == true &&
@@ -1709,8 +1868,8 @@ namespace BoardGameGeekLike.Services
 
             if (request.CardType.HasValue == true && Enum.IsDefined(request.CardType.Value) == false)
             {
-                var validTypes = string.Join(", ", Enum.GetValues(typeof(CardType))
-                                       .Cast<CardType>()
+                var validTypes = string.Join(", ", Enum.GetValues(typeof(MabCardType))
+                                       .Cast<MabCardType>()
                                        .Select(cardType => $"{cardType} ({(int)cardType})"));
 
                 return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
@@ -1719,86 +1878,174 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        public async Task<(List<AdminsGetAllCardsResponse>?, string)> GetAllCards(AdminsGetAllCardsRequest? request)
+        // MAB NPCS
+
+        public async Task<(AdminsAddMabNpcResponse?, string)> AddMabNpc(AdminsAddMabNpcRequest request)
         {
-            var (isValid, message) = GetAllCards_Validation(request);
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = AddMabNpc_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var content = await this._daoDbContext
+            var exists = await _daoDbContext
+                .Npcs
+                .AnyAsync(a => a.Name == request.Name && a.IsDeleted == false);
+
+            if (exists == true)
+            {
+                return (null, $"Error: this Mab NPC already exists - {request.Name}");
+            }
+
+            var (newNpcDeckEntries, ErrorMessage) = await GenerateRandomDeck(request.CardIds);
+
+            if (newNpcDeckEntries == null || newNpcDeckEntries.Count != 5)
+            {
+                return (null, ErrorMessage);
+            }
+
+            var newNpc = new Npc
+            {
+                Name = request.Name,
+                Description = request.Description,
+                Deck = newNpcDeckEntries,
+                Level = Helper.GetNpcLevel(newNpcDeckEntries.Select(a => a.Card.Level).ToList()),
+                IsDeleted = false
+            };
+
+            this._daoDbContext.Add(newNpc);
+
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
+
+            if (savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsAddMabNpcResponse
+            {
+                Level = newNpc.Level,
+                CountCards = newNpcDeckEntries.Count,
+            }, "Mab NPC created successfully");
+        }
+        public (bool, string) AddMabNpc_Validation(AdminsAddMabNpcRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: no information was provided");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Name) == true)
+            {
+                return (false, "Error: the NPC's name is mandatory");
+            }
+
+            if (string.IsNullOrEmpty(request.Description) == true)
+            {
+                return (false, "Error: the NPC's description is mandatory");
+            }
+
+            if (request.CardIds == null || request.CardIds.Count != Constants.DeckSize)
+            {
+                return (false, $"Error: the NPC's deck can neither be empty nor contain fewer nor more than {Constants.DeckSize} cards");
+            }
+
+            return (true, string.Empty);
+        }
+        private async Task<(List<NpcDeckEntry>?, string)> GenerateRandomDeck(List<int> mabCardIds)
+        {
+            var cardsDB = await _daoDbContext
                                     .Cards
-                                    .AsNoTracking()
-                                    .Where(a => a.IsDeleted == false)
-                                    .Select(a => new AdminsGetAllCardsResponse
-                                    {
-                                        CardId = a.Id,
-                                        CardName = a.Name,
-                                        CardPower = a.Power,
-                                        CardUpperHand = a.UpperHand,
-                                        CardLevel = a.Level,
-                                        CardType = a.Type,
-                                    })
-                                    .OrderBy(a => a.CardId)
+                                    .Where(a => mabCardIds.Contains(a.Id) && a.IsDeleted == false)
                                     .ToListAsync();
 
-            if (content == null || content.Count == 0)
+            if (cardsDB == null || cardsDB.Count == 0)
             {
-                return (null, "Error: no cards were found");
+                return (null, "Error: invalid card Ids");
             }
 
-            return (content, "All cards listed successfully");
-        }
-        private static (bool, string) GetAllCards_Validation(AdminsGetAllCardsRequest? request)
-        {
-            if (request != null)
+            var uniqueCardIds = mabCardIds.Distinct()
+                                       .ToList()
+                                       .Count;
+
+            if (uniqueCardIds != cardsDB.Count)
             {
-                return (false, "Error: request is NOT null, however it MUST be null!");
+                var notFoundIds = mabCardIds.Distinct()
+                                         .ToList()
+                                         .Except(cardsDB.Select(a => a.Id).ToList());
+
+                return (null, $"Error: invalid cardId: {string.Join(" ,", notFoundIds)}");
             }
 
-            return (true, string.Empty);
-        }
+            var newDeck = new List<NpcDeckEntry>();
 
-
-        public (List<AdminsListCardTypesResponse>?, string) ListCardTypes(AdminsListCardTypesRequest? request)
-        {
-            var (isValid, message) = ListCardTypes_Validation(request);
-
-            if (isValid == false)
+            foreach (var id in mabCardIds)
             {
-                return (null, message);
-            }
-
-            var cardTypesDB = Enum.GetValues(typeof(CardType))
-                .Cast<CardType>()
-                .Select(a => new AdminsListCardTypesResponse
+                var newCard = cardsDB.FirstOrDefault(a => a.Id == id);
+                if (newCard != null)
                 {
-                    CardTypeValue = (int)a,
-                    CardTypeName = a.ToString()
-                })
-                .ToList();
-
-            var content = cardTypesDB;
-
-            if (content == null || content.Count == 0)
-            {
-                return (null, "Error: no card types were found");
+                    newDeck.Add(new NpcDeckEntry()
+                    {
+                        Card = newCard,
+                    });
+                }
             }
 
-            return (content, "All card types listed successfully");
+            return (newDeck, string.Empty);
         }
-        private static (bool, string) ListCardTypes_Validation(AdminsListCardTypesRequest? request)
+
+
+        public async Task<(List<AdminsGetNpcsResponse>?, string)> ListMabNpcs(AdminsListMabNpcsRequest? request)
+        {
+            var npcsDB = await this._daoDbContext
+                .Npcs
+                .AsNoTracking()
+                .Select(a => new AdminsGetNpcsResponse
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    Description = a.Description,
+                    Level = a.Level,
+                    Deck = a.Deck.Select(b => new AdminsGetNpcsResponse_Deck
+                    {
+                        Name = b.Card.Name,
+                        Power = b.Card.Power,
+                        UpperHand = b.Card.UpperHand,
+                        Level = b.Card.Level,
+                        Type = b.Card.Type,
+                    })
+                    .ToList()
+                })
+                .OrderBy(a => a.Level)
+                .ThenBy(a => a.Name)
+                .ToListAsync();
+
+            if (npcsDB == null || npcsDB.Count == 0)
+            {
+                return (null, "Error: no NPCS found!");
+            }        
+
+            return (npcsDB, "NPCs listed successfully");
+        }
+        public (bool, string) GetNpcs_Validation(AdminsListMabNpcsRequest? request)
         {
             if (request != null)
             {
-                return (false, "Error: request is NOT null, however it MUST be null!");
-            }          
+                return (false, "Error: request is NOT null however it MUST be null!");
+            }
 
             return (true, string.Empty);
         }
-
+        
+            
         #endregion
 
     }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class AdminsGetAllCardsResponse
+    public class AdminsListMabCardsResponse
     {
         public int CardId { get; set; }
 
@@ -16,6 +16,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public int CardLevel { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public CardType CardType { get; set; }
+        public MabCardType CardType { get; set; }
+
+        public bool? IsDeleted { get; set; }
     }
 }

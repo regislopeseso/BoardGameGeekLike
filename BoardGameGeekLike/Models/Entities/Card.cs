@@ -11,12 +11,19 @@ namespace BoardGameGeekLike.Models.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         public string Name { get; set; }
+
         public int Power { get; set; }
+
         public int UpperHand { get; set; }
+
         public int Level { get; set; }
-        public CardType Type { get; set; }
+
+        public MabCardType Type { get; set; }
+
         public bool IsDeleted { get; set; } = false;
+
         public bool IsDummy { get; set; } = false;
     }
 }

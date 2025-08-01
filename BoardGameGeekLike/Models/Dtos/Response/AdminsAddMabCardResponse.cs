@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class AdminsDestructCardResponse
+    public class AdminsAddMabCardResponse
     {
     }
 }

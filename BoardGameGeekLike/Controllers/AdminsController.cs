@@ -19,7 +19,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
-        #region Board Games 
+        #region Board Games  (BG)
 
         [HttpGet]
         public async Task<IActionResult> ListBoardGames(AdminsListBoardGamesRequest? request)
@@ -292,13 +292,16 @@ namespace BoardGameGeekLike.Controllers
         #endregion
 
 
-        #region Medieval Auto Battler
-        [HttpPost]
-        public async Task<IActionResult> CreateCard([FromForm] AdminsCreateCardRequest request)
-        {
-            var (content, message) = await this._adminsService.CreateCard(request);
+        #region Medieval Auto Battler  (MAB)
 
-            var response = new Response<AdminsCreateCardResponse>
+        //MAB CARDS
+
+        [HttpPost]
+        public async Task<IActionResult> CreateMabCard([FromForm] AdminsAddMabCardRequest request)
+        {
+            var (content, message) = await this._adminsService.CreateMabCard(request);
+
+            var response = new Response<AdminsAddMabCardResponse>
             {
                 Content = content,
                 Message = message
@@ -308,11 +311,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ShowCardDetails([FromQuery] AdminsShowCardDetailsRequest request)
+        public async Task<IActionResult> ShowMabCardDetails([FromQuery] AdminsShowMabCardDetailsRequest request)
         {
-            var (content, message) = await this._adminsService.ShowCardDetails(request);
+            var (content, message) = await this._adminsService.ShowMabCardDetails(request);
 
-            var response = new Response<AdminsShowCardDetailsResponse>()
+            var response = new Response<AdminsShowMabCardDetailsResponse>()
             {
                 Content = content,
                 Message = message
@@ -322,11 +325,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> EditCard([FromBody] AdminsEditCardRequest request)
+        public async Task<IActionResult> EditMabCard([FromBody] AdminsEditMabCardRequest request)
         {
-            var (content, message) = await this._adminsService.EditCard(request);
+            var (content, message) = await this._adminsService.EditMabCard(request);
 
-            var response = new Response<AdminsEditCardResponse>()
+            var response = new Response<AdminsEditMabCardResponse>()
             {
                 Content = content,
                 Message = message
@@ -337,11 +340,40 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpDelete]
-        public async Task<IActionResult> DestructCard([FromBody] AdminsDestructCardRequest? request)
+        public async Task<IActionResult> DeleteMabCard([FromBody] AdminsDeleteMabCardRequest? request)
         {
-            var (content, message) = await this._adminsService.DestructCard(request);
+            var (content, message) = await this._adminsService.DeleteMabCard(request);
 
-            var response = new Response<AdminsDestructCardResponse>
+            var response = new Response<AdminsDeleteMabCardResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestoreMabCard([FromBody] AdminsRestoreMabCardRequest? request)
+        {
+            var (content, message) = await this._adminsService.RestoreMabCard(request);
+
+            var response = new Response<AdminsRestoreMabCardResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ListMabCards(AdminsListMabCardsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ListMabCards(request);
+
+            var response = new Response<List<AdminsListMabCardsResponse>>()
             {
                 Content = content,
                 Message = message
@@ -351,25 +383,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllCards(AdminsGetAllCardsRequest? request)
+        public IActionResult ListMabCardTypes(AdminsListMabCardTypesRequest? request)
         {
-            var (content, message) = await this._adminsService.GetAllCards(request);
+            var (content, message) = this._adminsService.ListMabCardTypes(request);
 
-            var response = new Response<List<AdminsGetAllCardsResponse>>()
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpGet]
-        public IActionResult ListCardTypes(AdminsListCardTypesRequest? request)
-        {
-            var (content, message) = this._adminsService.ListCardTypes(request);
-
-            var response = new Response<List<AdminsListCardTypesResponse>>()
+            var response = new Response<List<AdminsListMabCardTypesResponse>>()
             {
                 Content = content,
                 Message = message
@@ -391,6 +409,36 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        // MAB NPCS
+        [HttpPost]
+        public async Task<IActionResult> AddMabNpc(AdminsAddMabNpcRequest request)
+        {
+            var (content, message) = await this._adminsService.AddMabNpc(request);
+
+            var response = new Response<AdminsAddMabNpcResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ListMabNpcs(AdminsListMabNpcsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ListMabNpcs(request);
+
+            var response = new Response<List<AdminsGetNpcsResponse>?>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
         #endregion
     }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class AdminsEditCardRequest
+    public class AdminsEditMabCardRequest
     {
         public int CardId { get; set; }
         
@@ -14,6 +14,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
         public int CardUpperHand { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public CardType CardType { get; set; }
+        public MabCardType CardType { get; set; }
     }
 }
