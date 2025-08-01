@@ -297,9 +297,9 @@ namespace BoardGameGeekLike.Controllers
         //MAB CARDS
 
         [HttpPost]
-        public async Task<IActionResult> CreateMabCard([FromForm] AdminsAddMabCardRequest request)
+        public async Task<IActionResult> AddMabCard([FromForm] AdminsAddMabCardRequest request)
         {
-            var (content, message) = await this._adminsService.CreateMabCard(request);
+            var (content, message) = await this._adminsService.AddMabCard(request);
 
             var response = new Response<AdminsAddMabCardResponse>
             {

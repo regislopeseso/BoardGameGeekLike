@@ -3372,7 +3372,7 @@ namespace BoardGameGeekLike.Services
                         return (null, $"Error: request to create a new Default Life Counter TEMPLATE failed: {createTemplate_response_message}");
                     }
 
-                    // Default Life Counter Template Id:
+                    // Default Life Counter Template NpcId:
                     lifeCounterTemplateId = createTemplate_reponse_content.LifeCounterTemplateId;
                     lifeCounterTemplateName = createTemplate_reponse_content.LifeCounterTemplateName;
 
@@ -3392,7 +3392,7 @@ namespace BoardGameGeekLike.Services
                             $"Error: failed to fetch the ID of the most recently created Life Counter TEMPLATE: {getLastTemplateId_response_message}");
                     }
 
-                    // Most recently created Life Counter Template Id:
+                    // Most recently created Life Counter Template NpcId:
                     lifeCounterTemplateId = getLastTemplate_reponse_content.LastLifeCounterTemplateId;
                     lifeCounterTemplateName = getLastTemplate_reponse_content.LastLifeCounterTemplateName;
 

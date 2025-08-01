@@ -1321,7 +1321,7 @@ namespace BoardGameGeekLike.Services
 
         // MAB CARDS
 
-        public async Task<(AdminsAddMabCardResponse?, string)> CreateMabCard(AdminsAddMabCardRequest request)
+        public async Task<(AdminsAddMabCardResponse?, string)> AddMabCard(AdminsAddMabCardRequest request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -1330,7 +1330,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = CreateMabCard_Validation(request);
+            var (isValid, message) = AddMabCard_Validation(request);
 
             if (isValid == false)
             {
@@ -1369,7 +1369,7 @@ namespace BoardGameGeekLike.Services
 
             return (new AdminsAddMabCardResponse(), "New Mab Card added successfully");
         }
-        private static (bool, string) CreateMabCard_Validation(AdminsAddMabCardRequest request)
+        private static (bool, string) AddMabCard_Validation(AdminsAddMabCardRequest request)
         {
             if (request == null)
             {
@@ -1583,6 +1583,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(AdminsRestoreMabCardResponse?, string)> RestoreMabCard(AdminsRestoreMabCardRequest? request)
         {
@@ -2010,10 +2011,11 @@ namespace BoardGameGeekLike.Services
                 .AsNoTracking()
                 .Select(a => new AdminsGetNpcsResponse
                 {
-                    Id = a.Id,
-                    Name = a.Name,
-                    Description = a.Description,
-                    Level = a.Level,
+                    NpcId = a.Id,
+                    NpcName = a.Name,
+                    NpcDescription = a.Description,
+                    NpcLevel = a.Level,
+                    NpcIsDeleted = a.IsDeleted,
                     Deck = a.Deck.Select(b => new AdminsGetNpcsResponse_Deck
                     {
                         Name = b.Card.Name,
@@ -2024,8 +2026,8 @@ namespace BoardGameGeekLike.Services
                     })
                     .ToList()
                 })
-                .OrderBy(a => a.Level)
-                .ThenBy(a => a.Name)
+                .OrderBy(a => a.NpcLevel)
+                .ThenBy(a => a.NpcName)
                 .ToListAsync();
 
             if (npcsDB == null || npcsDB.Count == 0)

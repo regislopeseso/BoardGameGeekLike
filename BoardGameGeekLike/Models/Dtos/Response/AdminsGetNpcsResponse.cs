@@ -2,14 +2,16 @@
 {
     public class AdminsGetNpcsResponse
     {
-        public int Id { get; set; }
+        public int? NpcId { get; set; }
 
-        public string Name { get; set; }
+        public string? NpcName { get; set; }
 
-        public string Description { get; set; }
+        public string? NpcDescription { get; set; }
+
+        public int? NpcLevel { get; set; }
+
+        public bool? NpcIsDeleted { get; set; }
 
         public List<AdminsGetNpcsResponse_Deck>? Deck { get; set; }
-
-        public int Level { get; set; }
     }
 }
