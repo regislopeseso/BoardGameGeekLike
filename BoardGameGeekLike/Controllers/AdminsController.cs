@@ -338,7 +338,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
         [HttpDelete]
         public async Task<IActionResult> DeleteMabCard([FromBody] AdminsDeleteMabCardRequest? request)
         {
@@ -366,7 +365,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
 
         [HttpGet]
         public async Task<IActionResult> ListMabCards(AdminsListMabCardsRequest? request)
@@ -426,6 +424,20 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ShowMabNpcDetails([FromQuery] AdminsShowMabNpcDetailsRequest request)
+        {
+            var (content, message) = await this._adminsService.ShowMabNpcDetails(request);
+
+            var response = new Response<AdminsShowMabNpcDetailsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> ListMabNpcs(AdminsListMabNpcsRequest? request)
         {
             var (content, message) = await this._adminsService.ListMabNpcs(request);
@@ -438,7 +450,21 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
+        [HttpPut]
+        public async Task<IActionResult> EditMabNpc([FromBody] AdminsEditMabNpcRequest request)
+        {
+            var (content, message) = await this._adminsService.EditMabNpc(request);
+
+            var response = new Response<AdminsEditMabNpcResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpDelete]
         public async Task<IActionResult> DeleteMabNpc([FromBody] AdminsDeleteMabNpcRequest? request)
         {

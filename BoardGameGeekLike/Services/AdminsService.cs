@@ -1961,51 +1961,68 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        private async Task<(List<NpcDeckEntry>?, string)> GenerateRandomDeck(List<int> mabCardIds)
+
+
+        public async Task<(AdminsShowMabNpcDetailsResponse?, string)> ShowMabNpcDetails(AdminsShowMabNpcDetailsRequest? request)
         {
-            var cardsDB = await _daoDbContext
-                                    .Cards
-                                    .Where(a => mabCardIds.Contains(a.Id) && a.IsDeleted == false)
-                                    .ToListAsync();
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (cardsDB == null || cardsDB.Count == 0)
+            if (string.IsNullOrEmpty(userId))
             {
-                return (null, "Error: invalid card Ids");
+                return (null, "Error: User is not authenticated");
             }
 
-            var uniqueCardIds = mabCardIds.Distinct()
-                                       .ToList()
-                                       .Count;
+            var (isValid, message) = ShowMabNpcDetails_Validation(request);
 
-            if (uniqueCardIds != cardsDB.Count)
+            if (isValid == false)
             {
-                var notFoundIds = mabCardIds.Distinct()
-                                         .ToList()
-                                         .Except(cardsDB.Select(a => a.Id).ToList());
-
-                return (null, $"Error: invalid cardId: {string.Join(" ,", notFoundIds)}");
+                return (null, message);
             }
 
-            var newDeck = new List<NpcDeckEntry>();
-
-            foreach (var id in mabCardIds)
-            {
-                var newCard = cardsDB.FirstOrDefault(a => a.Id == id);
-                if (newCard != null)
+            var mabNpcDB = await this._daoDbContext
+                .Npcs
+                .Select(a => new AdminsShowMabNpcDetailsResponse
                 {
-                    newDeck.Add(new NpcDeckEntry()
-                    {
-                        Card = newCard,
-                    });
-                }
+                    NpcName = a.Name,
+                    Description = a.Description,
+                    Level = a.Level,
+                    CardIds = a.Deck.Select(b => b.CardId).ToList()
+                })
+                .FirstOrDefaultAsync();
+        
+
+            if (mabNpcDB == null)
+            {
+                return (null, "Error: Medieval Auto Battler Npc not found!");
             }
 
-            return (newDeck, string.Empty);
+            return (mabNpcDB, "Mab Npc details fetched successfully!");
+        }
+        private static (bool, string) ShowMabNpcDetails_Validation(AdminsShowMabNpcDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is not null");
+            }
+
+            if (request.NpcId <= 0)
+            {
+                return (false, "Error: invalid medieval auto battler CardId");
+            }
+
+            return (true, string.Empty);
         }
 
 
         public async Task<(List<AdminsGetNpcsResponse>?, string)> ListMabNpcs(AdminsListMabNpcsRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var npcsDB = await this._daoDbContext
                 .Npcs
                 .AsNoTracking()
@@ -2048,9 +2065,113 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(AdminsEditMabNpcResponse?, string)> EditMabNpc(AdminsEditMabNpcRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = EditMabNpc_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var npcDB = await _daoDbContext
+                .Npcs
+                .Include(a => a.Deck)
+                .ThenInclude(b => b.Card)
+                .FirstOrDefaultAsync(a => a.Id == request.NpcId);
+
+            if (npcDB == null)
+            {
+                return (null, $"Error: NPC not found!");
+            }
+
+            if (npcDB.IsDeleted == true)
+            {
+                return (null, $"Error: NPC has been already deleted!");
+            }
+
+            var availableCardIds = _daoDbContext
+                .Cards
+                .Where(a => a.IsDeleted == false)
+                .Select(a => a.Id)
+                .ToList();
+
+            if (request.CardIds!.All(id => availableCardIds.Contains(id)) == false)
+            {
+                return (null, "Error: the cardId or cardIds provided lead to non-existing cards");
+            }
+
+            var oldCardIds = npcDB
+                .Deck
+                .Select(a => a.Id)
+                .ToList();
+
+            await this._daoDbContext
+                .NpcDeckEntries
+                .Where(a => oldCardIds.Contains(a.CardId) && a.NpcId == request.NpcId)
+                .ExecuteDeleteAsync();
+            
+
+            var (newNpcDeckEntries, ErrorMessage) = await GenerateRandomDeck(request.CardIds!);
+
+            if (newNpcDeckEntries == null || newNpcDeckEntries.Count != 5)
+            {
+                return (null, ErrorMessage);
+            }
+
+            npcDB.Name = request.NpcName!;
+            npcDB.Description = request.NpcDescription!;
+            npcDB.Deck = newNpcDeckEntries;
+            npcDB.Level = Helper.GetNpcLevel(newNpcDeckEntries.Select(a => a.Card.Level).ToList());
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new AdminsEditMabNpcResponse(), "NPC updated successfully");
+        }
+        private static (bool, string) EditMabNpc_Validation(AdminsEditMabNpcRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: no information provided");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NpcName) == true)
+            {
+                return (false, "Error: invalid NpcName");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NpcDescription) == true)
+            {
+                return (false, "Error: invalid NpcName");
+            }
+
+            if (request.CardIds == null || request.CardIds.Count != Constants.DeckSize)
+            {
+                return (false, $"Error: the NPC's deck can neither be empty nor contain fewer or more than {Constants.DeckSize} cards");
+            }         
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(AdminsDeleteMabNpcResponse?, string)> DeleteMabNpc(AdminsDeleteMabNpcRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = DeleteMabNpc_Validation(request);
+            
             if (isValid == false)
             {
                 return (null, message);
@@ -2099,7 +2220,15 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(AdminsRestoreMabNpcResponse?, string)> RestoreMabNpc(AdminsRestoreMabNpcRequest? request)
         {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
             var (isValid, message) = RestoreMabNpc_Validation(request);
+           
             if (isValid == false)
             {
                 return (null, message);
@@ -2143,6 +2272,51 @@ namespace BoardGameGeekLike.Services
             }
 
             return (true, string.Empty);
+        }
+
+        private async Task<(List<NpcDeckEntry>?, string)> GenerateRandomDeck(List<int> mabCardIds)
+        {
+            var cardsDB = await _daoDbContext
+                .Cards
+                .Where(a => mabCardIds.Contains(a.Id) && a.IsDeleted == false)
+                .ToListAsync();
+
+            if (cardsDB == null || cardsDB.Count == 0)
+            {
+                return (null, "Error: invalid card Ids");
+            }
+
+            var uniqueCardIds = mabCardIds
+                .Distinct()
+                .ToList()
+                .Count;
+
+            if (uniqueCardIds != cardsDB.Count)
+            {
+                var notFoundIds = mabCardIds
+                    .Distinct()
+                    .ToList()
+                    .Except(cardsDB.Select(a => a.Id).ToList());
+
+                return (null, $"Error: invalid cardId: {string.Join(" ,", notFoundIds)}");
+            }
+
+            var newDeck = new List<NpcDeckEntry>();
+
+            foreach (var id in mabCardIds)
+            {
+                var newCard = cardsDB.FirstOrDefault(a => a.Id == id);
+
+                if (newCard != null)
+                {
+                    newDeck.Add(new NpcDeckEntry()
+                    {
+                        Card = newCard,
+                    });
+                }
+            }
+
+            return (newDeck, string.Empty);
         }
 
 
