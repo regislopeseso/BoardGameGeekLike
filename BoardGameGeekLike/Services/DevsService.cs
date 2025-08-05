@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -404,15 +405,20 @@ namespace BoardGameGeekLike.Services
         {
             var cardsSeed = new List<Card>();
 
-            foreach (var cardType in new[] { MabCardType.Archer, MabCardType.Cavalry, MabCardType.Spearman })
+            foreach (var cardType in new[] { MabCardType.Neutral, MabCardType.Ranged, MabCardType.Cavalry, MabCardType.Infantry })
             {
                 for (int power = Constants.MinCardPower; power <= Constants.MaxCardPower; power++)
                 {
                     for (int upperHand = Constants.MinCardUpperHand; upperHand <= Constants.MaxCardUpperHand; upperHand++)
                     {
+                        var cardName = cardType.ToString()[0] == 'R' ?
+                            "Bow" : cardType.ToString()[0] == 'C' ? 
+                            "Spear": cardType.ToString()[0] == 'I' ?
+                            "Sword" : "Fist";
+
                         var newCard = new Card
                         {
-                            Name = cardType.ToString() + " *" + power + "|" + upperHand + "*",
+                            Name = cardName + " *" + power + "|" + upperHand + "*",
                             Power = power,
                             UpperHand = upperHand,
                             Level = Helper.GetCardLevel(power, upperHand),
@@ -474,6 +480,8 @@ namespace BoardGameGeekLike.Services
         {
             var random = new Random();
 
+            var npcCount = "";
+
             if (level == Constants.MinCardLevel || level == Constants.MaxCardLevel)
             {
                 var countBotsLvlZero = 0;
@@ -505,19 +513,27 @@ namespace BoardGameGeekLike.Services
                     }
 
                     // Creating a new npc with 5 cards (npcLvl 0 or npcLvl 9) and adding it to a list of new NPCs:          
-                    var npcName = "";
+                    var npcName = "";                    
                     var npcDescription = "";
                     var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
                     if (level == 0)
                     {
                         countBotsLvlZero++;
-                        npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlZero;
+                        
+                        npcCount = countBotsLvlZero < 10 ? $"0{countBotsLvlZero}" : $"{countBotsLvlZero}";
+                       
+                        npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                         npcDescription = "(0, 0, 0, 0, 0)";
                     }
                     if (level == 9)
                     {
                         countBotsLvlNine++;
-                        npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlNine;
+                        
+                        npcCount = countBotsLvlNine < 10 ? $"0{countBotsLvlNine}" : $"{countBotsLvlNine}";
+
+                        npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                         npcDescription = "(9, 9, 9, 9, 9)";
                     }
                     npcs.Add(new Npc
@@ -539,7 +555,7 @@ namespace BoardGameGeekLike.Services
             {
                 var npcs = new List<Npc>();
                 var countBotsLvlOne = 0;
-                var count = 1;
+                var count = 1;                
 
                 while (count <= 2)
                 {
@@ -574,8 +590,13 @@ namespace BoardGameGeekLike.Services
 
                         // Creating a new npc with 5 cards npcLvl 1 and adding it to a list of new NPCs:
                         countBotsLvlOne++;
+
+                        npcCount = countBotsLvlOne < 10 ? $"0{countBotsLvlOne}" : $"{countBotsLvlOne}";
+
                         var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
-                        var npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlOne;
+                        
+                        var npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+                        
                         npcs.Add(new Npc
                         {
                             Name = npcName,
@@ -635,8 +656,13 @@ namespace BoardGameGeekLike.Services
 
                             // Creating a new npc with 5 cards npcLvl 1 and adding it to a list of new NPCs:                        
                             countBotsLvlEight++;
+
+                            npcCount = countBotsLvlEight < 10 ? $"0{countBotsLvlEight}" : $"{countBotsLvlEight}";
+
                             var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
-                            var npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlEight;
+
+                            var npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             npcs.Add(new Npc
                             {
                                 Name = npcName,
@@ -705,27 +731,51 @@ namespace BoardGameGeekLike.Services
                     {
                         case 2:
                             countBotsLvlTwo++;
-                            npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlTwo;
+
+                            npcCount = countBotsLvlTwo < 10 ? $"0{countBotsLvlTwo}" : $"{countBotsLvlTwo}";
+
+                            npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             break;
                         case 3:
                             countBotsLvlThree++;
-                            npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlThree;
+
+                            npcCount = countBotsLvlThree < 10 ? $"0{countBotsLvlThree}" : $"{countBotsLvlThree}";
+
+                            npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             break;
                         case 4:
                             countBotsLvlFour++;
-                            npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlFour;
+
+                            npcCount = countBotsLvlFour < 10 ? $"0{countBotsLvlFour}" : $"{countBotsLvlFour}";
+
+                            npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             break;
                         case 5:
                             countBotsLvlFive++;
-                            npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlFive;
+
+                            npcCount = countBotsLvlFive < 10 ? $"0{countBotsLvlFive}" : $"{countBotsLvlFive}";
+
+                            npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             break;
                         case 6:
                             countBotsLvlSix++;
-                            npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlSix;
+
+                            npcCount = countBotsLvlSix < 10 ? $"0{countBotsLvlSix}" : $"{countBotsLvlSix}";
+
+                            npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             break;
                         case 7:
                             countBotsLvlSeven++;
-                            npcName = "NPC-LVL" + npcLvl + "-" + countBotsLvlSeven;
+
+                            npcCount = countBotsLvlSeven < 10 ? $"0{countBotsLvlSeven}" : $"{countBotsLvlSeven}";
+
+                            npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
+
                             break;
                     }
 

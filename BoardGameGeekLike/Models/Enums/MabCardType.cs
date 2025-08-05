@@ -2,9 +2,9 @@
 {
     public enum MabCardType
     {
-        Commom = 0,
-        Archer = 1,   // > Spearman
-        Cavalry = 2,  // > Archer
-        Spearman = 3, // > Cavalry
+        Neutral = 0,
+        Ranged = 1,   // > Infantry
+        Cavalry = 2,  // > Ranged
+        Infantry = 3, // > Cavalry
     }
 }

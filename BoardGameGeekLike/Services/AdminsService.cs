@@ -1393,9 +1393,10 @@ namespace BoardGameGeekLike.Services
 
             if (Enum.IsDefined(request.CardType) == false)
             {
-                var validTypes = string.Join(", ", Enum.GetValues(typeof(MabCardType))
-                                        .Cast<MabCardType>()
-                                        .Select(cardType => $"{cardType} ({(int)cardType})"));
+                var validTypes = string
+                    .Join(", ", Enum.GetValues(typeof(MabCardType))
+                    .Cast<MabCardType>()
+                    .Select(cardType => $"{cardType} ({(int)cardType})"));
 
                 return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
             }
@@ -1986,7 +1987,17 @@ namespace BoardGameGeekLike.Services
                     NpcName = a.Name,
                     Description = a.Description,
                     Level = a.Level,
-                    CardIds = a.Deck.Select(b => b.CardId).ToList()
+                    Cards = a
+                        .Deck
+                        .Select(b => new AdminsShowMabNpcDetailsResponse_card
+                        {
+                            CardId = b.Card.Id,
+                            CardName = b.Card.Name,
+                            CardPower = b.Card.Power,
+                            CardUpperHand = b.Card.UpperHand,
+                            CardType = b.Card.Type,
+                        })                        
+                        .ToList()
                 })
                 .FirstOrDefaultAsync();
         

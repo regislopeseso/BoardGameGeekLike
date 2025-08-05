@@ -8,6 +8,6 @@
 
         public int? Level { get; set; }
 
-        public List<int>? CardIds { get; set; }
+        public List<AdminsShowMabNpcDetailsResponse_card>? Cards { get; set; }
     }
 }
