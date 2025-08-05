@@ -438,6 +438,34 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMabNpc([FromBody] AdminsDeleteMabNpcRequest? request)
+        {
+            var (content, message) = await this._adminsService.DeleteMabNpc(request);
+
+            var response = new Response<AdminsDeleteMabNpcResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestoreMabNpc([FromBody] AdminsRestoreMabNpcRequest? request)
+        {
+            var (content, message) = await this._adminsService.RestoreMabNpc(request);
+
+            var response = new Response<AdminsRestoreMabNpcResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
 
         #endregion

@@ -2046,8 +2046,106 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        
-            
+
+
+        public async Task<(AdminsDeleteMabNpcResponse?, string)> DeleteMabNpc(AdminsDeleteMabNpcRequest? request)
+        {
+            var (isValid, message) = DeleteMabNpc_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabNpcDB = await this._daoDbContext
+                .Npcs
+                .FindAsync(request!.NpcId);
+
+            if (mabNpcDB == null)
+            {
+                return (null, "Error: npc not found");
+            }
+
+            mabNpcDB.IsDeleted = true;
+
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
+
+            if (savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsDeleteMabNpcResponse(), "Mab Npc deleted successfully");
+        }
+        private static (bool, string) DeleteMabNpc_Validation(AdminsDeleteMabNpcRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.NpcId.HasValue == false)
+            {
+                return (false, "Error: NpcId is missing");
+            }
+
+            if (request.NpcId < 1)
+            {
+                return (false, "Error: invalid NpcId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(AdminsRestoreMabNpcResponse?, string)> RestoreMabNpc(AdminsRestoreMabNpcRequest? request)
+        {
+            var (isValid, message) = RestoreMabNpc_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabNpcDB = await this._daoDbContext
+                .Npcs
+                .FindAsync(request!.NpcId);
+
+            if (mabNpcDB == null)
+            {
+                return (null, "Error: npc not found");
+            }
+
+            mabNpcDB.IsDeleted = false;
+
+            var savingSucceded = await this._daoDbContext.SaveChangesAsync();
+
+            if (savingSucceded == 0)
+            {
+                return (null, "Error: saving DB modifications failed.");
+            }
+
+            return (new AdminsRestoreMabNpcResponse(), "Mab Npc restored successfully");
+        }
+        private static (bool, string) RestoreMabNpc_Validation(AdminsRestoreMabNpcRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.NpcId.HasValue == false)
+            {
+                return (false, "Error: NpcId is missing");
+            }
+
+            if (request.NpcId < 1)
+            {
+                return (false, "Error: invalid NpcId (is less than 1)");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         #endregion
 
     }
