@@ -381,6 +381,21 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ListMabCardIds(AdminsListMabCardIdsRequest? request)
+        {
+            var (content, message) = await this._adminsService.ListMabCardIds(request);
+
+            var response = new Response<List<AdminsListMabCardIdsResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpGet]
         public IActionResult ListMabCardTypes(AdminsListMabCardTypesRequest? request)
         {
             var (content, message) = this._adminsService.ListMabCardTypes(request);
@@ -464,6 +479,22 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        
+        [HttpPost]
+        public async Task<IActionResult> GetMabNpcLvl([FromBody] AdminsGetMabNpcLvlRequest request)
+        {
+            var (content, message) = await this._adminsService.GetMabNpcLvl(request);
+
+            var response = new Response<AdminsGetMabNpcLvlResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
 
         [HttpDelete]
         public async Task<IActionResult> DeleteMabNpc([FromBody] AdminsDeleteMabNpcRequest? request)

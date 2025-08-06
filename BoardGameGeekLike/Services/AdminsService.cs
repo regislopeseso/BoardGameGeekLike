@@ -5,12 +5,8 @@ using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Models.Enums;
 using BoardGameGeekLike.Utilities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using System.Security.Claims;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Constants = BoardGameGeekLike.Utilities.Constants;
 
 namespace BoardGameGeekLike.Services
@@ -1682,6 +1678,44 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(List<AdminsListMabCardIdsResponse>?, string)> ListMabCardIds(AdminsListMabCardIdsRequest? request)
+        {
+            var (isValid, message) = ListMabCardIds_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var content = await this._daoDbContext
+                .Cards
+                .AsNoTracking()
+                .Select(a => new AdminsListMabCardIdsResponse
+                {
+                    CardId = a.Id,
+                    CardName = a.Name,                 
+                })
+                .OrderBy(a => a.CardName)                
+                .ToListAsync();
+
+            if (content == null || content.Count == 0)
+            {
+                return (null, "Error: no cards were found");
+            }
+
+            return (content, "All card ids listed successfully");
+        }
+        private static (bool, string) ListMabCardIds_Validation(AdminsListMabCardIdsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         public (List<AdminsListMabCardTypesResponse>?, string) ListMabCardTypes(AdminsListMabCardTypesRequest? request)
         {
             var (isValid, message) = ListMabCardTypes_Validation(request);
@@ -1987,6 +2021,7 @@ namespace BoardGameGeekLike.Services
                     NpcName = a.Name,
                     Description = a.Description,
                     Level = a.Level,
+                    DeckSize = Constants.DeckSize,
                     Cards = a
                         .Deck
                         .Select(b => new AdminsShowMabNpcDetailsResponse_card
@@ -2167,6 +2202,87 @@ namespace BoardGameGeekLike.Services
             {
                 return (false, $"Error: the NPC's deck can neither be empty nor contain fewer or more than {Constants.DeckSize} cards");
             }         
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsGetMabNpcLvlResponse?, string)> GetMabNpcLvl(AdminsGetMabNpcLvlRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = GetMabNpcLvl_Validation(request);
+
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            // Load unique cards from DB
+            var cardsDB = await _daoDbContext
+                .Cards
+                .Where(a => request.MabCardIds.Contains(a.Id))
+                .Select(a => new
+                {
+                    CardId = a.Id,
+                    CardPower = a.Power,
+                    IsDeleted = a.IsDeleted
+                })
+                .ToListAsync();
+
+            if (cardsDB == null || cardsDB.Count < 1)
+            {
+                return (null, "Error: cards not found!");
+            }
+
+            // Dictionary for fast lookup
+            var cardLookup = cardsDB.ToDictionary(a => a.CardId, a => new { a.CardPower, a.IsDeleted });
+
+            // Reconstruct the full list of card powers based on the original request (with duplicates)
+            var cardPowers = new List<int>();
+
+            foreach (var cardId in request.MabCardIds)
+            {
+                if (!cardLookup.TryGetValue(cardId, out var cardInfo) || cardInfo.IsDeleted == true)
+                {
+                    return (null, "Error: not all requested cards could be found!");
+                }
+
+                cardPowers.Add(cardInfo.CardPower);
+            }
+
+            if (cardPowers.Count != Constants.DeckSize)
+            {
+                return (null, "Error: deck size is invalid!");
+            }
+
+            int? calculatedNMabNpcLevel = Helper.GetNpcLevel(cardPowers);
+
+            if (calculatedNMabNpcLevel == null || calculatedNMabNpcLevel < 0 || calculatedNMabNpcLevel > 9)
+            {
+                return (null, "Error: something went wrong while calculating NPC level!");
+            }
+
+            return (new AdminsGetMabNpcLvlResponse
+            {
+                MabNpcLvl = calculatedNMabNpcLevel
+            }, "Mab NPC level calculated successfully");
+        }
+        private static (bool, string) GetMabNpcLvl_Validation(AdminsGetMabNpcLvlRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: no information provided");
+            }              
+
+            if (request.MabCardIds == null || request.MabCardIds.Count != Constants.DeckSize)
+            {
+                return (false, $"Error: the number of cards necessary for calculating the mab npc level must be: {Constants.DeckSize}");
+            }
 
             return (true, string.Empty);
         }
