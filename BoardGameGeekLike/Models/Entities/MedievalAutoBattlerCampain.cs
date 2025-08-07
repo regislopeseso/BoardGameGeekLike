@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("playersSaves")]
-    public class PlayerSave
+    [Table("mabCampains")]
+    public class MedievalAutoBattlerCampain
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -33,15 +33,15 @@ namespace BoardGameGeekLike.Models.Entities
 
 
         [ForeignKey("User")]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
         public User? User { get; set; }
 
 
-        [InverseProperty("Save")]
+        [InverseProperty("PlayerCardEntries")]
         public List<PlayerCardEntry> PlayerCardEntries { get; set; }
 
 
-        [InverseProperty("Save")]
+        [InverseProperty("Decks")]
         public List<Deck> Decks { get; set; }        
     }
 }

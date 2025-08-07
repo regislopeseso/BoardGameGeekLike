@@ -27,13 +27,13 @@ namespace BoardGameGeekLike.Models
 
         public DbSet<Card> Cards { get; set; }
 
-        public DbSet<PlayerCardEntry> MPlayerCardEntry { get; set; }
+        public DbSet<PlayerCardEntry> PlayerCardEntry { get; set; }
 
         public DbSet<Deck> Decks { get; set; }
 
         public DbSet<PlayerDeckEntry> PlayerDeckEntries { get; set; }
 
-        public DbSet<PlayerSave> Saves { get; set; }
+        public DbSet<MedievalAutoBattlerCampain> MabCampains { get; set; }
 
         public DbSet<Npc> Npcs { get; set; }
 

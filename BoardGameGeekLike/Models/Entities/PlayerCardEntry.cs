@@ -14,7 +14,7 @@ namespace BoardGameGeekLike.Models.Entities
         [ForeignKey("Save")]
         public int SaveId { get; set; }
         [InverseProperty("PlayerCardEntries")]
-        public PlayerSave Save { get; set; }
+        public MedievalAutoBattlerCampain Save { get; set; }
 
 
         [ForeignKey("Card")]

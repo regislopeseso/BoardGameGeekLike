@@ -22,7 +22,7 @@ namespace BoardGameGeekLike.Controllers
             this._devsService = devsService;     
         }
 
-        #region BoardGames
+        #region  BOARD GAMES
 
         [HttpPost]
         public async Task<IActionResult> BoardGamesSeed(DevsBoardGamesSeedRequest? request)
@@ -54,7 +54,9 @@ namespace BoardGameGeekLike.Controllers
 
         #endregion
 
-        #region Medieval Auto Battler
+        #region PLAYABLE GAMES
+        
+        // Medieval Auto Battler (M.A.B.)
 
         [HttpPost]
         public async Task<IActionResult> MedievalAutoBattlerSeed(DevsMedievalAutoBattlerSeedRequest request)

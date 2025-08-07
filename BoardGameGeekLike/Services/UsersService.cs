@@ -5399,5 +5399,140 @@ namespace BoardGameGeekLike.Services
         #endregion
 
         #endregion
+
+
+        #region PLAYABLE GAMES
+
+        public async Task<(UsersStartMabCampainResponse?, string)> StartMabCampain(UsersStartMabCampainRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = StartMabCampain_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var newMabCampain = new MedievalAutoBattlerCampain
+            {
+                UserId = userId,
+                Name = request!.PlayerNickName!
+            };
+
+            var initialSaveCardEntries = new List<PlayerCardEntry>();
+            (initialSaveCardEntries, message) = await GetInitialMabCampainCardEntries(newMabCampain.Id);
+            if (initialSaveCardEntries == null || initialSaveCardEntries.Count == 0)
+            {
+                return (null, message);
+            }
+
+            var initialSaveDeckEntries = new List<PlayerDeckEntry>();
+            (initialSaveDeckEntries, message) = GetInitialMabCampainDeckEntries(initialSaveCardEntries);
+            if (initialSaveDeckEntries == null || initialSaveDeckEntries.Count == 0)
+            {
+                return (null, message);
+            }
+
+            newMabCampain.PlayerCardEntries = initialSaveCardEntries;
+
+            newMabCampain.Decks = new List<Deck>()
+            {
+                new Deck
+                {
+                    Name = "Initial Deck",
+                    PlayerDeckEntries = initialSaveDeckEntries
+                }
+            };
+
+            this._daoDbContext.MabCampains.Add(newMabCampain);
+
+            var isCampainStartedSuccessfully = await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersStartMabCampainResponse
+            {
+                MabCampainId = newMabCampain.Id,
+            }, "New Medieval Auto Battler Campain started successfully!");
+        }
+        private static (bool, string) StartMabCampain_Validation(UsersStartMabCampainRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.PlayerNickName) == true)
+            {
+                return (false, "Error: PlayerNickName is null or empty");
+            }         
+
+            return (true, string.Empty);
+        }
+        private async Task<(List<PlayerCardEntry>?, string)> GetInitialMabCampainCardEntries(int mabCampainId)
+        {
+            var validInitialMabCardsDB = await _daoDbContext
+                                    .Cards
+                                    .Where(a => a.Power + a.UpperHand < 5 && a.IsDeleted == false)
+                                    .Select(a => a.Id)
+                                    .ToListAsync();
+
+            if (validInitialMabCardsDB == null || validInitialMabCardsDB.Count == 0)
+            {
+                return (null, "Error: no mab cards having power + upper hand < 5 were found");
+            }
+
+            var random = new Random();
+            var randomCardIds = new List<int>();
+
+            while (randomCardIds.Count < Constants.DeckSize)
+            {
+                randomCardIds.Add(validInitialMabCardsDB[random.Next(validInitialMabCardsDB.Count)]);
+            }
+
+            var initialSaveCardEntries = new List<PlayerCardEntry>();
+
+            foreach (var cardId in randomCardIds)
+            {
+                if (cardId == 0)
+                {
+                    return (null, "Error: invalid mab cardId for initial SaveCardEntries");
+                }
+
+                initialSaveCardEntries.Add(new PlayerCardEntry()
+                {
+                    SaveId = mabCampainId,
+                    CardId = cardId,
+                });
+            }
+
+            return (initialSaveCardEntries, string.Empty);
+        }
+        private (List<PlayerDeckEntry>?, string) GetInitialMabCampainDeckEntries(List<PlayerCardEntry> initialMabCampainCardEntries)
+        {
+            var initialMabCampainDeckEntries = new List<PlayerDeckEntry>();
+
+            foreach (var initialMabCampainDeckEntry in initialMabCampainCardEntries)
+            {
+                initialMabCampainDeckEntries.Add(new PlayerDeckEntry()
+                {
+                    PlayerCardEntry = initialMabCampainDeckEntry
+                });
+            }
+
+            if (initialMabCampainDeckEntries.Count == 0)
+            {
+                return (null, "Error: invalid mabCardId for initial deck");
+            }
+
+            return (initialMabCampainDeckEntries, string.Empty);
+        }
+
+
+        #endregion
     }
 }

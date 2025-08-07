@@ -292,8 +292,10 @@ namespace BoardGameGeekLike.Controllers
         #endregion
 
 
-        #region Medieval Auto Battler  (MAB)
+        #region PLAYABLE GAMES
 
+        // Medieval Auto Battler  (MAB)
+        
         //MAB CARDS
 
         [HttpPost]

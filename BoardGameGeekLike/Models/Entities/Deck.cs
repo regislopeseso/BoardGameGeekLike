@@ -15,7 +15,7 @@ namespace BoardGameGeekLike.Models.Entities
         public List<PlayerDeckEntry> PlayerDeckEntries { get; set; }
 
         [InverseProperty("Decks")]
-        public PlayerSave Save { get; set; }
+        public MedievalAutoBattlerCampain Save { get; set; }
 
         public bool IsDeleted { get; set; } = false;
     }

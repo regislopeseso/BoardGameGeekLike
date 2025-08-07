@@ -33,7 +33,7 @@ namespace BoardGameGeekLike.Models.Entities
 
 
         [InverseProperty("User")]
-        public List<PlayerSave>? PlayerSaves { get; set; }
+        public List<MedievalAutoBattlerCampain>? MabCampains { get; set; }
 
 
         [InverseProperty("User")]

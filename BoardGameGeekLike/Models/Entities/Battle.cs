@@ -19,7 +19,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey("Save")]
         public int SaveId { get; set; }
-        public PlayerSave Save { get; set; }
+        public MedievalAutoBattlerCampain Save { get; set; }
 
 
         [ForeignKey("Npc")]
