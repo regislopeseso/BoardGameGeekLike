@@ -494,7 +494,19 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public IActionResult GetDeckSizeLimit(AdminsGetDeckSizeLimitRequest? request)
+        {
+            var (content, message) = this._adminsService.GetDeckSizeLimit(request);
 
+            var response = new Response<AdminsGetDeckSizeLimitResponse?>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpDelete]
         public async Task<IActionResult> DeleteMabNpc([FromBody] AdminsDeleteMabNpcRequest? request)

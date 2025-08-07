@@ -6,9 +6,7 @@
 
         public string? Description { get; set; }
 
-        public int? Level { get; set; }
-
-        public int? DeckSize { get; set; }
+        public int? Level { get; set; }        
 
         public List<AdminsShowMabNpcDetailsResponse_card>? Cards { get; set; }
     }

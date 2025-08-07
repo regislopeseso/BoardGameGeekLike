@@ -1431,6 +1431,7 @@ namespace BoardGameGeekLike.Services
                 CardName = mabCardDB.Name,
                 CardPower = mabCardDB.Power,
                 CardUpperHand = mabCardDB.UpperHand,
+                CardLevel = mabCardDB.Level,
                 CardType = mabCardDB.Type,
             }, "Mab Card details fetched successfully!");
         }
@@ -1487,6 +1488,7 @@ namespace BoardGameGeekLike.Services
             cardDB.Name = request.CardName;
             cardDB.Power = request.CardPower;
             cardDB.UpperHand = request.CardUpperHand;
+            cardDB.Level = Helper.GetCardLevel(request.CardPower, request.CardUpperHand);
             cardDB.Type = request.CardType;
 
             var savingSucceded = await this._daoDbContext.SaveChangesAsync();
@@ -2016,12 +2018,12 @@ namespace BoardGameGeekLike.Services
 
             var mabNpcDB = await this._daoDbContext
                 .Npcs
+                .Where(a => a.Id == request!.NpcId)
                 .Select(a => new AdminsShowMabNpcDetailsResponse
                 {
                     NpcName = a.Name,
                     Description = a.Description,
-                    Level = a.Level,
-                    DeckSize = Constants.DeckSize,
+                    Level = a.Level,                    
                     Cards = a
                         .Deck
                         .Select(b => new AdminsShowMabNpcDetailsResponse_card
@@ -2069,6 +2071,13 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
+            var (isValid, message) = ListMabNpcs_Validation(request);
+
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
             var npcsDB = await this._daoDbContext
                 .Npcs
                 .AsNoTracking()
@@ -2100,7 +2109,7 @@ namespace BoardGameGeekLike.Services
 
             return (npcsDB, "NPCs listed successfully");
         }
-        public (bool, string) GetNpcs_Validation(AdminsListMabNpcsRequest? request)
+        public (bool, string) ListMabNpcs_Validation(AdminsListMabNpcsRequest? request)
         {
             if (request != null)
             {
@@ -2206,6 +2215,7 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+
         public async Task<(AdminsGetMabNpcLvlResponse?, string)> GetMabNpcLvl(AdminsGetMabNpcLvlRequest request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -2282,6 +2292,35 @@ namespace BoardGameGeekLike.Services
             if (request.MabCardIds == null || request.MabCardIds.Count != Constants.DeckSize)
             {
                 return (false, $"Error: the number of cards necessary for calculating the mab npc level must be: {Constants.DeckSize}");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public (AdminsGetDeckSizeLimitResponse?, string) GetDeckSizeLimit(AdminsGetDeckSizeLimitRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = GetDeckSizeLimit_Validation(request);
+
+            if (!isValid)
+            {
+                return (null, message);
+            } 
+
+            return (new AdminsGetDeckSizeLimitResponse(), "Deck sized limit fetchted successfully");
+        }
+        public (bool, string) GetDeckSizeLimit_Validation(AdminsGetDeckSizeLimitRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null however it MUST be null!");
             }
 
             return (true, string.Empty);
