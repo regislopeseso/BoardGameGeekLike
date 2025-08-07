@@ -404,6 +404,7 @@ namespace BoardGameGeekLike.Services
         private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedCards()
         {
             var cardsSeed = new List<Card>();
+            var cardsCount = 1;
 
             foreach (var cardType in new[] { MabCardType.Neutral, MabCardType.Ranged, MabCardType.Cavalry, MabCardType.Infantry })
             {
@@ -411,22 +412,32 @@ namespace BoardGameGeekLike.Services
                 {
                     for (int upperHand = Constants.MinCardUpperHand; upperHand <= Constants.MaxCardUpperHand; upperHand++)
                     {
-                        var cardName = cardType.ToString()[0] == 'R' ?
-                            "Bow" : cardType.ToString()[0] == 'C' ? 
-                            "Spear": cardType.ToString()[0] == 'I' ?
+                        var cardName = cardsCount < 10 ? 
+                            "(MAB00" + cardsCount + ") " : 
+                            (cardsCount >= 10 && cardsCount < 100) ? 
+                            "(MAB0" + cardsCount + ") " : 
+                            "(MAB" + cardsCount + ") ";
+
+                         cardName += cardType.ToString()[0] == 'R' ?
+                            "Bow" : cardType.ToString()[0] == 'C' ?
+                            "Spear" : cardType.ToString()[0] == 'I' ?
                             "Sword" : "Fist";
+
+                        var cardLevel = Helper.GetCardLevel(power, upperHand);
 
                         var newCard = new Card
                         {
-                            Name = cardName + " *" + power + "|" + upperHand + "*",
+                            Name = cardName,
                             Power = power,
                             UpperHand = upperHand,
-                            Level = Helper.GetCardLevel(power, upperHand),
+                            Level = cardLevel,
                             Type = cardType,
                             IsDeleted = false,
                             IsDummy = true
                         };
                         cardsSeed.Add(newCard);
+
+                        cardsCount++;
                     }
                 }
             }

@@ -1656,9 +1656,10 @@ namespace BoardGameGeekLike.Services
                     IsDeleted = a.IsDeleted,
                 })
                 .OrderBy(a => a.IsDeleted)
-                .ThenBy(a => a.CardPower)
                 .ThenBy(a => a.CardName)
+                .ThenBy(a => a.CardLevel)
                 .ThenBy(a => a.CardType)
+                .ThenBy(a => a.CardPower)
                 .ThenBy(a => a.CardUpperHand)
                 .ToListAsync();
 
@@ -2239,7 +2240,7 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new
                 {
                     CardId = a.Id,
-                    CardPower = a.Power,
+                    CardLvl = a.Level,
                     IsDeleted = a.IsDeleted
                 })
                 .ToListAsync();
@@ -2250,19 +2251,19 @@ namespace BoardGameGeekLike.Services
             }
 
             // Dictionary for fast lookup
-            var cardLookup = cardsDB.ToDictionary(a => a.CardId, a => new { a.CardPower, a.IsDeleted });
+            var cardLookup = cardsDB.ToDictionary(a => a.CardId, a => new { a.CardLvl, a.IsDeleted });
 
             // Reconstruct the full list of card powers based on the original request (with duplicates)
             var cardPowers = new List<int>();
 
-            foreach (var cardId in request.MabCardIds)
+            foreach (var cardId in request.MabCardIds!)
             {
                 if (!cardLookup.TryGetValue(cardId, out var cardInfo) || cardInfo.IsDeleted == true)
                 {
                     return (null, "Error: not all requested cards could be found!");
                 }
 
-                cardPowers.Add(cardInfo.CardPower);
+                cardPowers.Add(cardInfo.CardLvl);
             }
 
             if (cardPowers.Count != Constants.DeckSize)
