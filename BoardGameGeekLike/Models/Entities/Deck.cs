@@ -9,14 +9,17 @@ namespace BoardGameGeekLike.Models.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        
         public required string Name { get; set; }
+        
+        public bool IsDeleted { get; set; } = false;
 
+        
         [InverseProperty("Deck")]
         public List<PlayerDeckEntry> PlayerDeckEntries { get; set; }
 
-        [InverseProperty("Decks")]
-        public MedievalAutoBattlerCampain Save { get; set; }
 
-        public bool IsDeleted { get; set; } = false;
+        [InverseProperty("Decks")]
+        public MedievalAutoBattlerCampaign MabCampaign { get; set; }
     }
 }

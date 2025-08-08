@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("mabCampains")]
-    public class MedievalAutoBattlerCampain
+    [Table("mabCampaigns")]
+    public class MedievalAutoBattlerCampaign
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -37,11 +37,11 @@ namespace BoardGameGeekLike.Models.Entities
         public User? User { get; set; }
 
 
-        [InverseProperty("PlayerCardEntries")]
+        [InverseProperty("MabCampaign")]
         public List<PlayerCardEntry> PlayerCardEntries { get; set; }
 
 
-        [InverseProperty("Decks")]
+        [InverseProperty("MabCampaign")]
         public List<Deck> Decks { get; set; }        
     }
 }

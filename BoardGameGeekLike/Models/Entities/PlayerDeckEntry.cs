@@ -10,9 +10,11 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+
         [ForeignKey("PlayerCardEntry")]
         public int PlayerCardEntryId { get; set; }
         public PlayerCardEntry PlayerCardEntry { get; set; }
+
 
         [InverseProperty(("PlayerDeckEntries"))]
         public Deck Deck { get; set; }

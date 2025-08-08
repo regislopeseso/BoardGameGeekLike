@@ -17,9 +17,9 @@ namespace BoardGameGeekLike.Models.Entities
         public bool IsFinished { get; set; } = false;
 
 
-        [ForeignKey("Save")]
-        public int SaveId { get; set; }
-        public MedievalAutoBattlerCampain Save { get; set; }
+        [ForeignKey("MedievalAutoBattlerCampaign")]
+        public int MabCampaignId { get; set; }
+        public MedievalAutoBattlerCampaign MabCampaign { get; set; }
 
 
         [ForeignKey("Npc")]

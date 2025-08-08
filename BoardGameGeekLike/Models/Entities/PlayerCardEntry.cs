@@ -10,11 +10,10 @@ namespace BoardGameGeekLike.Models.Entities
         public bool IsDeleted { get; set; } = false;
 
 
-
-        [ForeignKey("Save")]
-        public int SaveId { get; set; }
+        [ForeignKey("MedievalAutoBattlerCampaign")]
+        public int MabCampaignId { get; set; }
         [InverseProperty("PlayerCardEntries")]
-        public MedievalAutoBattlerCampain Save { get; set; }
+        public MedievalAutoBattlerCampaign MabCampaign { get; set; }
 
 
         [ForeignKey("Card")]

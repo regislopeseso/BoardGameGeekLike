@@ -5419,7 +5419,7 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var newMabCampain = new MedievalAutoBattlerCampain
+            var newMabCampain = new MedievalAutoBattlerCampaign
             {
                 UserId = userId,
                 Name = request!.PlayerNickName!
@@ -5450,7 +5450,7 @@ namespace BoardGameGeekLike.Services
                 }
             };
 
-            this._daoDbContext.MabCampains.Add(newMabCampain);
+            this._daoDbContext.MabCampaigns.Add(newMabCampain);
 
             var isCampainStartedSuccessfully = await this._daoDbContext.SaveChangesAsync();
 
@@ -5505,7 +5505,7 @@ namespace BoardGameGeekLike.Services
 
                 initialSaveCardEntries.Add(new PlayerCardEntry()
                 {
-                    SaveId = mabCampainId,
+                    MabCampaignId = mabCampainId,
                     CardId = cardId,
                 });
             }
