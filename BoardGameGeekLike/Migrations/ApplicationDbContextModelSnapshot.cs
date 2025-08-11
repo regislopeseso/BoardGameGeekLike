@@ -51,7 +51,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("NpcId");
 
-                    b.ToTable("battles", (string)null);
+                    b.ToTable("battles");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGame", b =>
@@ -104,7 +104,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("boardgames", (string)null);
+                    b.ToTable("boardgames");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Card", b =>
@@ -139,7 +139,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("cards", (string)null);
+                    b.ToTable("cards");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Category", b =>
@@ -161,7 +161,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("categories", (string)null);
+                    b.ToTable("categories");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Deck", b =>
@@ -186,7 +186,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("MabCampaignId");
 
-                    b.ToTable("decks", (string)null);
+                    b.ToTable("decks");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
@@ -245,7 +245,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LifeCounterManagers", (string)null);
+                    b.ToTable("LifeCounterManagers");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterPlayer", b =>
@@ -284,7 +284,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("LifeCounterManagerId");
 
-                    b.ToTable("LifeCounterPlayers", (string)null);
+                    b.ToTable("LifeCounterPlayers");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterTemplate", b =>
@@ -326,7 +326,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LifeCounterTemplates", (string)null);
+                    b.ToTable("LifeCounterTemplates");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>
@@ -349,7 +349,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("mechanics", (string)null);
+                    b.ToTable("mechanics");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", b =>
@@ -378,6 +378,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("CountVictories")
                         .HasColumnType("int");
 
+                    b.Property<byte>("Difficulty")
+                        .HasColumnType("tinyint unsigned");
+
                     b.Property<int>("Gold")
                         .HasColumnType("int");
 
@@ -398,7 +401,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("mabCampaigns", (string)null);
+                    b.ToTable("mabCampaigns");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Npc", b =>
@@ -428,7 +431,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("npcs", (string)null);
+                    b.ToTable("npcs");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.NpcDeckEntry", b =>
@@ -454,7 +457,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("NpcId");
 
-                    b.ToTable("npcDeckEntries", (string)null);
+                    b.ToTable("npcDeckEntries");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.PlayerCardEntry", b =>
@@ -480,7 +483,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("MabCampaignId");
 
-                    b.ToTable("playerCardEntries", (string)null);
+                    b.ToTable("playerCardEntries");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.PlayerDeckEntry", b =>
@@ -506,7 +509,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("PlayerCardEntryId");
 
-                    b.ToTable("playerDeckEntries", (string)null);
+                    b.ToTable("playerDeckEntries");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
@@ -532,7 +535,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ratings", (string)null);
+                    b.ToTable("ratings");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Session", b =>
@@ -568,7 +571,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("sessions", (string)null);
+                    b.ToTable("sessions");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
@@ -665,7 +668,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasIndex("MechanicsId");
 
-                    b.ToTable("BoardGameMechanic", (string)null);
+                    b.ToTable("BoardGameMechanic");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

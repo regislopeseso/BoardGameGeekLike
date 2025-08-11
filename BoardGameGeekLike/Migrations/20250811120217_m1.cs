@@ -308,7 +308,7 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "mabCampains",
+                name: "mabCampaigns",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -316,6 +316,7 @@ namespace BoardGameGeekLike.Migrations
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     PlayerLevel = table.Column<int>(type: "int", nullable: false),
+                    Difficulty = table.Column<byte>(type: "tinyint unsigned", nullable: false),
                     Gold = table.Column<int>(type: "int", nullable: false),
                     CountMatches = table.Column<int>(type: "int", nullable: false),
                     CountVictories = table.Column<int>(type: "int", nullable: false),
@@ -324,18 +325,17 @@ namespace BoardGameGeekLike.Migrations
                     AllCardsCollectedTrophy = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AllNpcsDefeatedTrophy = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    UserId = table.Column<string>(type: "varchar(255)", nullable: false)
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_mabCampains", x => x.Id);
+                    table.PrimaryKey("PK_mabCampaigns", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_mabCampains_AspNetUsers_UserId",
+                        name: "FK_mabCampaigns_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -449,16 +449,16 @@ namespace BoardGameGeekLike.Migrations
                     Results = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    SaveId = table.Column<int>(type: "int", nullable: false),
+                    MabCampaignId = table.Column<int>(type: "int", nullable: false),
                     NpcId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_battles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_battles_mabCampains_SaveId",
-                        column: x => x.SaveId,
-                        principalTable: "mabCampains",
+                        name: "FK_battles_mabCampaigns_MabCampaignId",
+                        column: x => x.MabCampaignId,
+                        principalTable: "mabCampaigns",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -478,16 +478,16 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    SaveId = table.Column<int>(type: "int", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    MabCampaignId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_decks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_decks_mabCampains_SaveId",
-                        column: x => x.SaveId,
-                        principalTable: "mabCampains",
+                        name: "FK_decks_mabCampaigns_MabCampaignId",
+                        column: x => x.MabCampaignId,
+                        principalTable: "mabCampaigns",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -500,7 +500,7 @@ namespace BoardGameGeekLike.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    SaveId = table.Column<int>(type: "int", nullable: false),
+                    MabCampaignId = table.Column<int>(type: "int", nullable: false),
                     CardId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -513,9 +513,9 @@ namespace BoardGameGeekLike.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_playerCardEntries_mabCampains_SaveId",
-                        column: x => x.SaveId,
-                        principalTable: "mabCampains",
+                        name: "FK_playerCardEntries_mabCampaigns_MabCampaignId",
+                        column: x => x.MabCampaignId,
+                        principalTable: "mabCampaigns",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -700,14 +700,14 @@ namespace BoardGameGeekLike.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_battles_MabCampaignId",
+                table: "battles",
+                column: "MabCampaignId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_battles_NpcId",
                 table: "battles",
                 column: "NpcId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_battles_SaveId",
-                table: "battles",
-                column: "SaveId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BoardGameMechanic_MechanicsId",
@@ -720,9 +720,9 @@ namespace BoardGameGeekLike.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_decks_SaveId",
+                name: "IX_decks_MabCampaignId",
                 table: "decks",
-                column: "SaveId");
+                column: "MabCampaignId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LifeCounterManagers_LifeCounterTemplateId",
@@ -745,8 +745,8 @@ namespace BoardGameGeekLike.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_mabCampains_UserId",
-                table: "mabCampains",
+                name: "IX_mabCampaigns_UserId",
+                table: "mabCampaigns",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -765,9 +765,9 @@ namespace BoardGameGeekLike.Migrations
                 column: "CardId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_playerCardEntries_SaveId",
+                name: "IX_playerCardEntries_MabCampaignId",
                 table: "playerCardEntries",
-                column: "SaveId");
+                column: "MabCampaignId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_playerDeckEntries_DeckId",
@@ -867,7 +867,7 @@ namespace BoardGameGeekLike.Migrations
                 name: "cards");
 
             migrationBuilder.DropTable(
-                name: "mabCampains");
+                name: "mabCampaigns");
 
             migrationBuilder.DropTable(
                 name: "categories");

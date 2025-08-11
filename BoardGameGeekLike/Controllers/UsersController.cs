@@ -752,11 +752,11 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
-        public async Task<IActionResult> StartMabCampain([FromForm] UsersStartMabCampainRequest? request)
+        public async Task<IActionResult> StartMabCampaign([FromForm] UsersStartMabCampaignRequest? request)
         {
-            var (content, message) = await this._usersService.StartMabCampain(request);
+            var (content, message) = await this._usersService.StartMabCampaign(request);
 
-            var response = new Response<UsersStartMabCampainResponse>
+            var response = new Response<UsersStartMabCampaignResponse>
             {
                 Content = content,
                 Message = message
@@ -765,6 +765,19 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
+        {
+            var (content, message) = await this._usersService.ShowMabCampaignStatistics(request);
+
+            var response = new Response<UsersShowMabCampaignStatisticsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         #endregion
 

@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersStartMabCampainResponse
+    public class UsersStartMabCampaignResponse
     {
         public int? MabCampainId { get; set; }
     }

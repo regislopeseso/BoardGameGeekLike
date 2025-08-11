@@ -5403,7 +5403,7 @@ namespace BoardGameGeekLike.Services
 
         #region PLAYABLE GAMES
 
-        public async Task<(UsersStartMabCampainResponse?, string)> StartMabCampain(UsersStartMabCampainRequest? request)
+        public async Task<(UsersStartMabCampaignResponse?, string)> StartMabCampaign(UsersStartMabCampaignRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -5412,7 +5412,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = StartMabCampain_Validation(request);
+            var (isValid, message) = StartMabCampaign_Validation(request);
 
             if (isValid == false)
             {
@@ -5422,18 +5422,19 @@ namespace BoardGameGeekLike.Services
             var newMabCampain = new MedievalAutoBattlerCampaign
             {
                 UserId = userId,
-                Name = request!.PlayerNickName!
+                MabPlayerNickName = request!.MabPlayerNickName!,
+                Difficulty = request.MabCampaignDifficulty
             };
 
             var initialSaveCardEntries = new List<PlayerCardEntry>();
-            (initialSaveCardEntries, message) = await GetInitialMabCampainCardEntries(newMabCampain.Id);
+            (initialSaveCardEntries, message) = await GetInitialMabCampaignCardEntries(newMabCampain.Id);
             if (initialSaveCardEntries == null || initialSaveCardEntries.Count == 0)
             {
                 return (null, message);
             }
 
             var initialSaveDeckEntries = new List<PlayerDeckEntry>();
-            (initialSaveDeckEntries, message) = GetInitialMabCampainDeckEntries(initialSaveCardEntries);
+            (initialSaveDeckEntries, message) = GetInitialMabCampaignDeckEntries(initialSaveCardEntries);
             if (initialSaveDeckEntries == null || initialSaveDeckEntries.Count == 0)
             {
                 return (null, message);
@@ -5454,26 +5455,26 @@ namespace BoardGameGeekLike.Services
 
             var isCampainStartedSuccessfully = await this._daoDbContext.SaveChangesAsync();
 
-            return (new UsersStartMabCampainResponse
+            return (new UsersStartMabCampaignResponse
             {
                 MabCampainId = newMabCampain.Id,
             }, "New Medieval Auto Battler Campain started successfully!");
         }
-        private static (bool, string) StartMabCampain_Validation(UsersStartMabCampainRequest? request)
+        private static (bool, string) StartMabCampaign_Validation(UsersStartMabCampaignRequest? request)
         {
             if (request == null)
             {
                 return (false, "Error: request is null");
             }
 
-            if (string.IsNullOrWhiteSpace(request.PlayerNickName) == true)
+            if (string.IsNullOrWhiteSpace(request.MabPlayerNickName) == true)
             {
-                return (false, "Error: PlayerNickName is null or empty");
+                return (false, "Error: MabPlayerNickName is null or empty");
             }         
 
             return (true, string.Empty);
         }
-        private async Task<(List<PlayerCardEntry>?, string)> GetInitialMabCampainCardEntries(int mabCampainId)
+        private async Task<(List<PlayerCardEntry>?, string)> GetInitialMabCampaignCardEntries(int mabCampaignId)
         {
             var validInitialMabCardsDB = await _daoDbContext
                                     .Cards
@@ -5505,18 +5506,18 @@ namespace BoardGameGeekLike.Services
 
                 initialSaveCardEntries.Add(new PlayerCardEntry()
                 {
-                    MabCampaignId = mabCampainId,
+                    MabCampaignId = mabCampaignId,
                     CardId = cardId,
                 });
             }
 
             return (initialSaveCardEntries, string.Empty);
         }
-        private (List<PlayerDeckEntry>?, string) GetInitialMabCampainDeckEntries(List<PlayerCardEntry> initialMabCampainCardEntries)
+        private (List<PlayerDeckEntry>?, string) GetInitialMabCampaignDeckEntries(List<PlayerCardEntry> initialMabCampaignCardEntries)
         {
             var initialMabCampainDeckEntries = new List<PlayerDeckEntry>();
 
-            foreach (var initialMabCampainDeckEntry in initialMabCampainCardEntries)
+            foreach (var initialMabCampainDeckEntry in initialMabCampaignCardEntries)
             {
                 initialMabCampainDeckEntries.Add(new PlayerDeckEntry()
                 {
@@ -5531,6 +5532,63 @@ namespace BoardGameGeekLike.Services
 
             return (initialMabCampainDeckEntries, string.Empty);
         }
+
+        public async Task<(UsersShowMabCampaignStatisticsResponse?, string)> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowMabCampaignStatistics_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns
+                .FindAsync(request!.MabCampaignId);
+
+            if(mabCampaignDB == null)
+            {
+                return (null, "Error: Mab Campaign not found");
+            }
+
+            if(mabCampaignDB.IsDeleted == true)
+            {
+                return (null, "Error: requested Mab Campaign is already finished");
+            }
+
+            return (new UsersShowMabCampaignStatisticsResponse { 
+                MabPlayerNickName = mabCampaignDB.MabPlayerNickName,
+                MabCampaignDifficulty = mabCampaignDB.Difficulty,
+                Goldstash = mabCampaignDB.GoldStash,
+
+
+                    
+            
+            },"Mab Campaign Statistics fetched successfully!");
+
+        }
+        private static (bool, string) ShowMabCampaignStatistics_Validation(UsersShowMabCampaignStatisticsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (request.MabCampaignId == null || request.MabCampaignId < 1)
+            {
+                return (false, "Error: MabCampaignId is null or invalid");
+            }
+
+            return (true, string.Empty);
+        }
+
 
 
         #endregion

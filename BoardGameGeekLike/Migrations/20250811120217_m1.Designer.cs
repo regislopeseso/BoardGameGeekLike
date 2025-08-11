@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250808122610_m3")]
-    partial class m3
+    [Migration("20250811120217_m1")]
+    partial class m1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -380,6 +380,9 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<int>("CountVictories")
                         .HasColumnType("int");
+
+                    b.Property<byte>("Difficulty")
+                        .HasColumnType("tinyint unsigned");
 
                     b.Property<int>("Gold")
                         .HasColumnType("int");

@@ -11,11 +11,13 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public required string Name { get; set; }
+        public required string MabPlayerNickName { get; set; }
 
-        public int PlayerLevel { get; set; }
+        public int MabPlayerLevel { get; set; }
 
-        public int Gold { get; set; }
+        public MabCampaignDifficulty Difficulty{ get; set; }
+
+        public int GoldStash { get; set; }
 
         public int CountMatches { get; set; }
 
