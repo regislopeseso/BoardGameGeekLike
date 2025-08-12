@@ -32,9 +32,9 @@ namespace BoardGameGeekLike.Models.Entities
         public List<Rating>? Ratings { get; set; }
 
 
-        [InverseProperty("User")]
-        public List<MedievalAutoBattlerCampaign>? MabCampains { get; set; }
-
+        [InverseProperty("User")]        
+        public MabCampaign? MabCampaign { get; set; }
+       
 
         [InverseProperty("User")]
         public List<LifeCounterTemplate>? LifeCounterTemplates { get; set; }

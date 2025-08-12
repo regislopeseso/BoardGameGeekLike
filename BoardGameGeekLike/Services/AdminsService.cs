@@ -1334,7 +1334,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var exists = await this._daoDbContext
-                .Cards
+                .MabCards
                 .AnyAsync(a =>
                     a.Name.Trim().ToLower() == request.CardName.Trim().ToLower() && 
                     a.IsDeleted == false);
@@ -1344,7 +1344,7 @@ namespace BoardGameGeekLike.Services
                 return (null, $"Error: requested name is already taken, please choose another!");
             }
 
-            var newCard = new Card
+            var newCard = new MabCard
             {
                 Name = request.CardName,
                 Power = request.CardPower,
@@ -1418,7 +1418,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var mabCardDB = await this._daoDbContext
-                .Cards
+                .MabCards
                 .FindAsync(request!.CardId);
 
             if( mabCardDB == null )
@@ -1468,7 +1468,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var exist = await this._daoDbContext
-                                   .Cards
+                                   .MabCards
                                    .AnyAsync(a => a.Name.ToLower() == request.CardName.Trim().ToLower());
 
             if (exist == true)
@@ -1477,7 +1477,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var cardDB = await this._daoDbContext
-                                   .Cards
+                                   .MabCards
                                    .FirstOrDefaultAsync(a => a.Id == request.CardId && a.IsDeleted == false);
 
             if (cardDB == null)
@@ -1544,7 +1544,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var cardDB = await this._daoDbContext
-                .Cards
+                .MabCards
                 .FindAsync(request!.CardId);
 
             if (cardDB == null)
@@ -1593,7 +1593,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var cardDB = await this._daoDbContext
-                .Cards
+                .MabCards
                 .FindAsync(request!.CardId);
 
             if (cardDB == null)
@@ -1643,7 +1643,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var content = await this._daoDbContext
-                .Cards
+                .MabCards
                 .AsNoTracking()                
                 .Select(a => new AdminsListMabCardsResponse
                 {
@@ -1691,7 +1691,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var content = await this._daoDbContext
-                .Cards
+                .MabCards
                 .AsNoTracking()
                 .Select(a => new AdminsListMabCardIdsResponse
                 {
@@ -1767,7 +1767,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var contentQueriable = this._daoDbContext
-                                       .Cards
+                                       .MabCards
                                        .AsNoTracking()
                                        .Where(a => a.IsDeleted == false);
 
@@ -1936,7 +1936,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var exists = await _daoDbContext
-                .Npcs
+                .MabNpcs
                 .AnyAsync(a => a.Name == request.Name && a.IsDeleted == false);
 
             if (exists == true)
@@ -1951,7 +1951,7 @@ namespace BoardGameGeekLike.Services
                 return (null, ErrorMessage);
             }
 
-            var newNpc = new Npc
+            var newNpc = new MabNpc
             {
                 Name = request.Name,
                 Description = request.Description,
@@ -2018,7 +2018,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var mabNpcDB = await this._daoDbContext
-                .Npcs
+                .MabNpcs
                 .Where(a => a.Id == request!.NpcId)
                 .Select(a => new AdminsShowMabNpcDetailsResponse
                 {
@@ -2080,7 +2080,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var npcsDB = await this._daoDbContext
-                .Npcs
+                .MabNpcs
                 .AsNoTracking()
                 .Select(a => new AdminsGetNpcsResponse
                 {
@@ -2138,7 +2138,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var npcDB = await _daoDbContext
-                .Npcs
+                .MabNpcs
                 .Include(a => a.Deck)
                 .ThenInclude(b => b.Card)
                 .FirstOrDefaultAsync(a => a.Id == request.NpcId);
@@ -2154,7 +2154,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var availableCardIds = _daoDbContext
-                .Cards
+                .MabCards
                 .Where(a => a.IsDeleted == false)
                 .Select(a => a.Id)
                 .ToList();
@@ -2170,7 +2170,7 @@ namespace BoardGameGeekLike.Services
                 .ToList();
 
             await this._daoDbContext
-                .NpcDeckEntries
+                .MabNpcDeckEntries
                 .Where(a => oldCardIds.Contains(a.CardId) && a.NpcId == request.NpcId)
                 .ExecuteDeleteAsync();
             
@@ -2235,7 +2235,7 @@ namespace BoardGameGeekLike.Services
 
             // Load unique cards from DB
             var cardsDB = await _daoDbContext
-                .Cards
+                .MabCards
                 .Where(a => request.MabCardIds.Contains(a.Id))
                 .Select(a => new
                 {
@@ -2345,7 +2345,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var mabNpcDB = await this._daoDbContext
-                .Npcs
+                .MabNpcs
                 .FindAsync(request!.NpcId);
 
             if (mabNpcDB == null)
@@ -2402,7 +2402,7 @@ namespace BoardGameGeekLike.Services
             }
 
             var mabNpcDB = await this._daoDbContext
-                .Npcs
+                .MabNpcs
                 .FindAsync(request!.NpcId);
 
             if (mabNpcDB == null)
@@ -2441,10 +2441,10 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        private async Task<(List<NpcDeckEntry>?, string)> GenerateRandomDeck(List<int> mabCardIds)
+        private async Task<(List<MabNpcDeckEntry>?, string)> GenerateRandomDeck(List<int> mabCardIds)
         {
             var cardsDB = await _daoDbContext
-                .Cards
+                .MabCards
                 .Where(a => mabCardIds.Contains(a.Id) && a.IsDeleted == false)
                 .ToListAsync();
 
@@ -2468,7 +2468,7 @@ namespace BoardGameGeekLike.Services
                 return (null, $"Error: invalid cardId: {string.Join(" ,", notFoundIds)}");
             }
 
-            var newDeck = new List<NpcDeckEntry>();
+            var newDeck = new List<MabNpcDeckEntry>();
 
             foreach (var id in mabCardIds)
             {
@@ -2476,7 +2476,7 @@ namespace BoardGameGeekLike.Services
 
                 if (newCard != null)
                 {
-                    newDeck.Add(new NpcDeckEntry()
+                    newDeck.Add(new MabNpcDeckEntry()
                     {
                         Card = newCard,
                     });

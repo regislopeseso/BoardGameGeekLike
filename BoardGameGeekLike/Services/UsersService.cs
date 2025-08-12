@@ -5419,45 +5419,58 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var newMabCampain = new MedievalAutoBattlerCampaign
+            var anyUserUnfinishedCampaign = await this._daoDbContext
+                .MabCampaigns
+                .AnyAsync(a => a.UserId == userId && a.IsDeleted == false);
+            
+            if(anyUserUnfinishedCampaign == true)
+            {
+                return (null, "Error: there is already a campaign started by this user!");
+            }
+
+            var newMabCampaign = new MabCampaign
             {
                 UserId = userId,
-                MabPlayerNickName = request!.MabPlayerNickName!,
-                Difficulty = request.MabCampaignDifficulty
-            };
 
-            var initialSaveCardEntries = new List<PlayerCardEntry>();
-            (initialSaveCardEntries, message) = await GetInitialMabCampaignCardEntries(newMabCampain.Id);
-            if (initialSaveCardEntries == null || initialSaveCardEntries.Count == 0)
+                MabPlayerCardCopies = new List<MabPlayerCardCopy>(),
+                MabPlayerDecks = new List<MabPlayerDeck>()
+            };               
+
+            (var initialMabPlayerCardCopies, message) = await GetInicialMabPlayerCardCopies(newMabCampaign.Id);
+
+            if (initialMabPlayerCardCopies == null || initialMabPlayerCardCopies.Count == 0)
             {
                 return (null, message);
             }
 
-            var initialSaveDeckEntries = new List<PlayerDeckEntry>();
-            (initialSaveDeckEntries, message) = GetInitialMabCampaignDeckEntries(initialSaveCardEntries);
-            if (initialSaveDeckEntries == null || initialSaveDeckEntries.Count == 0)
+            var newMabPlayerDeck = new MabPlayerDeck
             {
-                return (null, message);
-            }
-
-            newMabCampain.PlayerCardEntries = initialSaveCardEntries;
-
-            newMabCampain.Decks = new List<Deck>()
-            {
-                new Deck
-                {
-                    Name = "Initial Deck",
-                    PlayerDeckEntries = initialSaveDeckEntries
-                }
+                Name = "Inicial Deck",
+                MabPlayerCardCopies = initialMabPlayerCardCopies,
+                IsActive = true
             };
+            
+            newMabCampaign.MabPlayerNickName = request!.MabPlayerNickName;
+            newMabCampaign.MabPlayerLevel = 0;
+            newMabCampaign.Difficulty = request.MabCampaignDifficulty;
+            newMabCampaign.GoldStash = request.MabCampaignDifficulty == MabCampaignDifficulty.Easy ? 
+                2*Constants.BoosterPrice :
+                 request.MabCampaignDifficulty == MabCampaignDifficulty.Medium ?
+                 Constants.BoosterPrice : 0;
+            
+            newMabCampaign.MabPlayerCardCopies = initialMabPlayerCardCopies;
 
-            this._daoDbContext.MabCampaigns.Add(newMabCampain);
+            newMabCampaign.MabPlayerDecks.Add(newMabPlayerDeck);
+
+            
+
+            this._daoDbContext.MabCampaigns.Add(newMabCampaign);
 
             var isCampainStartedSuccessfully = await this._daoDbContext.SaveChangesAsync();
 
             return (new UsersStartMabCampaignResponse
             {
-                MabCampainId = newMabCampain.Id,
+                MabCampainId = newMabCampaign.Id,
             }, "New Medieval Auto Battler Campain started successfully!");
         }
         private static (bool, string) StartMabCampaign_Validation(UsersStartMabCampaignRequest? request)
@@ -5474,13 +5487,13 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        private async Task<(List<PlayerCardEntry>?, string)> GetInitialMabCampaignCardEntries(int mabCampaignId)
+        private async Task<(List<MabPlayerCardCopy>?, string)> GetInicialMabPlayerCardCopies(int mabCampaignId)
         {
             var validInitialMabCardsDB = await _daoDbContext
-                                    .Cards
-                                    .Where(a => a.Power + a.UpperHand < 5 && a.IsDeleted == false)
-                                    .Select(a => a.Id)
-                                    .ToListAsync();
+                .MabCards
+                .Where(a => a.Power + a.UpperHand < 5 && a.IsDeleted == false)
+                .Select(a => a.Id)
+                .ToListAsync();
 
             if (validInitialMabCardsDB == null || validInitialMabCardsDB.Count == 0)
             {
@@ -5495,7 +5508,7 @@ namespace BoardGameGeekLike.Services
                 randomCardIds.Add(validInitialMabCardsDB[random.Next(validInitialMabCardsDB.Count)]);
             }
 
-            var initialSaveCardEntries = new List<PlayerCardEntry>();
+            var initialPlayerCardCopies = new List<MabPlayerCardCopy>();
 
             foreach (var cardId in randomCardIds)
             {
@@ -5504,34 +5517,125 @@ namespace BoardGameGeekLike.Services
                     return (null, "Error: invalid mab cardId for initial SaveCardEntries");
                 }
 
-                initialSaveCardEntries.Add(new PlayerCardEntry()
+                initialPlayerCardCopies.Add(new MabPlayerCardCopy()
                 {
                     MabCampaignId = mabCampaignId,
-                    CardId = cardId,
+                    MabCardId = cardId,
                 });
             }
 
-            return (initialSaveCardEntries, string.Empty);
+            return (initialPlayerCardCopies, string.Empty);
         }
-        private (List<PlayerDeckEntry>?, string) GetInitialMabCampaignDeckEntries(List<PlayerCardEntry> initialMabCampaignCardEntries)
+      
+
+        public async Task<(UsersEditMabPlayerNickNameResponse?, string)> EditMabPlayerNickName(UsersEditMabPlayerNickNameRequest? request)
         {
-            var initialMabCampainDeckEntries = new List<PlayerDeckEntry>();
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            foreach (var initialMabCampainDeckEntry in initialMabCampaignCardEntries)
+            if (string.IsNullOrEmpty(userId))
             {
-                initialMabCampainDeckEntries.Add(new PlayerDeckEntry()
-                {
-                    PlayerCardEntry = initialMabCampainDeckEntry
-                });
+                return (null, "Error: User is not authenticated");
             }
 
-            if (initialMabCampainDeckEntries.Count == 0)
+            var (isValid, message) = EditMabPlayerNickName_Validation(request);
+
+            if (isValid == false)
             {
-                return (null, "Error: invalid mabCardId for initial deck");
+                return (null, message);
             }
 
-            return (initialMabCampainDeckEntries, string.Empty);
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns
+                .FirstOrDefaultAsync(a =>
+                    a.UserId == userId);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: Mab Campaign not found");
+            }
+
+            if (mabCampaignDB.IsDeleted == true)
+            {
+                return (null, "Error: requested Mab Campaign is already finished");
+            }
+
+            mabCampaignDB.MabPlayerNickName = request!.NewMabPlayerNickname!;
+
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersEditMabPlayerNickNameResponse(), "Mab Player Nickname updated successfully!");
         }
+        private static (bool, string) EditMabPlayerNickName_Validation(UsersEditMabPlayerNickNameRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+
+            if (string.IsNullOrWhiteSpace(request.NewMabPlayerNickname) == true)
+            {
+                return (false, $"Error: NewMabPlayerNickname request failed: {request.NewMabPlayerNickname}");
+            }
+
+
+
+            return (true, string.Empty);
+        }
+
+
+
+        public async Task<(UsersShowMabCardDetailsResponse?, string)> ShowMabCardDetails(UsersShowMabCardDetailsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ShowMabCardDetails_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCardDB = await this._daoDbContext
+                .MabCards
+                .FindAsync(request!.MabCardId);
+
+            if (mabCardDB == null)
+            {
+                return (null, "Error: Mab Card not found!");
+            }
+
+            return (new UsersShowMabCardDetailsResponse
+            {
+                MabCardName = mabCardDB.Name,
+                MabCardPower = mabCardDB.Power,
+                MabCardUpperHand = mabCardDB.UpperHand,
+                MabCardLevel = mabCardDB.Level,
+                MabCardType = mabCardDB.Type,
+            }, "Mab Card details fetched successfully!");
+        }
+        private static (bool, string) ShowMabCardDetails_Validation(UsersShowMabCardDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is not null");
+            }
+
+            if (request.MabCardId <= 0)
+            {
+                return (false, "Error: invalid medieval auto battler MabCardId");
+            }
+
+            return (true, string.Empty);
+        }
+
+
 
         public async Task<(UsersShowMabCampaignStatisticsResponse?, string)> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
         {
@@ -5551,7 +5655,7 @@ namespace BoardGameGeekLike.Services
 
             var mabCampaignDB = await this._daoDbContext
                 .MabCampaigns
-                .FindAsync(request!.MabCampaignId);
+                .FirstOrDefaultAsync(a => a.UserId == userId);
 
             if(mabCampaignDB == null)
             {
@@ -5564,30 +5668,92 @@ namespace BoardGameGeekLike.Services
             }
 
             return (new UsersShowMabCampaignStatisticsResponse { 
-                MabPlayerNickName = mabCampaignDB.MabPlayerNickName,
-                MabCampaignDifficulty = mabCampaignDB.Difficulty,
-                Goldstash = mabCampaignDB.GoldStash,
-
-
-                    
-            
+                MabPlayerNickName = mabCampaignDB.MabPlayerNickName!,
+                MabCampaignDifficulty = mabCampaignDB.Difficulty!.Value,
+                Goldstash = mabCampaignDB.GoldStash!.Value,
+                CountMatches = mabCampaignDB.CountMatches!.Value,
+                CountVictories = mabCampaignDB.CountVictories!.Value,
+                CountDefeats = mabCampaignDB.CountDefeats!.Value,
+                CountBoosters = mabCampaignDB.CountBoosters!.Value,
+                PlayerLevel = mabCampaignDB.MabPlayerLevel!.Value,
+                AllCardsCollectedTrophy = mabCampaignDB.AllCardsCollectedTrophy!.Value,
+                AllNpcsDefeatedTrophy = mabCampaignDB.AllNpcsDefeatedTrophy!.Value                   
             },"Mab Campaign Statistics fetched successfully!");
 
         }
         private static (bool, string) ShowMabCampaignStatistics_Validation(UsersShowMabCampaignStatisticsRequest? request)
         {
-            if (request == null)
+            if (request != null)
             {
-                return (false, "Error: request is null");
-            }
-
-            if (request.MabCampaignId == null || request.MabCampaignId < 1)
-            {
-                return (false, "Error: MabCampaignId is null or invalid");
+                return (false, "Error: request is NOT null, however it MUST be null!");
             }
 
             return (true, string.Empty);
         }
+
+
+
+        public async Task<(UsersShowActiveMabDeckDetailsResponse?, string)> ShowActiveMabDeckDetails(UsersShowActiveMabDeckDetailsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = FetchMabPlayerCurrentDeck_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var deckData = await _daoDbContext
+               .MabDecks
+               .Where(a => a.MabCampaign.UserId == userId &&
+                           a.MabCampaign.IsDeleted.Value == false &&
+                           a.IsDeleted.Value == false &&
+                           a.IsActive == true)
+               .Select(a => new
+               {
+                   DeckId = a.Id,
+                   DeckName = a.Name,
+                   Cards = a.MabPlayerCardCopies
+                       .Where(b => !b.IsDeleted && b.MabCard != null)
+                       .Select(b => new UsersShowActiveMabDeckDetailsResponse_mabCard
+                       {
+                           MabCardId = b.Id,
+                           MabCardName = b.MabCard.Name,                           
+                       })
+                       .ToList()
+               })
+               .FirstOrDefaultAsync();
+
+            if (deckData == null)
+            {
+                return (null, "Error: failed to fetch mab player active deck");
+            }
+
+            var content = new UsersShowActiveMabDeckDetailsResponse
+            {
+                ActiveMabDeckId = deckData.DeckId,
+                ActiveMabDeckName = deckData.DeckName,
+                ActiveMabPlayerCards = deckData.Cards
+            };
+
+            return (content, "Mab Player Current Deck fetched successfully!");
+        }
+        private static (bool, string) FetchMabPlayerCurrentDeck_Validation(UsersShowActiveMabDeckDetailsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null");
+            }      
+     
+            return (true, string.Empty);
+        }
+
 
 
 

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace BoardGameGeekLike.Models.Entities
 {
     [Table("npcs")]
-    public class Npc
+    public class MabNpc
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -14,7 +14,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public required string Description { get; set; }
 
-        public List<NpcDeckEntry> Deck { get; set; }
+        public List<MabNpcDeckEntry> Deck { get; set; }
 
         public int Level { get; set; }
 

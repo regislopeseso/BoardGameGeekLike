@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250811120217_m1")]
-    partial class m1
+    [Migration("20250812145943_m4")]
+    partial class m4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,38 +24,6 @@ namespace BoardGameGeekLike.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Battle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsFinished")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("MabCampaignId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NpcId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Results")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Winner")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MabCampaignId");
-
-                    b.HasIndex("NpcId");
-
-                    b.ToTable("battles");
-                });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGame", b =>
                 {
@@ -110,41 +78,6 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("boardgames");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Card", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsDummy")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Power")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UpperHand")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("cards");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -165,31 +98,6 @@ namespace BoardGameGeekLike.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("categories");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Deck", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("MabCampaignId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MabCampaignId");
-
-                    b.ToTable("decks");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
@@ -332,7 +240,96 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("LifeCounterTemplates");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabBattle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsFinished")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("MabCampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NpcId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Results")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Winner")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MabCampaignId");
+
+                    b.HasIndex("NpcId");
+
+                    b.ToTable("mabBattles");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCampaign", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActiveMabPlayerDeckId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("AllCardsCollectedTrophy")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("AllNpcsDefeatedTrophy")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("CountBoosters")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CountDefeats")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CountMatches")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CountVictories")
+                        .HasColumnType("int");
+
+                    b.Property<byte?>("Difficulty")
+                        .HasColumnType("tinyint unsigned");
+
+                    b.Property<int?>("GoldStash")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("MabPlayerLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MabPlayerNickName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActiveMabPlayerDeckId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("mabCampaigns");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCard", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -346,68 +343,28 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool>("IsDummy")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("mechanics");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("Level")
                         .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("AllCardsCollectedTrophy")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("AllNpcsDefeatedTrophy")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("CountBoosters")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CountDefeats")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CountMatches")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CountVictories")
-                        .HasColumnType("int");
-
-                    b.Property<byte>("Difficulty")
-                        .HasColumnType("tinyint unsigned");
-
-                    b.Property<int>("Gold")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("PlayerLevel")
+                    b.Property<int>("Power")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UpperHand")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("mabCampaigns");
+                    b.ToTable("mabCards");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Npc", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -437,7 +394,7 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("npcs");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.NpcDeckEntry", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpcDeckEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -463,7 +420,7 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("npcDeckEntries");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.PlayerCardEntry", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabPlayerCardCopy", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -471,25 +428,30 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CardId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int>("MabCampaignId")
+                    b.Property<int?>("MabCampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MabCardId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MabPlayerDeckId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CardId");
 
                     b.HasIndex("MabCampaignId");
 
-                    b.ToTable("playerCardEntries");
+                    b.HasIndex("MabCardId");
+
+                    b.HasIndex("MabPlayerDeckId");
+
+                    b.ToTable("mabPlayerCardCopy");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.PlayerDeckEntry", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabPlayerDeck", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -497,22 +459,44 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DeckId")
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("MabCampaignId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MabCampaignId");
+
+                    b.ToTable("mabDecks");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int>("PlayerCardEntryId")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsDummy")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DeckId");
-
-                    b.HasIndex("PlayerCardEntryId");
-
-                    b.ToTable("playerDeckEntries");
+                    b.ToTable("mechanics");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
@@ -806,25 +790,6 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Battle", b =>
-                {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", "MabCampaign")
-                        .WithMany()
-                        .HasForeignKey("MabCampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BoardGameGeekLike.Models.Entities.Npc", "Npc")
-                        .WithMany()
-                        .HasForeignKey("NpcId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("MabCampaign");
-
-                    b.Navigation("Npc");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.BoardGame", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.Category", "Category")
@@ -832,17 +797,6 @@ namespace BoardGameGeekLike.Migrations
                         .HasForeignKey("CategoryId");
 
                     b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Deck", b =>
-                {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", "MabCampaign")
-                        .WithMany("Decks")
-                        .HasForeignKey("MabCampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("MabCampaign");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
@@ -880,24 +834,49 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabBattle", b =>
                 {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCampaign", "MabCampaign")
+                        .WithMany()
+                        .HasForeignKey("MabCampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabNpc", "Npc")
+                        .WithMany()
+                        .HasForeignKey("NpcId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MabCampaign");
+
+                    b.Navigation("Npc");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCampaign", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabPlayerDeck", "ActiveMabPlayerDeck")
+                        .WithMany()
+                        .HasForeignKey("ActiveMabPlayerDeckId");
+
                     b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
-                        .WithMany("MabCampains")
-                        .HasForeignKey("UserId");
+                        .WithOne("MabCampaign")
+                        .HasForeignKey("BoardGameGeekLike.Models.Entities.MabCampaign", "UserId");
+
+                    b.Navigation("ActiveMabPlayerDeck");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.NpcDeckEntry", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpcDeckEntry", b =>
                 {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.Card", "Card")
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCard", "Card")
                         .WithMany()
                         .HasForeignKey("CardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BoardGameGeekLike.Models.Entities.Npc", "Npc")
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabNpc", "Npc")
                         .WithMany("Deck")
                         .HasForeignKey("NpcId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -908,42 +887,34 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("Npc");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.PlayerCardEntry", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabPlayerCardCopy", b =>
                 {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.Card", "Card")
-                        .WithMany()
-                        .HasForeignKey("CardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCampaign", "MabCampaign")
+                        .WithMany("MabPlayerCardCopies")
+                        .HasForeignKey("MabCampaignId");
 
-                    b.HasOne("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", "MabCampaign")
-                        .WithMany("PlayerCardEntries")
-                        .HasForeignKey("MabCampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCard", "MabCard")
+                        .WithMany("MabPlayerCardCopies")
+                        .HasForeignKey("MabCardId");
 
-                    b.Navigation("Card");
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabPlayerDeck", "MabPlayerDeck")
+                        .WithMany("MabPlayerCardCopies")
+                        .HasForeignKey("MabPlayerDeckId");
 
                     b.Navigation("MabCampaign");
+
+                    b.Navigation("MabCard");
+
+                    b.Navigation("MabPlayerDeck");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.PlayerDeckEntry", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabPlayerDeck", b =>
                 {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.Deck", "Deck")
-                        .WithMany("PlayerDeckEntries")
-                        .HasForeignKey("DeckId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCampaign", "MabCampaign")
+                        .WithMany("MabPlayerDecks")
+                        .HasForeignKey("MabCampaignId");
 
-                    b.HasOne("BoardGameGeekLike.Models.Entities.PlayerCardEntry", "PlayerCardEntry")
-                        .WithMany()
-                        .HasForeignKey("PlayerCardEntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Deck");
-
-                    b.Navigation("PlayerCardEntry");
+                    b.Navigation("MabCampaign");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Rating", b =>
@@ -1060,11 +1031,6 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("BoardGames");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Deck", b =>
-                {
-                    b.Navigation("PlayerDeckEntries");
-                });
-
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterManager", b =>
                 {
                     b.Navigation("LifeCounterPlayers");
@@ -1075,16 +1041,26 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("LifeCounterManagers");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MedievalAutoBattlerCampaign", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCampaign", b =>
                 {
-                    b.Navigation("Decks");
+                    b.Navigation("MabPlayerCardCopies");
 
-                    b.Navigation("PlayerCardEntries");
+                    b.Navigation("MabPlayerDecks");
                 });
 
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Npc", b =>
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCard", b =>
+                {
+                    b.Navigation("MabPlayerCardCopies");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>
                 {
                     b.Navigation("Deck");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabPlayerDeck", b =>
+                {
+                    b.Navigation("MabPlayerCardCopies");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
@@ -1093,7 +1069,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Navigation("LifeCounterTemplates");
 
-                    b.Navigation("MabCampains");
+                    b.Navigation("MabCampaign");
 
                     b.Navigation("Ratings");
 

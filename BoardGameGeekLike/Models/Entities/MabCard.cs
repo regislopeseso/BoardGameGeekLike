@@ -5,8 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("cards")]
-    public class Card
+    [Table("mabCards")]
+    public class MabCard
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -25,5 +25,8 @@ namespace BoardGameGeekLike.Models.Entities
         public bool IsDeleted { get; set; } = false;
 
         public bool IsDummy { get; set; } = false;
+
+
+        public List<MabPlayerCardCopy>? MabPlayerCardCopies { get; set; }
     }
 }

@@ -403,7 +403,7 @@ namespace BoardGameGeekLike.Services
 
         private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedCards()
         {
-            var cardsSeed = new List<Card>();
+            var cardsSeed = new List<MabCard>();
             var cardsCount = 1;
 
             foreach (var cardType in new[] { MabCardType.Neutral, MabCardType.Ranged, MabCardType.Cavalry, MabCardType.Infantry })
@@ -425,7 +425,7 @@ namespace BoardGameGeekLike.Services
 
                         var cardLevel = Helper.GetCardLevel(power, upperHand);
 
-                        var newCard = new Card
+                        var newCard = new MabCard
                         {
                             Name = cardName,
                             Power = power,
@@ -452,7 +452,7 @@ namespace BoardGameGeekLike.Services
         private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedNpcs()
         {
             var cardsDB = await _daoDbContext
-                                    .Cards
+                                    .MabCards
                                     .Where(a => a.IsDeleted == false)
                                     .ToListAsync();
 
@@ -468,7 +468,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: not enough card variety for seeding NPCs. The existance of at least one card of each level is mandatory for seeding NPCs");
             }
 
-            var npcsSeed = new List<Npc>();
+            var npcsSeed = new List<MabNpc>();
 
             for (int level = Constants.MinCardLevel; level <= Constants.MaxCardLevel; level++)
             {
@@ -487,7 +487,7 @@ namespace BoardGameGeekLike.Services
             return (null, "NPCs have been successfully seeded");
         }
 
-        private static List<Npc> GenerateRandomNpcs(int level, List<Card> cardsDB)
+        private static List<MabNpc> GenerateRandomNpcs(int level, List<MabCard> cardsDB)
         {
             var random = new Random();
 
@@ -499,7 +499,7 @@ namespace BoardGameGeekLike.Services
                 var countBotsLvlNine = 0;
 
                 // Creating a list that will contain 10 NPCs of cardLvl 0 or cardLvl 9:
-                var npcs = new List<Npc>();
+                var npcs = new List<MabNpc>();
 
                 while (npcs.Count < 10)
                 {
@@ -507,7 +507,7 @@ namespace BoardGameGeekLike.Services
                     var cardsFiltered = cardsDB.Where(a => a.Level == level).ToList();
 
                     // Creating a new list of NpcDeckentries
-                    var validNpcDeckEntries = new List<NpcDeckEntry>();
+                    var validNpcDeckEntries = new List<MabNpcDeckEntry>();
                     for (int countCards = 0; countCards < 5; countCards++)
                     {
                         // Obtaining one random request out of the list of filtered cards
@@ -516,7 +516,7 @@ namespace BoardGameGeekLike.Services
                         // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:
                         validNpcDeckEntries.Add
                         (
-                            new NpcDeckEntry
+                            new MabNpcDeckEntry
                             {
                                 Card = card
                             }
@@ -547,7 +547,7 @@ namespace BoardGameGeekLike.Services
 
                         npcDescription = "(9, 9, 9, 9, 9)";
                     }
-                    npcs.Add(new Npc
+                    npcs.Add(new MabNpc
                     {
                         Name = npcName,
                         Description = npcDescription,
@@ -564,7 +564,7 @@ namespace BoardGameGeekLike.Services
             }
             else if (level == 1)
             {
-                var npcs = new List<Npc>();
+                var npcs = new List<MabNpc>();
                 var countBotsLvlOne = 0;
                 var count = 1;                
 
@@ -578,7 +578,7 @@ namespace BoardGameGeekLike.Services
                         var levelSequence = Helper.GetPowerSequence(level, i);
 
                         // Criating a new list of valid NPC deck entries:
-                        var validNpcDeckEntries = new List<NpcDeckEntry>();
+                        var validNpcDeckEntries = new List<MabNpcDeckEntry>();
 
                         // Obtaing a random request of cardLvl corresponding to its position in the sequence:
                         foreach (var cardLvl in levelSequence)
@@ -592,7 +592,7 @@ namespace BoardGameGeekLike.Services
                             // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:                               
                             validNpcDeckEntries.Add
                             (
-                                new NpcDeckEntry
+                                new MabNpcDeckEntry
                                 {
                                     Card = card
                                 }
@@ -608,7 +608,7 @@ namespace BoardGameGeekLike.Services
                         
                         var npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
                         
-                        npcs.Add(new Npc
+                        npcs.Add(new MabNpc
                         {
                             Name = npcName,
                             Description = "( " + string.Join(", ", levelSequence) + " )",
@@ -627,7 +627,7 @@ namespace BoardGameGeekLike.Services
             }
             else if (level == 8)
             {
-                var npcs = new List<Npc>();
+                var npcs = new List<MabNpc>();
                 var countBotsLvlEight = 0;
                 var count = 1;
 
@@ -644,7 +644,7 @@ namespace BoardGameGeekLike.Services
                             var levelSequence = Helper.GetPowerSequence(level, i);
 
                             // Criating a new list of valid NPC deck entries:
-                            var validNpcDeckEntries = new List<NpcDeckEntry>();
+                            var validNpcDeckEntries = new List<MabNpcDeckEntry>();
 
                             // Obtaing a random cards of cardLvl corresponding to its position in the sequence:
                             foreach (var cardLvl in levelSequence)
@@ -658,7 +658,7 @@ namespace BoardGameGeekLike.Services
                                 // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:                               
                                 validNpcDeckEntries.Add
                                 (
-                                    new NpcDeckEntry
+                                    new MabNpcDeckEntry
                                     {
                                         Card = card
                                     }
@@ -674,7 +674,7 @@ namespace BoardGameGeekLike.Services
 
                             var npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
 
-                            npcs.Add(new Npc
+                            npcs.Add(new MabNpc
                             {
                                 Name = npcName,
                                 Description = "( " + string.Join(", ", levelSequence) + " )",
@@ -702,15 +702,15 @@ namespace BoardGameGeekLike.Services
                 var countBotsLvlSix = 0;
                 var countBotsLvlSeven = 0;
 
-                var validDecks = new List<List<NpcDeckEntry>>();
-                var npcs = new List<Npc>();
+                var validDecks = new List<List<MabNpcDeckEntry>>();
+                var npcs = new List<MabNpc>();
 
                 // Obtaining the lists of all unique sequences
                 // (for cardLvl 2 up to 7 there are 12 unique possible combinations):
                 for (int i = 1; i <= 12; i++)
                 {
                     // Criating a new list of valid NPC deck entries:
-                    var validNpcDeckEntries = new List<NpcDeckEntry>();
+                    var validNpcDeckEntries = new List<MabNpcDeckEntry>();
 
                     //ex.: cardLvl == 6 and  i == 1 => (4, 4, 6, 8, 8 )
                     var levelSequence = Helper.GetPowerSequence(level, i);
@@ -727,7 +727,7 @@ namespace BoardGameGeekLike.Services
                         // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:
                         validNpcDeckEntries.Add
                         (
-                            new NpcDeckEntry
+                            new MabNpcDeckEntry
                             {
                                 Card = card
                             }
@@ -790,7 +790,7 @@ namespace BoardGameGeekLike.Services
                             break;
                     }
 
-                    npcs.Add(new Npc
+                    npcs.Add(new MabNpc
                     {
                         Name = npcName,
                         Description = "( " + string.Join(", ", levelSequence) + " )",
@@ -818,12 +818,12 @@ namespace BoardGameGeekLike.Services
             }
 
             await this._daoDbContext
-                            .Npcs
+                            .MabNpcs
                             .Where(a => a.IsDummy == true)
                             .ExecuteDeleteAsync();
 
             await this._daoDbContext
-                .Cards
+                .MabCards
                 .Where(a => a.IsDummy == true)
                 .ExecuteDeleteAsync();
 

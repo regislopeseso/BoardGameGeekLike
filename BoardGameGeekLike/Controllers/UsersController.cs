@@ -766,11 +766,60 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ShowMabCardDetails([FromQuery] UsersShowMabCardDetailsRequest request)
+        {
+            var (content, message) = await this._usersService.ShowMabCardDetails(request);
+
+            var response = new Response<UsersShowMabCardDetailsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> ShowActiveMabDeckDetails(UsersShowActiveMabDeckDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.ShowActiveMabDeckDetails(request);
+
+            var response = new Response<UsersShowActiveMabDeckDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
+
+        [HttpGet]
         public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
         {
             var (content, message) = await this._usersService.ShowMabCampaignStatistics(request);
 
             var response = new Response<UsersShowMabCampaignStatisticsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpPut]
+        public async Task<IActionResult> EditMabPlayerNickName([FromBody] UsersEditMabPlayerNickNameRequest? request)
+        {
+            var (content, message) = await this._usersService.EditMabPlayerNickName(request);
+
+            var response = new Response<UsersEditMabPlayerNickNameResponse>
             {
                 Content = content,
                 Message = message

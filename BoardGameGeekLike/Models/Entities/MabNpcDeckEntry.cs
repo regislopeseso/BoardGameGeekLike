@@ -3,23 +3,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("decks")]
-    public class Deck
+    [Table("npcDeckEntries")]
+    public class MabNpcDeckEntry
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        
-        public required string Name { get; set; }
-        
+
         public bool IsDeleted { get; set; } = false;
 
-        
+
+        [ForeignKey("Card")]
+        public int CardId { get; set; }
+        public MabCard Card { get; set; }
+
+
+        [ForeignKey("Npc")]
+        public int NpcId { get; set; }
         [InverseProperty("Deck")]
-        public List<PlayerDeckEntry> PlayerDeckEntries { get; set; }
-
-
-        [InverseProperty("Decks")]
-        public MedievalAutoBattlerCampaign MabCampaign { get; set; }
+        public MabNpc Npc { get; set; }
     }
 }

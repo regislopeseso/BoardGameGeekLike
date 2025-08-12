@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("battles")]
-    public class Battle
+    [Table("mabBattles")]
+    public class MabBattle
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -19,11 +19,11 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey("MedievalAutoBattlerCampaign")]
         public int MabCampaignId { get; set; }
-        public MedievalAutoBattlerCampaign MabCampaign { get; set; }
+        public MabCampaign MabCampaign { get; set; }
 
 
         [ForeignKey("Npc")]
         public int NpcId { get; set; }
-        public Npc Npc { get; set; }
+        public MabNpc Npc { get; set; }
     }
 }
