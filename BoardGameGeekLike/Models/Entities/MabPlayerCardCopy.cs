@@ -10,6 +10,8 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        public bool IsActive { get; set; } = false;
+
         public bool IsDeleted { get; set; } = false;
 
 

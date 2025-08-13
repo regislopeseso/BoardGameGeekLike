@@ -5521,6 +5521,7 @@ namespace BoardGameGeekLike.Services
                 {
                     MabCampaignId = mabCampaignId,
                     MabCardId = cardId,
+                    IsActive = true,
                 });
             }
 
@@ -5585,7 +5586,6 @@ namespace BoardGameGeekLike.Services
         }
 
 
-
         public async Task<(UsersShowMabCardDetailsResponse?, string)> ShowMabCardDetails(UsersShowMabCardDetailsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -5604,7 +5604,8 @@ namespace BoardGameGeekLike.Services
 
             var mabCardDB = await this._daoDbContext
                 .MabCards
-                .FindAsync(request!.MabCardId);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == request!.MabCardId);
 
             if (mabCardDB == null)
             {
@@ -5636,7 +5637,6 @@ namespace BoardGameGeekLike.Services
         }
 
 
-
         public async Task<(UsersShowMabCampaignStatisticsResponse?, string)> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -5655,6 +5655,7 @@ namespace BoardGameGeekLike.Services
 
             var mabCampaignDB = await this._daoDbContext
                 .MabCampaigns
+                .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.UserId == userId);
 
             if(mabCampaignDB == null)
@@ -5692,7 +5693,6 @@ namespace BoardGameGeekLike.Services
         }
 
 
-
         public async Task<(UsersShowActiveMabDeckDetailsResponse?, string)> ShowActiveMabDeckDetails(UsersShowActiveMabDeckDetailsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -5702,7 +5702,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = FetchMabPlayerCurrentDeck_Validation(request);
+            var (isValid, message) = ShowActiveMabDeckDetails_Validation(request);
 
             if (isValid == false)
             {
@@ -5711,6 +5711,7 @@ namespace BoardGameGeekLike.Services
 
             var deckData = await _daoDbContext
                .MabDecks
+               .AsNoTracking()
                .Where(a => a.MabCampaign.UserId == userId &&
                            a.MabCampaign.IsDeleted.Value == false &&
                            a.IsDeleted.Value == false &&
@@ -5744,7 +5745,7 @@ namespace BoardGameGeekLike.Services
 
             return (content, "Mab Player Current Deck fetched successfully!");
         }
-        private static (bool, string) FetchMabPlayerCurrentDeck_Validation(UsersShowActiveMabDeckDetailsRequest? request)
+        private static (bool, string) ShowActiveMabDeckDetails_Validation(UsersShowActiveMabDeckDetailsRequest? request)
         {
             if (request != null)
             {
@@ -5754,6 +5755,115 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+
+        public async Task<(UsersDeactivateMabCardCopyResponse?, string)> DeactivateMabCardCopy(UsersDeactivateMabCardCopyRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = DeactivateMabCardCopy_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCardCopyDB = await this._daoDbContext
+                .MabPlayerCardCopies
+                .FindAsync(request!.MabCardId);
+
+            if(mabCardCopyDB == null)
+            {
+                return (null, "Error: requested mab card copy not found!");
+            }
+
+            mabCardCopyDB.IsActive = false;
+
+            var wasInactivationSuccessfull = await this._daoDbContext.SaveChangesAsync();
+
+            if (wasInactivationSuccessfull < 1)
+            {
+                return (null, "Error: attempt to inactivate mab card copy failed!");
+            }
+
+            return (new UsersDeactivateMabCardCopyResponse(), "Mab card copy was successfully inactivated!");
+        }
+        private static (bool, string) DeactivateMabCardCopy_Validation(UsersDeactivateMabCardCopyRequest? request) 
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(List<UsersListInactiveMabCardCopiesResponse>?, string)> ListInactiveMabCardCopies(UsersListUnactiveMabCardCopiesRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ListInactiveMabCardCopies_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            // Step 1: Get counts per card from DB
+            var groupedCards = await _daoDbContext.MabPlayerCardCopies
+                .AsNoTracking()
+                .Where(a => !a.IsDeleted)
+                .Where(a => a.MabPlayerDeck != null && a.MabPlayerDeck.IsActive.Value == false)
+                .GroupBy(a => new
+                {
+                    a.MabCardId,
+                    a.MabCard.Name,
+                    a.MabCard.Level,
+                    a.MabCard.Power,
+                    a.MabCard.UpperHand
+                })
+                .Select(a => new
+                {
+                    a.Key.MabCardId,
+                    a.Key.Name,
+                    a.Key.Level,
+                    a.Key.Power,
+                    a.Key.UpperHand,
+                    Qty = a.Count()
+                })
+                .ToListAsync(); // materialize in memory
+
+            // Step 2: Build final response with string formatting in memory
+            var content = groupedCards
+                .Select(c => new UsersListInactiveMabCardCopiesResponse
+                {
+                    MabCardId = c.MabCardId!.Value,
+                    MabCardDescription = $"{c.Name}({c.Qty})-{c.Level}/{c.Power}/{c.UpperHand}"
+                })
+                .OrderBy(x => x.MabCardDescription)
+                .ToList();
+
+
+            return (content, "Mab Player Current Deck fetched successfully!");
+        }
+        private static (bool, string) ListInactiveMabCardCopies_Validation(UsersListUnactiveMabCardCopiesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null");
+            }
+
+            return (true, string.Empty);
+        }
 
 
 

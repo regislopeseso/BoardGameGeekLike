@@ -779,9 +779,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
-
-
         [HttpGet]
         public async Task<IActionResult> ShowActiveMabDeckDetails(UsersShowActiveMabDeckDetailsRequest? request)
         {
@@ -797,7 +794,33 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> ListInactiveMabCardCopies(UsersListUnactiveMabCardCopiesRequest? request)
+        {
+            var (content, message) = await this._usersService.ListInactiveMabCardCopies(request);
 
+            var response = new Response<List<UsersListInactiveMabCardCopiesResponse>?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+        
+        [HttpPut]
+        public async Task<IActionResult> DeactivateMabCardCopy([FromBody] UsersDeactivateMabCardCopyRequest? request)
+        {
+            var (content, message) = await this._usersService.DeactivateMabCardCopy(request);
+
+            var response = new Response<UsersDeactivateMabCardCopyResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpGet]
         public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
@@ -812,7 +835,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
 
         [HttpPut]
         public async Task<IActionResult> EditMabPlayerNickName([FromBody] UsersEditMabPlayerNickNameRequest? request)
@@ -829,7 +851,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         #endregion
-
+            
 
     }
 }
