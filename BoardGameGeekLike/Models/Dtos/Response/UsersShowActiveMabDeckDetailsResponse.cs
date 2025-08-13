@@ -9,9 +9,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public string? ActiveMabDeckName { get; set; }
 
-        public List<UsersShowActiveMabDeckDetailsResponse_mabCard>? ActiveMabPlayerCards { get; set; }
-
-        public int DeckSizeLimit { get; set; } = Constants.DeckSize;
-
+        public int MabDeckSizeLimit { get; set; } = Constants.DeckSize;
+        
+        public List<UsersShowActiveMabDeckDetailsResponse_mabCardCopy>? ActiveMabCardCopies { get; set; }
     }
 }

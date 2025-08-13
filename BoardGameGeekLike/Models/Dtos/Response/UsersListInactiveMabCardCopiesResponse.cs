@@ -2,7 +2,7 @@
 {
     public class UsersListInactiveMabCardCopiesResponse
     {
-        public int? MabCardId { get; set; }
+        public int? MabCardCopyId { get; set; }
 
         public string? MabCardDescription { get; set; }
     }

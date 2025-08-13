@@ -795,7 +795,7 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> ListInactiveMabCardCopies(UsersListUnactiveMabCardCopiesRequest? request)
+        public async Task<IActionResult> ListInactiveMabCardCopies([FromQuery] UsersListUnactiveMabCardCopiesRequest? request)
         {
             var (content, message) = await this._usersService.ListInactiveMabCardCopies(request);
 
@@ -821,6 +821,22 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpPut]
+        public async Task<IActionResult> ActivateMabCardCopy([FromBody] UsersActivateMabCardCopyRequest? request)
+        {
+            var (content, message) = await this._usersService.ActivateMabCardCopy(request);
+
+            var response = new Response<UsersActivateMabCardCopyResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
 
         [HttpGet]
         public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
