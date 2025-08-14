@@ -5764,6 +5764,57 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(UsersEditActiveMabDeckNameResponse?, string)> EditActiveMabDeckName(UsersEditActiveMabDeckNameRequest? request) {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = EditActiveMabDeckName_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var activeMabDeck = await this._daoDbContext
+                .MabDecks
+                .FirstOrDefaultAsync(a => a.MabCampaign.UserId == userId && a.IsDeleted == false && a.IsActive == true);
+
+            if(activeMabDeck == null)
+            {
+                return (null, "Error: requested active mab deck not found!");
+            }
+
+            activeMabDeck.Name = request.ActiveMabDeckNewName;
+
+            var wasNameEditionSuccessfull =  await this._daoDbContext.SaveChangesAsync();
+
+            if(wasNameEditionSuccessfull < 1)
+            {
+                return (null, "Error: attempt to change active mab deck name failed!");
+            }
+
+            return (new UsersEditActiveMabDeckNameResponse(), "Active Mab Deck name updated successfully!");
+        }
+        private static (bool, string) EditActiveMabDeckName_Validation(UsersEditActiveMabDeckNameRequest? request) {
+
+            if (request == null)
+            {
+                return (false, "Error: request is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.ActiveMabDeckNewName) == true)
+            {
+                return (false, "Error: invalid or missing ActiveMabDeckNewName");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(UsersDeactivateMabCardCopyResponse?, string)> DeactivateMabCardCopy(UsersDeactivateMabCardCopyRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -5798,7 +5849,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: attempt to inactivate mab card copy failed!");
             }
 
-            return (new UsersDeactivateMabCardCopyResponse(), "Mab card copy was successfully inactivated!");
+            return (new UsersDeactivateMabCardCopyResponse(), "Mab card copy was successfully INACTIVATED!");
         }
         private static (bool, string) DeactivateMabCardCopy_Validation(UsersDeactivateMabCardCopyRequest? request) 
         {
@@ -5847,10 +5898,10 @@ namespace BoardGameGeekLike.Services
 
             if (wasInactivationSuccessfull < 1)
             {
-                return (null, "Error: attempt to inactivate mab card copy failed!");
+                return (null, "Error: attempt to activate mab card copy failed!");
             }
 
-            return (new UsersActivateMabCardCopyResponse(), "Mab card copy was successfully inactivated!");
+            return (new UsersActivateMabCardCopyResponse(), "Mab card copy was successfully ACTIVATED!");
         }
         private static (bool, string) ActivateMabCardCopy_Validation(UsersActivateMabCardCopyRequest? request)
         {

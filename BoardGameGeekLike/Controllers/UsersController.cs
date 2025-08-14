@@ -793,6 +793,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPut]
+        public async Task<IActionResult> EditActiveMabDeckName([FromBody] UsersEditActiveMabDeckNameRequest? request)
+        {
+            var (content, message) = await this._usersService.EditActiveMabDeckName(request);
+
+            var response = new Response<UsersEditActiveMabDeckNameResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> ListInactiveMabCardCopies([FromQuery] UsersListUnactiveMabCardCopiesRequest? request)
