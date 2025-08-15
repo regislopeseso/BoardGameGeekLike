@@ -5794,7 +5794,7 @@ namespace BoardGameGeekLike.Services
 
             if(wasNameEditionSuccessfull < 1)
             {
-                return (null, "Error: attempt to change active mab deck name failed!");
+                return (null, "Warning: no changes have been effected!");
             }
 
             return (new UsersEditActiveMabDeckNameResponse(), "Active Mab Deck name updated successfully!");
@@ -5948,19 +5948,19 @@ namespace BoardGameGeekLike.Services
                 .Where(a => !a.IsDeleted && a.MabPlayerDeckId != request.ActiveMabDeckId)                
                 .GroupBy(a => new
                 {
-                    a.Id,
-                    a.MabCard.Name,
-                    a.MabCard.Level,
-                    a.MabCard.Power,
-                    a.MabCard.UpperHand
+                    a.MabCardId,                    
                 })
                 .Select(a => new
                 {
-                    a.Key.Id,
-                    a.Key.Name,
-                    a.Key.Level,
-                    a.Key.Power,
-                    a.Key.UpperHand,
+                    MabCard = a.Select(b => new
+                    {
+                        b.Id,
+                        b.MabCard!.Name,
+                        b.MabCard.Level,
+                        b.MabCard.Power,
+                        b.MabCard.UpperHand
+                    }).FirstOrDefault(),
+                  
                     Qty = a.Count()
                 })
                 .ToListAsync(); // materialize in memory
@@ -5969,8 +5969,8 @@ namespace BoardGameGeekLike.Services
             var content = groupedCards
                 .Select(a => new UsersListInactiveMabCardCopiesResponse
                 {
-                    MabCardCopyId = a.Id!,
-                    MabCardDescription = $"{a.Name}({a.Qty})-{a.Level}/{a.Power}/{a.UpperHand}"
+                    MabCardCopyId = a.MabCard!.Id!,
+                    MabCardDescription = $"{a.MabCard.Name}({a.Qty})-{a.MabCard.Level}/{a.MabCard.Power}/{a.MabCard.UpperHand}"
                 })
                 .OrderBy(x => x.MabCardDescription)
                 .ToList();
@@ -5992,6 +5992,73 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
+
+        public async Task<(List<UsersListMabPlayerCardCopiesResponse>?, string)> ListMabPlayerCardCopies(UsersListMabPlayerCardCopiesRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = ListMabPlayerCardCopies_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            // Step 1: Get counts per card from DB
+            var mabPlayerCopyCardsDB = await _daoDbContext
+                .MabCampaigns
+                .AsNoTracking()
+                .Where(a => a.IsDeleted == false && a.UserId == userId)
+                .Select(a => a.MabPlayerCardCopies)
+                .FirstOrDefaultAsync();
+
+
+            //CONSERTAR ESSE ENDPOINT NA SEGUNDA-FEIRA!
+              //var groupedCardCopies = mabPlayerCopyCardsDB
+              // .GroupBy(a => new
+              //  {
+              //      a.MabCardId,
+              //      a.MabCard.Name,
+              //      a.MabCard.Level,
+              //      a.MabCard.Power,
+              //      a.MabCard.UpperHand
+              //  }).Select(a => new
+              //  {
+              //      a.Key.MabCardId,
+              //      a.Key.Name,
+              //      a.Key.Level,
+              //      a.Key.Power,
+              //      a.Key.UpperHand,
+              //      Qty = a.Count()
+              //  })           
+              //  .ToList();
+
+            
+            //var content = groupedCardCopies.Select(a => new UsersListMabPlayerCardCopiesResponse
+            //{
+            //    MabCardCopyId = a.MabCardId,
+            //    MabCardDescription = $"{a.Name}({a.Qty})-{a.Level}/{a.Power}/{a.UpperHand}"
+
+            //}).ToList();
+
+            return (null, "Mab Player card copies listed successfully!");
+        }
+        private static (bool, string) ListMabPlayerCardCopies_Validation(UsersListMabPlayerCardCopiesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }          
+
+            return (true, string.Empty);
+        }
+
 
 
 

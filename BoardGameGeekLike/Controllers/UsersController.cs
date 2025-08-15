@@ -821,7 +821,22 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
+        [HttpGet]
+        public async Task<IActionResult> ListMabPlayerCardCopies(UsersListMabPlayerCardCopiesRequest? request)
+        {
+            var (content, message) = await this._usersService.ListMabPlayerCardCopies(request);
+
+            var response = new Response<List<UsersListMabPlayerCardCopiesResponse>?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
         [HttpPut]
         public async Task<IActionResult> DeactivateMabCardCopy([FromBody] UsersDeactivateMabCardCopyRequest? request)
         {
