@@ -32,7 +32,7 @@ namespace BoardGameGeekLike.Models
         public DbSet<MabNpcDeckEntry> MabNpcDeckEntries { get; set; }
         public DbSet<MabCampaign> MabCampaigns { get; set; }
         public DbSet<MabPlayerCardCopy> MabPlayerCardCopies { get; set; }
-        public DbSet<MabPlayerDeck> MabDecks { get; set; }   
+        public DbSet<MabPlayerDeck> MabPlayerDecks { get; set; }   
         public DbSet<MabBattle> MabBattles { get; set; }
     }
 }

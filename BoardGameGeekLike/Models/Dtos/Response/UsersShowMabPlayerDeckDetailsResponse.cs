@@ -3,7 +3,7 @@ using System.Reflection.Metadata;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersShowActiveMabDeckDetailsResponse
+    public class UsersShowMabPlayerDeckDetailsResponse
     {
         public int? ActiveMabDeckId { get; set; }
 
@@ -11,6 +11,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int MabDeckSizeLimit { get; set; } = Constants.DeckSize;
         
-        public List<UsersShowActiveMabDeckDetailsResponse_mabCardCopy>? ActiveMabCardCopies { get; set; }
+        public List<UsersShowMabPlayerDeckDetailsResponse_mabCardCopy>? MabCardCopies { get; set; }
     }
 }
