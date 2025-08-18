@@ -19,13 +19,13 @@ namespace BoardGameGeekLike.Models.Entities
 
 
 
-        [ForeignKey("MabCampaign")]
-        public int? MabCampaignId { get; set; }
+        [ForeignKey("MabPlayerCampaign")]
+        public int? MabPlayerCampaignId { get; set; }
         [InverseProperty("MabPlayerDecks")]
-        public MabCampaign? MabCampaign { get; set; }
+        public MabPlayerCampaign? MabPlayerCampaign { get; set; }
 
 
         [InverseProperty("MabPlayerDeck")]
-        public List<MabPlayerCardCopy>? MabPlayerCardCopies { get; set; }
+        public List<MabPlayerAssignedCardCopy>? MabPlayerAssignedCardCopies { get; set; }
     }
 }

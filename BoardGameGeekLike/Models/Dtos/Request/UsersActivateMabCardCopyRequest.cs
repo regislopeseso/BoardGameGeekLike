@@ -2,8 +2,8 @@
 {
     public class UsersActivateMabCardCopyRequest
     {
-        public int? MabCardCopyId { get; set; }
+        public int? MabDeckId { get; set; }
 
-        public int? ActiveMabDeckId { get; set; }
+        public int? MabCardCopyId { get; set; }
     }
 }

@@ -826,7 +826,7 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
-        public async Task<IActionResult> AddMabPlayerDeck(UsersAddMabPlayerDeckRequest? request)
+        public async Task<IActionResult> AddMabPlayerDeck(UsersAddMabCardCopyToDeckRequest? request)
         {
             var (content, message) = await this._usersService.AddMabPlayerDeck(request);
 
@@ -871,11 +871,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> ActivateMabCardCopy([FromBody] UsersActivateMabCardCopyRequest? request)
+        public async Task<IActionResult> AddMabCardCopyToDeck([FromBody] UsersActivateMabCardCopyRequest? request)
         {
-            var (content, message) = await this._usersService.ActivateMabCardCopy(request);
+            var (content, message) = await this._usersService.AddMabCardCopyToDeck(request);
 
-            var response = new Response<UsersActivateMabCardCopyResponse>
+            var response = new Response<UsersAddMabCardCopyToDeckResponse>
             {
                 Content = content,
                 Message = message

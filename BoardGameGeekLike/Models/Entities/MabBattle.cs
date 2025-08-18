@@ -19,7 +19,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey("MedievalAutoBattlerCampaign")]
         public int MabCampaignId { get; set; }
-        public MabCampaign MabCampaign { get; set; }
+        public MabPlayerCampaign MabCampaign { get; set; }
 
 
         [ForeignKey("Npc")]

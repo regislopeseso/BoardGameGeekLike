@@ -28,10 +28,14 @@ namespace BoardGameGeekLike.Models
 
 
         public DbSet<MabCard> MabCards { get; set; }
+
         public DbSet<MabNpc> MabNpcs { get; set; }
         public DbSet<MabNpcDeckEntry> MabNpcDeckEntries { get; set; }
-        public DbSet<MabCampaign> MabCampaigns { get; set; }
+
+        public DbSet<MabPlayerCampaign> MabPlayerCampaigns { get; set; }
+
         public DbSet<MabPlayerCardCopy> MabPlayerCardCopies { get; set; }
+        public DbSet<MabPlayerAssignedCardCopy> MabPlayerAssignedCardCopies { get; set; }
         public DbSet<MabPlayerDeck> MabPlayerDecks { get; set; }   
         public DbSet<MabBattle> MabBattles { get; set; }
     }

@@ -10,8 +10,6 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public bool IsActive { get; set; } = false;
-
         public bool IsDeleted { get; set; } = false;
 
 
@@ -21,16 +19,13 @@ namespace BoardGameGeekLike.Models.Entities
         public MabCard? MabCard { get; set; }
 
 
-        [ForeignKey("MabCampaign")]
-        public int? MabCampaignId { get; set; }
+        [ForeignKey("MabPlayerCampaign")]
+        public int? MabPlayerCampaignId { get; set; }
         [InverseProperty("MabPlayerCardCopies")]
-        public MabCampaign? MabCampaign { get; set; }
-        
+        public MabPlayerCampaign? MabPlayerCampaign { get; set; }
 
-        [ForeignKey("MabPlayerDeck")]
-        public int? MabPlayerDeckId { get; set; }
-        [InverseProperty("MabPlayerCardCopies")]
-        public MabPlayerDeck? MabPlayerDeck { get; set; }
+     
+        public List<MabPlayerAssignedCardCopy>? MabPlayerAssignedCardCopies { get; set; }
     }
 }
      
