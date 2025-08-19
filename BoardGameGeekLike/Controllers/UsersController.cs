@@ -856,12 +856,12 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
-        [HttpPut]
-        public async Task<IActionResult> DeactivateMabCardCopy([FromBody] UsersDeactivateMabCardCopyRequest? request)
+        [HttpDelete]
+        public async Task<IActionResult> UnassignMabCardCopy([FromBody] UsersUnassignMabCardCopyRequest? request)
         {
-            var (content, message) = await this._usersService.DeactivateMabCardCopy(request);
+            var (content, message) = await this._usersService.UnassignMabCardCopy(request);
 
-            var response = new Response<UsersDeactivateMabCardCopyResponse>
+            var response = new Response<UsersUnassignMabCardCopyResponse>
             {
                 Content = content,
                 Message = message
@@ -870,12 +870,12 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> AddMabCardCopyToDeck([FromBody] UsersActivateMabCardCopyRequest? request)
+        [HttpPost]
+        public async Task<IActionResult> AssignMabCardCopy([FromBody] UsersAssignMabCardCopyRequest? request)
         {
-            var (content, message) = await this._usersService.AddMabCardCopyToDeck(request);
+            var (content, message) = await this._usersService.AssignMabCardCopy(request);
 
-            var response = new Response<UsersAddMabCardCopyToDeckResponse>
+            var response = new Response<UsersAssignMabCardCopyToDeckResponse>
             {
                 Content = content,
                 Message = message

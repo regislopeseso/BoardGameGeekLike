@@ -11,6 +11,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int MabDeckSizeLimit { get; set; } = Constants.DeckSize;
         
-        public List<UsersShowMabPlayerDeckDetailsResponse_mabCardCopy>? MabCardCopies { get; set; }
+        public List<UsersShowMabPlayerDeckDetailsResponse_assignedCardCopy>? MabCardCopies { get; set; }
     }
 }

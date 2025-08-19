@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using BoardGameGeekLike.Utilities;
 using Constants = BoardGameGeekLike.Utilities.Constants;
+using System.Runtime.InteropServices;
 
 
 
@@ -5428,49 +5429,53 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: there is already a campaign started by this user!");
             }
 
-            var newMabCampaign = new MabPlayerCampaign
+            var userNewMabCampaign = new MabPlayerCampaign
             {
                 UserId = userId,
-
                 MabPlayerCardCopies = new List<MabPlayerCardCopy>(),
                 MabPlayerDecks = new List<MabPlayerDeck>()
             };               
 
-            (var initialMabPlayerCardCopies, message) = await GetInicialMabPlayerCardCopies(newMabCampaign.Id);
+            (var mabPlayerInitialCardCopies, message) = await GetMabPlayerInicialCardCopies(userNewMabCampaign.Id);
 
-            if (initialMabPlayerCardCopies == null || initialMabPlayerCardCopies.Count == 0)
+            if (mabPlayerInitialCardCopies == null || mabPlayerInitialCardCopies.Count == 0)
             {
                 return (null, message);
             }
 
-            var newMabPlayerDeck = new MabPlayerDeck
+            (var mabPlayerInitialAssignedCardCopies, message) = GetMabPlayerInitialAssignedCardCopies(mabPlayerInitialCardCopies);
+
+            if (mabPlayerInitialAssignedCardCopies == null || mabPlayerInitialCardCopies.Count == 0)
+            {
+                return (null, message);
+            }
+
+            var mabPlayerNewDeck = new MabPlayerDeck
             {
                 Name = "Inicial Deck",
-                MabPlayerCardCopies = initialMabPlayerCardCopies,
+                MabPlayerAssignedCardCopies = mabPlayerInitialAssignedCardCopies,
                 IsActive = true
             };
             
-            newMabCampaign.MabPlayerNickName = request!.MabPlayerNickName;
-            newMabCampaign.MabPlayerLevel = 0;
-            newMabCampaign.Difficulty = request.MabCampaignDifficulty;
-            newMabCampaign.GoldStash = request.MabCampaignDifficulty == MabCampaignDifficulty.Easy ? 
+            userNewMabCampaign.MabPlayerNickName = request!.MabPlayerNickName;
+            userNewMabCampaign.MabPlayerLevel = 0;
+            userNewMabCampaign.Difficulty = request.MabCampaignDifficulty;
+            userNewMabCampaign.GoldStash = request.MabCampaignDifficulty == MabCampaignDifficulty.Easy ? 
                 2*Constants.BoosterPrice :
                  request.MabCampaignDifficulty == MabCampaignDifficulty.Medium ?
                  Constants.BoosterPrice : 0;
             
-            newMabCampaign.MabPlayerCardCopies = initialMabPlayerCardCopies;
+            userNewMabCampaign.MabPlayerCardCopies = mabPlayerInitialCardCopies;
 
-            newMabCampaign.MabPlayerDecks.Add(newMabPlayerDeck);
+            userNewMabCampaign.MabPlayerDecks.Add(mabPlayerNewDeck);            
 
-            
-
-            this._daoDbContext.MabPlayerCampaigns.Add(newMabCampaign);
+            this._daoDbContext.MabPlayerCampaigns.Add(userNewMabCampaign);
 
             var isCampainStartedSuccessfully = await this._daoDbContext.SaveChangesAsync();
 
             return (new UsersStartMabCampaignResponse
             {
-                MabCampainId = newMabCampaign.Id,
+                MabCampainId = userNewMabCampaign.Id,
             }, "New Medieval Auto Battler Campain started successfully!");
         }
         private static (bool, string) StartMabCampaign_Validation(UsersStartMabCampaignRequest? request)
@@ -5487,7 +5492,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        private async Task<(List<MabPlayerCardCopy>?, string)> GetInicialMabPlayerCardCopies(int mabCampaignId)
+        private async Task<(List<MabPlayerCardCopy>?, string)> GetMabPlayerInicialCardCopies(int mabCampaignId)
         {
             var validInitialMabCardsDB = await _daoDbContext
                 .MabCards
@@ -5508,24 +5513,42 @@ namespace BoardGameGeekLike.Services
                 randomCardIds.Add(validInitialMabCardsDB[random.Next(validInitialMabCardsDB.Count)]);
             }
 
-            var initialPlayerCardCopies = new List<MabPlayerCardCopy>();
+            var mabPlayerInitialCardCopies = new List<MabPlayerCardCopy>();
 
             foreach (var cardId in randomCardIds)
             {
                 if (cardId == 0)
                 {
-                    return (null, "Error: invalid mab cardId for initial SaveCardEntries");
+                    return (null, "Error: invalid mab cardId for initial Mab Player Card Copies");
                 }
 
-                initialPlayerCardCopies.Add(new MabPlayerCardCopy()
+                mabPlayerInitialCardCopies.Add(new MabPlayerCardCopy
                 {
-                    MabCampaignId = mabCampaignId,
-                    MabCardId = cardId,
-                    IsActive = true,
+                    MabPlayerCampaignId = mabCampaignId,
+                    MabCardId = cardId,                  
                 });
             }
 
-            return (initialPlayerCardCopies, string.Empty);
+            return (mabPlayerInitialCardCopies, string.Empty);
+        }
+        private (List<MabPlayerAssignedCardCopy>?, string) GetMabPlayerInitialAssignedCardCopies(List<MabPlayerCardCopy> mabPlayerInicialCardCopies)
+        {
+            var mabPlayerInicialAssignedCardCopies = new List<MabPlayerAssignedCardCopy>();
+
+            foreach (var mabPlayerInicialCardCopy in mabPlayerInicialCardCopies)
+            {
+                mabPlayerInicialAssignedCardCopies.Add(new MabPlayerAssignedCardCopy
+                {
+                    MabCardCopy = mabPlayerInicialCardCopy
+                });
+            }
+
+            if (mabPlayerInicialAssignedCardCopies.Count == 0)
+            {
+                return (null, "Error while processing mab player card copies into assigned ones");
+            }
+
+            return (mabPlayerInicialAssignedCardCopies, string.Empty);
         }
 
 
@@ -5716,7 +5739,7 @@ namespace BoardGameGeekLike.Services
                   .MabPlayerCampaigns
                   .Where(a => a.UserId == userId && a.IsDeleted == false)
                   .SelectMany(a => a.MabPlayerDecks!
-                      .Where(b => b.IsActive == true && b.IsDeleted == false)
+                      .Where(b => b.IsActive == true)
                       .Select(b => b.Id))
                   .FirstOrDefaultAsync();
 
@@ -5731,24 +5754,23 @@ namespace BoardGameGeekLike.Services
             var deckData = await this._daoDbContext
                .MabPlayerDecks
                .AsNoTracking()
-               .Where(a => a.MabCampaign.UserId == userId &&
-                           a.MabCampaign.IsDeleted.Value == false &&
-                           a.IsDeleted.Value == false &&
+               .Where(a => a.MabPlayerCampaign!.UserId == userId &&
+                           a.MabPlayerCampaign.IsDeleted!.Value == false &&                           
                            a.Id == request.MabDeckId)
                .Select(a => new
                {
                    DeckId = a.Id,
                    DeckName = a.Name,
-                   Cards = a.MabPlayerCardCopies
-                       .Where(b => !b.IsDeleted && b.MabCard != null)
-                       .Select(b => new UsersShowMabPlayerDeckDetailsResponse_mabCardCopy
+                   AssignedCardCopies = a.MabPlayerAssignedCardCopies
+                       .Where(b => b.MabCardCopy != null)
+                       .Select(b => new UsersShowMabPlayerDeckDetailsResponse_assignedCardCopy
                        {
-                           MabCardCopyId = b.Id,
-                           MabCardName = b.MabCard.Name,    
-                           MabCardLevel = b.MabCard.Level,
-                           MabCardPower = b.MabCard.Power,
-                           MabCardUpperHand = b.MabCard.UpperHand,
-                           MabCardType = b.MabCard.Type
+                           AssignedMabCardCopyId = b.Id,
+                           MabCardName = b.MabCardCopy.MabCard.Name,    
+                           MabCardLevel = b.MabCardCopy.MabCard.Level,
+                           MabCardPower = b.MabCardCopy.MabCard.Power,
+                           MabCardUpperHand = b.MabCardCopy.MabCard.UpperHand,
+                           MabCardType = b.MabCardCopy.MabCard.Type
                        })
                        .OrderByDescending(b => b.MabCardLevel)
                        .ThenByDescending(b => b.MabCardPower)
@@ -5766,7 +5788,7 @@ namespace BoardGameGeekLike.Services
             {
                 ActiveMabDeckId = deckData.DeckId,
                 ActiveMabDeckName = deckData.DeckName,
-                MabCardCopies = deckData.Cards
+                MabCardCopies = deckData.AssignedCardCopies
             };
 
             return (content, "Mab Player Current Deck fetched successfully!");
@@ -5799,7 +5821,7 @@ namespace BoardGameGeekLike.Services
 
             var activeMabDeck = await this._daoDbContext
                 .MabPlayerDecks
-                .FirstOrDefaultAsync(a => a.MabCampaign.UserId == userId && a.IsDeleted == false && a.IsActive == true);
+                .FirstOrDefaultAsync(a => a.MabPlayerCampaign!.UserId == userId && a.IsActive == true);
 
             if(activeMabDeck == null)
             {
@@ -5833,7 +5855,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersDeactivateMabCardCopyResponse?, string)> DeactivateMabCardCopy(UsersDeactivateMabCardCopyRequest? request)
+        public async Task<(UsersUnassignMabCardCopyResponse?, string)> UnassignMabCardCopy(UsersUnassignMabCardCopyRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -5842,41 +5864,33 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = DeactivateMabCardCopy_Validation(request);
+            var (isValid, message) = UnassignMabCardCopy_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var mabCardCopyDB = await this._daoDbContext
-                .MabPlayerCardCopies
-                .FindAsync(request!.MabCardCopyId);
-
-            if(mabCardCopyDB == null)
-            {
-                return (null, "Error: requested mab card copy not found!");
-            }
-
-            mabCardCopyDB.MabPlayerDeckId = null;
-
-            var wasInactivationSuccessfull = await this._daoDbContext.SaveChangesAsync();
-
-            if (wasInactivationSuccessfull < 1)
+            var wasDeleteSuccessfull = await this._daoDbContext
+                .MabPlayerAssignedCardCopies
+                .Where(a => a.MabPlayerDeck.MabPlayerCampaign.UserId == userId && a.Id == request.AssignedMabCardCopyId)
+                .ExecuteDeleteAsync();
+   
+            if (wasDeleteSuccessfull < 1)
             {
                 return (null, "Error: attempt to inactivate mab card copy failed!");
             }
 
-            return (new UsersDeactivateMabCardCopyResponse(), "Mab card copy was successfully INACTIVATED!");
+            return (new UsersUnassignMabCardCopyResponse(), "Mab card copy was successfully INACTIVATED!");
         }
-        private static (bool, string) DeactivateMabCardCopy_Validation(UsersDeactivateMabCardCopyRequest? request) 
+        private static (bool, string) UnassignMabCardCopy_Validation(UsersUnassignMabCardCopyRequest? request) 
         {
             if (request == null)
             {
                 return (false, "Error: request is null");
             }
 
-            if(request.MabCardCopyId == null || request.MabCardCopyId < 1)
+            if(request.AssignedMabCardCopyId == null || request.AssignedMabCardCopyId < 1)
             {
                 return (false, "Error: invalid or missing MabCardCopyId");
             }
@@ -5885,7 +5899,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersAddMabCardCopyToDeckResponse?, string)> AddMabCardCopyToDeck(UsersActivateMabCardCopyRequest? request)
+        public async Task<(UsersAssignMabCardCopyToDeckResponse?, string)> AssignMabCardCopy(UsersAssignMabCardCopyRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -5894,36 +5908,39 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (isValid, message) = AddMabCardCopyToDeck_Validation(request);
+            var (isValid, message) = AssignMabCardCopy_Validation(request);
 
             if (isValid == false)
             {
                 return (null, message);
             }
 
-            var mabDeckDB = await this._daoDbContext
+            var mablayerDeckDB = await this._daoDbContext
               .MabPlayerDecks             
-              .Include(a => a.MabPlayerCardCopies)
-              .FirstOrDefaultAsync(a => a.IsDeleted == false && a.MabCampaign!.UserId == userId && a.MabCampaign.IsDeleted == false);
+              .Include(a => a.MabPlayerAssignedCardCopies)
+              .FirstOrDefaultAsync(a => a.MabPlayerCampaign.UserId == userId && a.MabPlayerCampaign.IsDeleted == false && a.Id == request.MabDeckId);
 
-            if (mabDeckDB == null)
+            if (mablayerDeckDB == null)
             {
                 return (null, "Error: requested mab card copy not found!");
             }
 
-            var wereChangesEffected = await this._daoDbContext
-                .MabPlayerCardCopies
-                .Where(a => a.MabCardId == request!.MabCardCopyId && a.MabCampaign.UserId == userId)
-                .ExecuteUpdateAsync(a => a.SetProperty(b => b.MabPlayerDeckId, mabDeckDB.Id));            
+            mablayerDeckDB.MabPlayerAssignedCardCopies.Add(new MabPlayerAssignedCardCopy
+            {
+                MabCardCopyId = request.MabCardCopyId,
+                MabPlayerDeckId = mablayerDeckDB.Id
+            });
+
+            var wereChangesEffected = await this._daoDbContext.SaveChangesAsync();
 
             if (wereChangesEffected < 1)
             {
                 return (null, "Error: attempt to add mab card copy to deck failed!");
             }
 
-            return (new UsersAddMabCardCopyToDeckResponse(), "Mab card copy was successfully added to deck!");
+            return (new UsersAssignMabCardCopyToDeckResponse(), "Mab card copy was successfully assigned to deck!");
         }
-        private static (bool, string) AddMabCardCopyToDeck_Validation(UsersActivateMabCardCopyRequest? request)
+        private static (bool, string) AssignMabCardCopy_Validation(UsersAssignMabCardCopyRequest? request)
         {
             if (request == null)
             {
@@ -5965,7 +5982,8 @@ namespace BoardGameGeekLike.Services
             var groupedCards = await _daoDbContext
                 .MabPlayerCardCopies
                 .AsNoTracking()
-                .Where(a => !a.IsDeleted && a.MabPlayerDeckId != request.ActiveMabDeckId)                
+                .Where(a => a.MabPlayerAssignedCardCopies!
+                    .Any(b => b.MabPlayerDeckId == request!.ActiveMabDeckId) == false)                
                 .GroupBy(a => new
                 {
                     a.MabCardId,                    
@@ -6050,7 +6068,7 @@ namespace BoardGameGeekLike.Services
             {
                 Name = $"New Deck #{mabCampaignDB.MabDecksCount + 1}",
                 IsActive = false,
-                MabCampaignId = mabCampaignDB.MabCampaignID
+                MabPlayerCampaignId = mabCampaignDB.MabCampaignID
             };
 
             this._daoDbContext.MabPlayerDecks.Add(newMabDeck);
@@ -6139,9 +6157,6 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
-
-
 
         #endregion
     }

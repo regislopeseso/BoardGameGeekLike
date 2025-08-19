@@ -10,8 +10,6 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public bool IsDeleted { get; set; } = false;
-
 
         [ForeignKey("MabCard")]
         public int? MabCardId { get; set; }

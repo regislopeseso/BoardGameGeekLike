@@ -12,11 +12,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public string? Name { get; set; }
 
-        public bool? IsActive { get; set; }
-
-        public bool? IsDeleted { get; set; } = false;
-
-
+        public bool? IsActive { get; set; }     
 
 
         [ForeignKey("MabPlayerCampaign")]
