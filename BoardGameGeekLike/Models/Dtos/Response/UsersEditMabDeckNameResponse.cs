@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersEditActiveMabDeckNameResponse
+    public class UsersEditMabDeckNameResponse
     {
     }
 }

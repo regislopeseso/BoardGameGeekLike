@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersListInactiveMabCardCopiesResponse
+    public class UsersListUnassignedMabCardCopiesResponse
     {
         public int? MabCardCopyId { get; set; }
 

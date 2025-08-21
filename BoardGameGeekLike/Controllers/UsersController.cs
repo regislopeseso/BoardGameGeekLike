@@ -794,11 +794,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> EditActiveMabDeckName([FromBody] UsersEditActiveMabDeckNameRequest? request)
+        public async Task<IActionResult> EditMabDeckName([FromBody] UsersEditMabDeckNameRequest? request)
         {
-            var (content, message) = await this._usersService.EditActiveMabDeckName(request);
+            var (content, message) = await this._usersService.EditMabDeckName(request);
 
-            var response = new Response<UsersEditActiveMabDeckNameResponse>
+            var response = new Response<UsersEditMabDeckNameResponse>
             {
                 Content = content,
                 Message = message
@@ -806,14 +806,13 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
 
         [HttpGet]
-        public async Task<IActionResult> ListInactiveMabCardCopies([FromQuery] UsersListUnactiveMabCardCopiesRequest? request)
+        public async Task<IActionResult> ListUnassignedMabCardCopies([FromQuery] UsersListListUnassignedMabCardCopiesRequest? request)
         {
-            var (content, message) = await this._usersService.ListInactiveMabCardCopies(request);
+            var (content, message) = await this._usersService.ListUnassignedMabCardCopies(request);
 
-            var response = new Response<List<UsersListInactiveMabCardCopiesResponse>?>
+            var response = new Response<List<UsersListUnassignedMabCardCopiesResponse>?>
             {
                 Content = content,
                 Message = message
@@ -821,8 +820,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
@@ -839,8 +836,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
-
         [HttpGet]
         public async Task<IActionResult> ListMabPlayerCardCopies(UsersListMabPlayerCardCopiesRequest? request)
         {
@@ -854,7 +849,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
 
         [HttpDelete]
         public async Task<IActionResult> UnassignMabCardCopy([FromBody] UsersUnassignMabCardCopyRequest? request)
@@ -883,8 +877,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
