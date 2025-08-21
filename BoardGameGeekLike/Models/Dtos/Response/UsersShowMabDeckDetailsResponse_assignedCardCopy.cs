@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersShowMabPlayerDeckDetailsResponse_assignedCardCopy
+    public class UsersShowMabDeckDetailsResponse_assignedCardCopy
     {
         public int? AssignedMabCardCopyId { get; set; }
 

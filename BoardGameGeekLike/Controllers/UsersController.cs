@@ -780,11 +780,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ShowMabPlayerDeckDetails([FromQuery] UsersShowMabPlayerDeckDetailsRequest? request)
+        public async Task<IActionResult> ShowMabDeckDetails([FromQuery] UsersShowMabDeckDetailsRequest? request)
         {
-            var (content, message) = await this._usersService.ShowMabPlayerDeckDetails(request);
+            var (content, message) = await this._usersService.ShowMabDeckDetails(request);
 
-            var response = new Response<UsersShowMabPlayerDeckDetailsResponse>
+            var response = new Response<UsersShowMabDeckDetailsResponse>
             {
                 Content = content,
                 Message = message
@@ -806,6 +806,38 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMabDeck([FromBody] UsersDeleteMabDeckRequest? request)
+        {
+            var (content, message) = await this._usersService.DeleteMabDeck(request);
+
+            var response = new Response<UsersDeleteMabDeckResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpPut]
+        public async Task<IActionResult> ActivateMabDeck([FromBody] UsersActivateMabDeckRequest? request)
+        {
+            var (content, message) = await this._usersService.ActivateMabDeck(request);
+
+            var response = new Response<UsersActivateMabDeckResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> ListUnassignedMabCardCopies([FromQuery] UsersListListUnassignedMabCardCopiesRequest? request)
@@ -836,12 +868,12 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ListMabPlayerCardCopies(UsersListMabPlayerCardCopiesRequest? request)
+        [HttpPost]
+        public async Task<IActionResult> AssignMabCardCopy([FromBody] UsersAssignMabCardCopyRequest? request)
         {
-            var (content, message) = await this._usersService.ListMabPlayerCardCopies(request);
+            var (content, message) = await this._usersService.AssignMabCardCopy(request);
 
-            var response = new Response<List<UsersListMabPlayerCardCopiesResponse>?>
+            var response = new Response<UsersAssignMabCardCopyToDeckResponse>
             {
                 Content = content,
                 Message = message
@@ -863,21 +895,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> AssignMabCardCopy([FromBody] UsersAssignMabCardCopyRequest? request)
-        {
-            var (content, message) = await this._usersService.AssignMabCardCopy(request);
-
-            var response = new Response<UsersAssignMabCardCopyToDeckResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
+   
         [HttpGet]
         public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
         {
@@ -906,8 +924,22 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ListMabPlayerDecks(UsersListMabPlayerDecksRequest? request)
+        {
+            var (content, message) = await this._usersService.ListMabPlayerDecks(request);
+
+            var response = new Response<List<UsersListMabPlayerDecksResponse>?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         #endregion
-            
+
 
     }
 }

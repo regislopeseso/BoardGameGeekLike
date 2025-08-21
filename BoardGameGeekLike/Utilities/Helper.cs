@@ -21,12 +21,17 @@
 
         public static int GetCardLevel(int power, int upperHand)
         {
-            return (int)Math.Ceiling((double)(power + upperHand) / 2);
+            return (int)Math.Ceiling((double)(power + upperHand) / 2d);
         }
 
         public static int GetNpcLevel(List<int> cardLevels)
         {
-            return (int)Math.Ceiling((double)(cardLevels.Sum() / cardLevels.Count));
+            return (int)Math.Ceiling((cardLevels.Sum() / (double)cardLevels.Count));
+        }
+
+        public static int GetPlayerDeckLevel(List<int> cardLevels)
+        {
+            return (int)Math.Ceiling((cardLevels.Sum() / (double)cardLevels.Count));
         }
 
         public static List<int> GetPowerSequence(int level, int pos)
