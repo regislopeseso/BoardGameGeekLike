@@ -3,6 +3,7 @@ using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Models.Enums;
+using BoardGameGeekLike.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
@@ -11,13 +12,13 @@ using Microsoft.VisualBasic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using BoardGameGeekLike.Utilities;
 using Constants = BoardGameGeekLike.Utilities.Constants;
-using System.Runtime.InteropServices;
 
 
 
@@ -5436,7 +5437,15 @@ namespace BoardGameGeekLike.Services
                 MabPlayerDecks = new List<MabPlayerDeck>()
             };               
 
-            (var mabPlayerInitialCardCopies, message) = await GetMabPlayerInicialCardCopies(userNewMabCampaign.Id);
+            var difficultyLevelEvaluation = EvaluateDifficultyLevel(request.MabCampaignDifficulty!.Value);
+
+            var startingGoldStash = difficultyLevelEvaluation[0];
+
+            var maxCardLevel = difficultyLevelEvaluation[1];
+
+            var startingCardsCount = difficultyLevelEvaluation[2];
+
+            (var mabPlayerInitialCardCopies, message) = await GetMabPlayerInicialCardCopies(userNewMabCampaign.Id, maxCardLevel, startingCardsCount);
 
             if (mabPlayerInitialCardCopies == null || mabPlayerInitialCardCopies.Count == 0)
             {
@@ -5460,13 +5469,8 @@ namespace BoardGameGeekLike.Services
             userNewMabCampaign.MabPlayerNickName = request!.MabPlayerNickName;
             userNewMabCampaign.MabPlayerLevel = 0;
             userNewMabCampaign.Difficulty = request.MabCampaignDifficulty;
-            userNewMabCampaign.GoldStash = request.MabCampaignDifficulty == MabCampaignDifficulty.Easy ? 
-                2*Constants.BoosterPrice :
-                 request.MabCampaignDifficulty == MabCampaignDifficulty.Medium ?
-                 Constants.BoosterPrice : 0;
-            
+            userNewMabCampaign.GoldStash = startingGoldStash;
             userNewMabCampaign.MabPlayerCardCopies = mabPlayerInitialCardCopies;
-
             userNewMabCampaign.MabPlayerDecks.Add(mabPlayerNewDeck);            
 
             this._daoDbContext.MabPlayerCampaigns.Add(userNewMabCampaign);
@@ -5492,11 +5496,11 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-        private async Task<(List<MabPlayerCardCopy>?, string)> GetMabPlayerInicialCardCopies(int mabCampaignId)
+        private async Task<(List<MabPlayerCardCopy>?, string)> GetMabPlayerInicialCardCopies(int mabCampaignId, int maxCardLevel, int startingCardsCount)
         {
             var validInitialMabCardsDB = await _daoDbContext
                 .MabCards
-                .Where(a => a.Power + a.UpperHand < 5 && a.IsDeleted == false)
+                .Where(a => a.Level <= maxCardLevel && a.IsDeleted == false)
                 .Select(a => a.Id)
                 .ToListAsync();
 
@@ -5508,7 +5512,7 @@ namespace BoardGameGeekLike.Services
             var random = new Random();
             var randomCardIds = new List<int>();
 
-            while (randomCardIds.Count < Constants.DeckSize)
+            while (randomCardIds.Count < startingCardsCount)
             {
                 randomCardIds.Add(validInitialMabCardsDB[random.Next(validInitialMabCardsDB.Count)]);
             }
@@ -5550,7 +5554,38 @@ namespace BoardGameGeekLike.Services
 
             return (mabPlayerInicialAssignedCardCopies, string.Empty);
         }
+        private List<int> EvaluateDifficultyLevel(MabCampaignDifficulty difficultyLevel)
+        {
+            int startingGoldStash;
 
+            int maxCardLevel;
+
+            int startingCardsCount;
+
+            switch (difficultyLevel)
+            {
+                case MabCampaignDifficulty.Easy:
+                    startingGoldStash = 2 * Constants.BoosterPrice;
+                    maxCardLevel = Constants.MinCardLevel + 2;
+                    startingCardsCount = Constants.DeckSize * 3;
+                    break;
+                case MabCampaignDifficulty.Medium:
+                    startingGoldStash = Constants.BoosterPrice;
+                    maxCardLevel = Constants.MinCardLevel + 1;
+                    startingCardsCount = Constants.DeckSize * 2;
+                    break;
+                case MabCampaignDifficulty.Hard:
+                    startingGoldStash = 0;
+                    maxCardLevel = Constants.MinCardLevel;
+                    startingCardsCount = Constants.DeckSize;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(difficultyLevel));                 
+            }   
+     
+
+            return new List<int> { startingGoldStash, maxCardLevel, startingCardsCount };
+        }
 
         public async Task<(UsersShowMabCampaignStatisticsResponse?, string)> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
         {
@@ -5568,35 +5603,41 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var mabCampaignDB = await this._daoDbContext
+            var content = await this._daoDbContext
                 .MabPlayerCampaigns
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.UserId == userId);
+                .Where(a => a.UserId == userId && a.IsDeleted == false)
+                .Select(a => new UsersShowMabCampaignStatisticsResponse
+                {
+                    MabPlayerNickName = a.MabPlayerNickName!,
 
-            if (mabCampaignDB == null)
+                    MabCampaignDifficulty = a.Difficulty!.Value,
+
+                    Goldstash = a.GoldStash!.Value,
+
+                    CountMatches = a.CountMatches!.Value,
+
+                    CountVictories = a.CountVictories!.Value,
+
+                    CountDefeats = a.CountDefeats!.Value,
+
+                    CountBoosters = a.CountBoosters!.Value,
+
+                    PlayerLevel = a.MabPlayerLevel!.Value,
+
+                    DecksOwned = a.MabPlayerDecks!.Count,
+
+                    AllCardsCollectedTrophy = a.AllCardsCollectedTrophy!.Value,
+
+                    AllNpcsDefeatedTrophy = a.AllNpcsDefeatedTrophy!.Value
+                })
+                .FirstOrDefaultAsync();
+
+            if (content == null)
             {
                 return (null, "Error: Mab Campaign not found");
-            }
+            }           
 
-            if (mabCampaignDB.IsDeleted == true)
-            {
-                return (null, "Error: requested Mab Campaign is already finished");
-            }
-
-            return (new UsersShowMabCampaignStatisticsResponse
-            {
-                MabPlayerNickName = mabCampaignDB.MabPlayerNickName!,
-                MabCampaignDifficulty = mabCampaignDB.Difficulty!.Value,
-                Goldstash = mabCampaignDB.GoldStash!.Value,
-                CountMatches = mabCampaignDB.CountMatches!.Value,
-                CountVictories = mabCampaignDB.CountVictories!.Value,
-                CountDefeats = mabCampaignDB.CountDefeats!.Value,
-                CountBoosters = mabCampaignDB.CountBoosters!.Value,
-                PlayerLevel = mabCampaignDB.MabPlayerLevel!.Value,
-                AllCardsCollectedTrophy = mabCampaignDB.AllCardsCollectedTrophy!.Value,
-                AllNpcsDefeatedTrophy = mabCampaignDB.AllNpcsDefeatedTrophy!.Value
-            }, "Mab Campaign Statistics fetched successfully!");
-
+            return (content, "Mab Campaign Statistics fetched successfully!");
         }
         private static (bool, string) ShowMabCampaignStatistics_Validation(UsersShowMabCampaignStatisticsRequest? request)
         {
@@ -5733,46 +5774,66 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+
+           
             if (request!.MabDeckId == null)
             {
                 var activeDeckIdDB = await this._daoDbContext
-                  .MabPlayerDecks 
-                  .AsNoTracking()
-                  .Where(a => a.MabPlayerCampaign!.UserId == userId && a.MabPlayerCampaign.IsDeleted == false)
-                  .Select(a => a.Id)                  
-                  .OrderByDescending(a => a)
-                  .FirstOrDefaultAsync();               
+                    .MabPlayerDecks
+                      .AsNoTracking()                                      
+                      .FirstOrDefaultAsync(a => a.MabPlayerCampaign!.UserId == userId && a.MabPlayerCampaign.IsDeleted == false && a.IsActive == true);
 
-                request.MabDeckId = activeDeckIdDB;
+                if (activeDeckIdDB == null)
+                {
+                    var lastMabDeckAdded = await this._daoDbContext
+                        .MabPlayerDecks 
+                        .AsNoTracking()
+                        .OrderByDescending(a => a.Id)                                                           
+                        .FirstOrDefaultAsync(a => a.MabPlayerCampaign!.UserId == userId && a.MabPlayerCampaign.IsDeleted == false);
+
+                    if(lastMabDeckAdded == null)
+                    {
+                        return (null, "Error: no mab player decks found for this user!");
+                    }
+
+                    lastMabDeckAdded.IsActive = true;
+
+                    request.MabDeckId = lastMabDeckAdded.Id;
+                }
+                else
+                {
+                    request.MabDeckId = activeDeckIdDB.Id;
+                }           
+
             }
-
+          
             var deckData = await this._daoDbContext
-               .MabPlayerDecks
-               .AsNoTracking()
-               .Where(a => a.MabPlayerCampaign!.UserId == userId &&
-                           a.MabPlayerCampaign.IsDeleted!.Value == false &&                           
-                           a.Id == request.MabDeckId)
-               .Select(a => new
-               {
-                   DeckId = a.Id,
-                   DeckName = a.Name,
-                   AssignedCardCopies = a.MabPlayerAssignedCardCopies
-                       .Where(b => b.MabCardCopy != null)
-                       .Select(b => new UsersShowMabDeckDetailsResponse_assignedCardCopy
-                       {
-                           AssignedMabCardCopyId = b.Id,
-                           MabCardName = b.MabCardCopy.MabCard.Name,    
-                           MabCardLevel = b.MabCardCopy.MabCard.Level,
-                           MabCardPower = b.MabCardCopy.MabCard.Power,
-                           MabCardUpperHand = b.MabCardCopy.MabCard.UpperHand,
-                           MabCardType = b.MabCardCopy.MabCard.Type
-                       })
-                       .OrderByDescending(b => b.MabCardLevel)
-                       .ThenByDescending(b => b.MabCardPower)
-                       .ThenByDescending(b => b.MabCardUpperHand)
-                       .ToList()
-               })
-               .FirstOrDefaultAsync();
+                .MabPlayerDecks
+                .AsNoTracking()
+                .Where(a => a.MabPlayerCampaign!.UserId == userId &&
+                            a.MabPlayerCampaign.IsDeleted!.Value == false &&
+                            a.Id == request.MabDeckId)
+                .Select(a => new
+                {
+                    DeckId = a.Id,
+                    DeckName = a.Name,
+                    AssignedCardCopies = a.MabPlayerAssignedCardCopies
+                        .Where(b => b.MabCardCopy != null)
+                        .Select(b => new UsersShowMabDeckDetailsResponse_assignedCardCopy
+                        {
+                            AssignedMabCardCopyId = b.Id,
+                            MabCardName = b.MabCardCopy.MabCard.Name,
+                            MabCardLevel = b.MabCardCopy.MabCard.Level,
+                            MabCardPower = b.MabCardCopy.MabCard.Power,
+                            MabCardUpperHand = b.MabCardCopy.MabCard.UpperHand,
+                            MabCardType = b.MabCardCopy.MabCard.Type
+                        })
+                        .OrderByDescending(b => b.MabCardLevel)
+                        .ThenByDescending(b => b.MabCardPower)
+                        .ThenByDescending(b => b.MabCardUpperHand)
+                        .ToList()
+                })
+                .FirstOrDefaultAsync();
 
             if (deckData == null)
             {
@@ -6264,6 +6325,432 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
 
         }
+
+
+        public async Task<(UsersStartMabBattleResponse?, string)> StartMabBattle(UsersStartMabBattleRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = StartMabBattle_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await _daoDbContext
+                .MabPlayerCampaigns
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDeleted == false);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: request mab campaign could not be found!");
+            }
+
+            var random = new Random();
+
+            var validNpcsIdsDB = await this._daoDbContext
+                .MabNpcs
+                .AsNoTracking()
+                .Where(a => a.IsDeleted == false && a.Level <= mabCampaignDB.MabPlayerLevel + 1)
+                .Select(a => new { a.Id, a.Name })
+                .ToListAsync();
+
+            if (validNpcsIdsDB == null || validNpcsIdsDB.Count == 0)
+            {
+                return (null, "Error: no valid mab NPC was found for this match");
+            }
+
+            var randomNpc = validNpcsIdsDB.OrderBy(a => random.Next()).FirstOrDefault();
+
+            var newMatch = new MabBattle
+            {
+                MabCampaignId = mabCampaignDB.Id,
+                NpcId = randomNpc!.Id
+            };
+
+            this._daoDbContext.Add(newMatch);
+
+            await _daoDbContext.SaveChangesAsync();
+
+            var content = new UsersStartMabBattleResponse
+            {
+                MabBattleId = newMatch.Id,
+                MabNpcName = randomNpc.Name
+            };
+
+            return (content, "A new battle started successfully");
+        }
+        private static (bool, string) StartMabBattle_Validation(UsersStartMabBattleRequest? request)
+        {
+            if(request == null)
+            {
+                return ( false, "Error: request is null!");
+            }
+
+            if(request.MabQuestId.HasValue == false || request.MabQuestId < 1)
+            {
+                return (false, "Error: MabQuestId is invalid or missing");
+            }   
+
+            return (true, string.Empty);    
+        }
+
+        public async Task<(UsersMabPlayerTurnResponse?, string)> MabPlayerTurn(UsersMabPlayerTurnRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabPlayerTurn_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+
+            var mabBattleDB = await this._daoDbContext
+                .MabBattles
+                .Include(a => a.MabBattleTurns)
+                .FirstOrDefaultAsync(a => a.IsFinished == false && a.MabCampaign!.UserId == userId);
+
+            if(mabBattleDB == null)
+            {
+                return(null, "Error: no mab battle found for this campaign!");
+            }
+
+            var mabBattleTurns = new List<MabBattleTurn>();
+
+            var lastMabBattleTurn = new MabBattleTurn();
+
+            int mabBattleRoundNumer = 0;
+
+            int? mabNpcCardCopyId;
+
+            message = "Player's turn ended successfully, now is the NPC's turn!";
+
+            if (mabBattleDB.MabBattleTurns == null || mabBattleDB.MabBattleTurns.Count < 1)
+            {
+                mabBattleDB.MabBattleTurns = new List<MabBattleTurn>()
+                {
+                    new MabBattleTurn
+                    {
+                        MabBattleRoundNumber = 1,
+                        MabPlayerCardCopyId = request!.MabCardCopyId,                              
+                    }
+                };
+
+                return (new UsersMabPlayerTurnResponse { IsRoundFinished = false },
+                    message);            
+            }
+
+            
+            mabBattleTurns = mabBattleDB.MabBattleTurns.OrderBy(a => a.Id).ToList();
+
+            lastMabBattleTurn = mabBattleTurns.Last();
+
+            if(lastMabBattleTurn.IsRoundFinished == true)
+            {
+                mabBattleRoundNumer = mabBattleTurns.Count + 1;
+
+                mabBattleDB.MabBattleTurns.Add(new MabBattleTurn
+                {
+                    MabBattleRoundNumber = mabBattleRoundNumer,
+                    MabPlayerCardCopyId = request!.MabCardCopyId,                  
+                });
+
+                return (new UsersMabPlayerTurnResponse { IsRoundFinished = false },
+                    message);
+            }         
+                mabBattleRoundNumer = lastMabBattleTurn.MabBattleRoundNumber!.Value;
+
+                mabNpcCardCopyId = lastMabBattleTurn.MabNpcCardCopyId!.Value;
+
+                var(winnerMabCardCopyId, mabBattleRoundPoints) = await EvaluateMabBattleRound(request!.MabCardCopyId!.Value, mabNpcCardCopyId.Value);
+
+            return (new UsersMabPlayerTurnResponse {
+                WinnerCardCopyId = winnerMabCardCopyId,
+                MabBattleRoundPoints = mabBattleRoundPoints,
+                IsRoundFinished = true },
+                "Mab Battle Round ended successfully");
+        }
+        //A partir daqui, é preciso ainda fazer migration, pois as tabelas ainda não existem no banco de dados
+
+        private static (bool, string) MabPlayerTurn_Validation(UsersMabPlayerTurnRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null!");
+            }
+
+            if (request.MabCardCopyId.HasValue == false || request.MabCardCopyId < 1)
+            {
+                return (false, "Error: MabCardCopyId is invalid or missing");
+            }
+
+            return (true, string.Empty);
+        }
+        private async Task<(int?, int?)> EvaluateMabBattleRound(int mabPlayerCardCopyId, int mabNpcCardCopyID)
+        {
+            var winnerMabCardCopyId = 0;
+
+            var mabBattleRoundPoints = 0;
+
+            var mabPlayerCardCopyDB = await this._daoDbContext
+                .MabCards
+                .AsNoTracking()               
+                .FirstOrDefaultAsync(a => a.IsDeleted == false && a.MabPlayerCardCopies.Any(b => b.Id == mabPlayerCardCopyId));             
+            
+            var mabNpcCardCopyDB = await this._daoDbContext
+                .MabCards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.IsDeleted == false && a.Id == mabNpcCardCopyID);
+
+            var mabPlayerCardFullPower = Helper.GetCardFullPower(mabPlayerCardCopyDB!.Power, mabPlayerCardCopyDB.UpperHand, (int)mabPlayerCardCopyDB.Type!, (int)mabNpcCardCopyDB.Type!);
+
+            var mabNpcCardFullPower = Helper.GetCardFullPower(mabNpcCardCopyDB!.Power, mabNpcCardCopyDB.UpperHand, (int)mabNpcCardCopyDB.Type!, (int)mabPlayerCardCopyDB.Type!);
+
+            mabBattleRoundPoints = Helper.GetDuelingPoints(mabPlayerCardFullPower, mabNpcCardFullPower);
+
+            winnerMabCardCopyId = mabBattleRoundPoints > 0 ? mabPlayerCardCopyId : mabNpcCardCopyID;
+
+            return (winnerMabCardCopyId, mabBattleRoundPoints);
+        }
+
+        private static int RandomFirstPlayer()
+        {
+            var random = new Random();
+
+            return random.Next(1, 3);
+        }
+
+
+
+        //public async Task<(PlayersPlayBattleResponse?, string)> PlayBattle(PlayersPlayBattleRequest request)
+        //{
+        //    var (isValid, message) = PlayIsValid(request);
+        //    if (isValid == false)
+        //    {
+        //        return (null, message);
+        //    }
+
+        //    var battleDB = await _daoDbContext
+        //        .Battles
+        //        .Include(a => a.Npc)
+        //        .ThenInclude(a => a.Deck)
+        //        .ThenInclude(a => a.Card)
+        //        .Include(a => a.Save)
+        //        .ThenInclude(a => a.Decks.Where(a => a.Id == request.DeckId))
+        //        .ThenInclude(a => a.PlayerDeckEntries)
+        //        .ThenInclude(a => a.PlayerCardEntry)
+        //        .ThenInclude(a => a.Card)
+        //        .Where(a => a.Id == request.BattleId)
+        //        .FirstOrDefaultAsync();
+
+        //    if (battleDB == null)
+        //    {
+        //        return (null, "Error: invalid battle");
+        //    }
+
+        //    var content = new PlayersPlayBattleResponse();
+
+        //    if (battleDB.IsRoundFinished == true)
+        //    {
+        //        var revertJason = JsonSerializer.Deserialize<PlayersPlayBattleResponse>(battleDB.Results);
+
+        //        content = new PlayersPlayBattleResponse
+        //        {
+        //            Duels = revertJason.Duels,
+        //            WinnerId = revertJason.WinnerId,
+        //            WinnerName = revertJason.WinnerName,
+        //        };
+
+        //        return (content, "Attention! This a record of a battle that was already finished");
+        //    }
+
+
+        //    var playerDeckDB = battleDB.Save.Decks.FirstOrDefault(a => a.Id == request.DeckId);
+
+        //    if (playerDeckDB == null || playerDeckDB.PlayerDeckEntries.Count == 0 || playerDeckDB.IsDeleted == true)
+        //    {
+        //        return (null, "Error: invalid deck");
+        //    }
+
+        //    var playerCardsDB = battleDB.Save.Decks.SelectMany(a => a.PlayerDeckEntries.Select(b => b.PlayerCardEntry.Card)).ToList();
+        //    var npcCardsDB = battleDB.Npc.Deck.Select(a => a.Card).ToList();
+
+        //    var duels = new List<List<PlayersPlayBattle_DuelingCard>>();
+
+        //    for (int i = 0; i < Constants.DeckSize; i++)
+        //    {
+        //        var playerCardFullPower = Helper.GetCardFullPower(playerCardsDB[i].Power, playerCardsDB[i].UpperHand, (int)playerCardsDB[i].Type, (int)npcCardsDB[i].Type);
+
+        //        var npcCardFullPower = Helper.GetCardFullPower(npcCardsDB[i].Power, npcCardsDB[i].UpperHand, (int)npcCardsDB[i].Type, (int)playerCardsDB[i].Type);
+
+        //        duels.Add(
+        //            new List<PlayersPlayBattle_DuelingCard>
+        //            {
+        //                new PlayersPlayBattle_DuelingCard
+        //                {
+        //                    CardName = playerCardsDB[i].Name,
+        //                    CardType = playerCardsDB[i].Type,
+        //                    CardPower = playerCardsDB[i].Power,
+        //                    CardUpperHand = playerCardsDB[i].UpperHand,
+        //                    CardFullPower = playerCardFullPower,
+        //                    DualResult = Helper.GetDuelingPoints(playerCardFullPower, npcCardFullPower),
+        //                },
+        //                new PlayersPlayBattle_DuelingCard
+        //                {
+        //                    CardName = npcCardsDB[i].Name,
+        //                    CardType = npcCardsDB[i].Type,
+        //                    CardPower = npcCardsDB[i].Power,
+        //                    CardUpperHand = npcCardsDB[i].UpperHand,
+        //                    CardFullPower = npcCardFullPower,
+        //                    DualResult = Helper.GetDuelingPoints(npcCardFullPower, playerCardFullPower),
+        //                },
+        //            });
+        //    }
+
+        //    var playerTotalPoints = duels.Select(a => a[0].DualResult).Sum();
+
+        //    var npcTotalPoints = duels.Select(a => a[1].DualResult).Sum();
+
+        //    var winner = battleDB.Save.Name;
+
+        //    if (npcTotalPoints > playerTotalPoints)
+        //    {
+        //        winner = battleDB.Npc.Name;
+
+        //        battleDB.Save.PlayerLevel += 0;
+        //        battleDB.Save.Gold += 0;
+        //        battleDB.Save.CountMatches++;
+        //        battleDB.Save.CountDefeats++;
+        //        battleDB.Winner = winner;
+        //        battleDB.IsRoundFinished = true;
+
+        //        content.Duels = duels;
+        //        content.WinnerName = $"The NPC {winner} wins";
+        //        content.WinnerId = battleDB.NpcId;
+
+        //        await _daoDbContext.SaveChangesAsync();
+
+        //        return (content, "Results read sucessfully");
+        //    }
+        //    ;
+
+        //    content.WinnerName = $"{winner} wins";
+
+        //    if (battleDB.Save.PlayerLevel < battleDB.Npc.Level)
+        //    {
+        //        battleDB.Save.PlayerLevel = battleDB.Npc.Level;
+        //    }
+        //    battleDB.Save.Gold += 1;
+        //    battleDB.Save.CountMatches++;
+        //    battleDB.Save.CountVictories++;
+        //    battleDB.Winner = battleDB.Save.Name;
+        //    battleDB.IsRoundFinished = true;
+
+        //    var allNpcsIdsDB = _daoDbContext
+        //                         .Npcs
+        //                         .Select(a => a.Id)
+        //                         .ToList();
+
+        //    content.Duels = duels;
+        //    content.WinnerId = battleDB.SaveId;
+
+        //    message = "Battle result evaluated sucessfully";
+
+        //    if (battleDB.Save.AllNpcsDefeatedTrophy == false)
+        //    {
+        //        var allNpcsDefeated = await _daoDbContext
+        //                                        .Battles
+        //                                        .Where(a => a.Save.Id == battleDB.SaveId)
+        //                                        .Select(a => a.NpcId)
+        //                                        .ToListAsync();
+
+        //        if (allNpcsIdsDB.All(a => allNpcsDefeated.Contains(a)) == true)
+        //        {
+        //            message += " . . . All NPCs have been defeated, a new trophy was unlocked";
+        //            battleDB.Save.AllNpcsDefeatedTrophy = true;
+        //        }
+        //    }
+
+        //    if (battleDB.Save.AllNpcsDefeatedTrophy == true)
+        //    {
+        //        var allNpcsDefeated = await _daoDbContext
+        //                                        .Battles
+        //                                        .Where(a => a.Save.Id == battleDB.SaveId)
+        //                                        .Select(a => a.NpcId)
+        //                                        .ToListAsync();
+
+        //        if (allNpcsIdsDB.All(a => allNpcsDefeated.Contains(a)) == false)
+        //        {
+        //            message += " . . . new NPCS yet to be defeat, your trophy was removed";
+        //            battleDB.Save.AllNpcsDefeatedTrophy = false;
+        //        }
+
+        //    }
+
+        //    battleDB.Results = JsonSerializer.Serialize(content);
+        //    await _daoDbContext.SaveChangesAsync();
+
+        //    return (content, message);
+        //}
+        //public (bool, string) PlayIsValid(PlayersPlayBattleRequest request)
+        //{
+        //    if (request == null)
+        //    {
+        //        return (false, "Error: no information provided");
+        //    }
+
+        //    if (request.BattleId <= 0)
+        //    {
+        //        return (false, "Error: invalid BattleId");
+        //    }
+
+        //    if (request.DeckId <= 0)
+        //    {
+        //        return (false, "Error: invalid DeckId");
+        //    }
+
+        //    return (true, string.Empty);
+        //}
+
+        //public async Task<(PlayersGetBattleResultsResponse?, string)> GetBattleResults(PlayersGetBattleResultsRequest request)
+        //{
+        //    if (request.BattleId == null && request.SaveId == null || request.BattleId <= 0 && request.SaveId <= 0)
+        //    {
+        //        return (null, "Error: informing either a BattleId or a SaveId is mandatory");
+        //    }
+
+        //    var battleDB = await _daoDbContext
+        //                            .Battles
+        //                            .FirstOrDefaultAsync(a => a.Id == request.BattleId && a.IsRoundFinished == true);
+        //    if (battleDB == null || string.IsNullOrEmpty(battleDB.Results))
+        //    {
+        //        return (null, "Error: no battle results found");
+        //    }
+
+        //    var revertJason = JsonSerializer.Deserialize<PlayersPlayBattleResponse>(battleDB.Results);
+
+        //    var content = new PlayersGetBattleResultsResponse
+        //    {
+        //        Duels = revertJason.Duels,
+        //        WinnerId = revertJason.WinnerId,
+        //        WinnerName = revertJason.WinnerName,
+        //    };
+
+        //    return (content, "Results listed successfully");
+        //}
 
 
 

@@ -38,5 +38,6 @@ namespace BoardGameGeekLike.Models
         public DbSet<MabPlayerAssignedCardCopy> MabPlayerAssignedCardCopies { get; set; }
         public DbSet<MabPlayerDeck> MabPlayerDecks { get; set; }   
         public DbSet<MabBattle> MabBattles { get; set; }
+        public DbSet<MabBattleTurn> MabBattleTurns { get; set; }
     }
 }

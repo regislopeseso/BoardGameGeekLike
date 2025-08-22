@@ -938,6 +938,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> StartMabBattle([FromForm] UsersStartMabBattleRequest? request)
+        {
+            var (content, message) = await this._usersService.StartMabBattle(request);
+
+            var response = new Response<UsersStartMabBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         #endregion
 
 

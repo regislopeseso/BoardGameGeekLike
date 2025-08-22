@@ -177,5 +177,8 @@
         {
             return playerFullPower - npcFullPower <= 0 ? 0 : 1;
         }
+
+       
+
     }
 }

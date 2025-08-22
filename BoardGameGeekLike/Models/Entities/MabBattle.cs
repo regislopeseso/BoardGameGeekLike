@@ -17,7 +17,7 @@ namespace BoardGameGeekLike.Models.Entities
         public bool IsFinished { get; set; } = false;
 
 
-        [ForeignKey("MedievalAutoBattlerCampaign")]
+        [ForeignKey("MabCampaign")]
         public int MabCampaignId { get; set; }
         public MabPlayerCampaign MabCampaign { get; set; }
 
@@ -25,5 +25,8 @@ namespace BoardGameGeekLike.Models.Entities
         [ForeignKey("Npc")]
         public int NpcId { get; set; }
         public MabNpc Npc { get; set; }
+
+        [InverseProperty("MabBattle")]
+        public List<MabBattleTurn>? MabBattleTurns { get; set; }
     }
 }

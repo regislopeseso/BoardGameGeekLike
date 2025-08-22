@@ -19,6 +19,8 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? GoldStash { get; set; }
 
+        public double? GoldValue { get; set; } = 1.0;
+
         public int? CountMatches { get; set; } = 0;
 
         public int? CountVictories { get; set; } = 0;
