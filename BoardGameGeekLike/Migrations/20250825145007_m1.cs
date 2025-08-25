@@ -318,6 +318,7 @@ namespace BoardGameGeekLike.Migrations
                     MabPlayerLevel = table.Column<int>(type: "int", nullable: true),
                     Difficulty = table.Column<byte>(type: "tinyint unsigned", nullable: true),
                     GoldStash = table.Column<int>(type: "int", nullable: true),
+                    GoldValue = table.Column<double>(type: "double", nullable: true),
                     CountMatches = table.Column<int>(type: "int", nullable: true),
                     CountVictories = table.Column<int>(type: "int", nullable: true),
                     CountDefeats = table.Column<int>(type: "int", nullable: true),
@@ -444,6 +445,7 @@ namespace BoardGameGeekLike.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    DoesPlayerPlaysFirst = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     Winner = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Results = table.Column<string>(type: "longtext", nullable: true)
@@ -504,7 +506,6 @@ namespace BoardGameGeekLike.Migrations
                     Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsActive = table.Column<bool>(type: "tinyint(1)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     MabPlayerCampaignId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -632,6 +633,31 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "mabBattleTurns",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    MabBattleRoundNumber = table.Column<int>(type: "int", nullable: true),
+                    MabPlayerCardCopyId = table.Column<int>(type: "int", nullable: true),
+                    MabNpcDeckEntryId = table.Column<int>(type: "int", nullable: true),
+                    HasPlayerWon = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    IsRoundFinished = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    RoundPoints = table.Column<int>(type: "int", nullable: true),
+                    MabBattleId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_mabBattleTurns", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_mabBattleTurns_mabBattles_MabBattleId",
+                        column: x => x.MabBattleId,
+                        principalTable: "mabBattles",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "MabPlayerAssignedCardCopies",
                 columns: table => new
                 {
@@ -734,6 +760,11 @@ namespace BoardGameGeekLike.Migrations
                 column: "NpcId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_mabBattleTurns_MabBattleId",
+                table: "mabBattleTurns",
+                column: "MabBattleId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_mabCampaigns_UserId",
                 table: "mabCampaigns",
                 column: "UserId",
@@ -820,7 +851,7 @@ namespace BoardGameGeekLike.Migrations
                 name: "LifeCounterPlayers");
 
             migrationBuilder.DropTable(
-                name: "mabBattles");
+                name: "mabBattleTurns");
 
             migrationBuilder.DropTable(
                 name: "MabPlayerAssignedCardCopies");
@@ -844,19 +875,22 @@ namespace BoardGameGeekLike.Migrations
                 name: "LifeCounterManagers");
 
             migrationBuilder.DropTable(
+                name: "mabBattles");
+
+            migrationBuilder.DropTable(
                 name: "mabPlayerCardCopy");
 
             migrationBuilder.DropTable(
                 name: "mabPlayerDecks");
 
             migrationBuilder.DropTable(
-                name: "npcs");
-
-            migrationBuilder.DropTable(
                 name: "boardgames");
 
             migrationBuilder.DropTable(
                 name: "LifeCounterTemplates");
+
+            migrationBuilder.DropTable(
+                name: "npcs");
 
             migrationBuilder.DropTable(
                 name: "mabCards");

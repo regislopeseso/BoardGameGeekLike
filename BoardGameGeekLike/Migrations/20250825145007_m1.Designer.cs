@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250822175557_m2")]
-    partial class m2
+    [Migration("20250825145007_m1")]
+    partial class m1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -248,6 +248,9 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool?>("DoesPlayerPlaysFirst")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsFinished")
                         .HasColumnType("tinyint(1)");
 
@@ -270,6 +273,42 @@ namespace BoardGameGeekLike.Migrations
                     b.HasIndex("NpcId");
 
                     b.ToTable("mabBattles");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabBattleTurn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("HasPlayerWon")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsRoundFinished")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("MabBattleId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MabBattleRoundNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MabNpcDeckEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MabPlayerCardCopyId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RoundPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MabBattleId");
+
+                    b.ToTable("mabBattleTurns");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCard", b =>
@@ -865,6 +904,15 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("Npc");
                 });
 
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabBattleTurn", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabBattle", "MabBattle")
+                        .WithMany("MabBattleTurns")
+                        .HasForeignKey("MabBattleId");
+
+                    b.Navigation("MabBattle");
+                });
+
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpcDeckEntry", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.MabCard", "Card")
@@ -1054,6 +1102,11 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.LifeCounterTemplate", b =>
                 {
                     b.Navigation("LifeCounterManagers");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabBattle", b =>
+                {
+                    b.Navigation("MabBattleTurns");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCard", b =>

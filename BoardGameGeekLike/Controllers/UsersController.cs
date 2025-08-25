@@ -952,6 +952,48 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ListMabAvailableRoundCardCopies(UsersListMabAvailableRoundCardCopiesRequest? request)
+        {
+            var (content, message) = await this._usersService.ListMabAvailableRoundCardCopies(request);
+
+            var response = new Response<List<UsersListMabAvailableRoundCardCopiesResponse>?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabPlayerTurn([FromForm] UsersMabPlayerTurnRequest? request)
+        {
+            var (content, message) = await this._usersService.MabPlayerTurn(request);
+
+            var response = new Response<UsersMabPlayerTurnResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabNpcTurn(UsersMabNpcTurnRequest? request)
+        {
+            var (content, message) = await this._usersService.MabNpcTurn(request);
+
+            var response = new Response<UsersMabNpcTurnResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         #endregion
 
 

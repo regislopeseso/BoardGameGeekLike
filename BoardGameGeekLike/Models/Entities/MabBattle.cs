@@ -10,6 +10,8 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        public bool? DoesPlayerPlaysFirst { get; set; }
+
         public string? Winner { get; set; }
 
         public string? Results { get; set; }
