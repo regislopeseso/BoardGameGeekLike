@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250825145007_m1")]
-    partial class m1
+    [Migration("20250825191825_m2")]
+    partial class m2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -248,13 +248,19 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool?>("DoesPlayerPlaysFirst")
+                    b.Property<bool?>("HasPlayerWon")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsFinished")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool?>("IsPlayersTurn")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("MabCampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MabPlayerCampaignId")
                         .HasColumnType("int");
 
                     b.Property<int>("NpcId")
@@ -263,12 +269,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<string>("Results")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Winner")
-                        .HasColumnType("longtext");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("MabCampaignId");
+                    b.HasIndex("MabPlayerCampaignId");
 
                     b.HasIndex("NpcId");
 
@@ -887,9 +890,9 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabBattle", b =>
                 {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.MabPlayerCampaign", "MabCampaign")
-                        .WithMany()
-                        .HasForeignKey("MabCampaignId")
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabPlayerCampaign", "MabPlayerCampaign")
+                        .WithMany("MabBattles")
+                        .HasForeignKey("MabPlayerCampaignId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -899,7 +902,7 @@ namespace BoardGameGeekLike.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("MabCampaign");
+                    b.Navigation("MabPlayerCampaign");
 
                     b.Navigation("Npc");
                 });
@@ -1121,6 +1124,8 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabPlayerCampaign", b =>
                 {
+                    b.Navigation("MabBattles");
+
                     b.Navigation("MabPlayerCardCopies");
 
                     b.Navigation("MabPlayerDecks");

@@ -452,14 +452,15 @@ namespace BoardGameGeekLike.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsFinished = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     MabCampaignId = table.Column<int>(type: "int", nullable: false),
+                    MabPlayerCampaignId = table.Column<int>(type: "int", nullable: false),
                     NpcId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_mabBattles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_mabBattles_mabCampaigns_MabCampaignId",
-                        column: x => x.MabCampaignId,
+                        name: "FK_mabBattles_mabCampaigns_MabPlayerCampaignId",
+                        column: x => x.MabPlayerCampaignId,
                         principalTable: "mabCampaigns",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -750,9 +751,9 @@ namespace BoardGameGeekLike.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_mabBattles_MabCampaignId",
+                name: "IX_mabBattles_MabPlayerCampaignId",
                 table: "mabBattles",
-                column: "MabCampaignId");
+                column: "MabPlayerCampaignId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_mabBattles_NpcId",

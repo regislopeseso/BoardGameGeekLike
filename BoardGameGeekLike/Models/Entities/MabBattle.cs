@@ -10,9 +10,9 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public bool? DoesPlayerPlaysFirst { get; set; }
+        public bool? IsPlayersTurn { get; set; }
 
-        public string? Winner { get; set; }
+        public bool? HasPlayerWon { get; set; }
 
         public string? Results { get; set; }
 
@@ -21,7 +21,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey("MabCampaign")]
         public int MabCampaignId { get; set; }
-        public MabPlayerCampaign MabCampaign { get; set; }
+        public MabPlayerCampaign MabPlayerCampaign { get; set; }
 
 
         [ForeignKey("Npc")]

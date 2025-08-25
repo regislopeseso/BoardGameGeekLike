@@ -2,7 +2,7 @@
 {
     public class UsersMabNpcTurnResponse
     {
-        public int? WinnerCardCopyId { get; set; }
+        public bool? HasPlayerWon { get; set; }
 
         public int? MabBattleRoundPoints { get; set; } = 0;
 

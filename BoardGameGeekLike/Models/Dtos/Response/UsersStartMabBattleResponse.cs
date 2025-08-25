@@ -2,8 +2,8 @@
 {
     public class UsersStartMabBattleResponse
     {
-        public int? MabBattleId { get; set; }
-
         public string? MabNpcName { get; set; }
+
+        public bool? DoesPlayerGoFirst { get; set; }
     }
 }

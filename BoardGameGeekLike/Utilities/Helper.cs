@@ -166,11 +166,26 @@
 
         public static int GetCardFullPower(int power, int upperhand, int firstType, int secondType)
         {
-            return firstType == 1 && secondType == 2 ? power + upperhand :
-                   firstType == 1 && secondType == 3 ? power :
-                   firstType == 2 && secondType == 1 ? power :
-                   firstType == 2 && secondType == 3 ? power + upperhand :
-                   firstType == 3 && secondType == 1 ? power + upperhand : power;
+            return (firstType, secondType) switch
+            {
+                (0, 0) => power,
+                (0, 1) => power,
+                (0, 2) => power,
+                (0, 3) => power,
+                (1, 0) => power + 2*upperhand,
+                (1, 1) => power,
+                (1, 2) => power + upperhand,
+                (1, 3) => power,
+                (2, 0) => power + 2*upperhand,
+                (2, 1) => power,
+                (2, 2) => power,
+                (2, 3) => power + upperhand,
+                (3, 0) => power + 2*upperhand,
+                (3, 1) => power + upperhand,
+                (3, 2) => power,
+                (3, 3) => power,
+                _ => power
+            };
         }
 
         public static int GetDuelingPoints(int playerFullPower, int npcFullPower)

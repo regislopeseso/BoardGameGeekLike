@@ -47,5 +47,8 @@ namespace BoardGameGeekLike.Models.Entities
 
         [InverseProperty("MabPlayerCampaign")]
         public List<MabPlayerCardCopy>? MabPlayerCardCopies { get; set; }
+
+        [InverseProperty("MabPlayerCampaign")]
+        public List<MabBattle>? MabBattles { get; set; }
     }
 }

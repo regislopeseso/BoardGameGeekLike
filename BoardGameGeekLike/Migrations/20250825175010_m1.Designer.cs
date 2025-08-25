@@ -4,6 +4,7 @@ using BoardGameGeekLike.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250825175010_m1")]
+    partial class m1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,13 +248,10 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool?>("HasPlayerWon")
+                    b.Property<bool?>("DoesPlayerPlaysFirst")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsFinished")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool?>("IsPlayersTurn")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("MabCampaignId")
@@ -264,6 +264,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Results")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Winner")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

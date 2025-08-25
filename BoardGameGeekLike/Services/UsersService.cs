@@ -12,6 +12,7 @@ using Microsoft.VisualBasic;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
@@ -5541,11 +5542,11 @@ namespace BoardGameGeekLike.Services
         {
             var mabPlayerInicialAssignedCardCopies = new List<MabPlayerAssignedCardCopy>();
 
-            foreach (var mabPlayerInicialCardCopy in mabPlayerInicialCardCopies)
+            for (var i = 0; i < Constants.DeckSize; i++)
             {
                 mabPlayerInicialAssignedCardCopies.Add(new MabPlayerAssignedCardCopy
                 {
-                    MabCardCopy = mabPlayerInicialCardCopy
+                    MabCardCopy = mabPlayerInicialCardCopies[i]
                 });
             }
 
@@ -6347,6 +6348,7 @@ namespace BoardGameGeekLike.Services
 
             var mabCampaignDB = await _daoDbContext
                 .MabPlayerCampaigns
+                .Include(a => a.MabBattles)
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDeleted == false);
 
             if (mabCampaignDB == null)
@@ -6354,37 +6356,40 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: request mab campaign could not be found!");
             }
 
-            var random = new Random();
-
-            var validNpcsIdsDB = await this._daoDbContext
-                .MabNpcs
-                .AsNoTracking()
-                .Where(a => a.IsDeleted == false && a.Level <= mabCampaignDB.MabPlayerLevel + 1)
-                .Select(a => new { a.Id, a.Name })
-                .ToListAsync();
-
-            if (validNpcsIdsDB == null || validNpcsIdsDB.Count == 0)
+            if(mabCampaignDB.MabBattles!.Any(a => a.IsFinished == false))
             {
-                return (null, "Error: no valid mab NPC was found for this match");
+                return (null, "Error: there is already an ongoing battle!");
             }
 
-            var randomNpc = validNpcsIdsDB.OrderBy(a => random.Next()).FirstOrDefault();
+            var randomNpc = await this._daoDbContext
+                .MabNpcs
+                .AsNoTracking()
+                .Where(a => !a.IsDeleted && a.Level <= mabCampaignDB.MabPlayerLevel + 1)
+                .OrderBy(a => Guid.NewGuid())   // random order at SQL side
+                .Select(a => new { a.Id, a.Name })
+                .FirstOrDefaultAsync();
 
-            var newMatch = new MabBattle
+            if (randomNpc == null)
+            {
+                return (null, "Error: no valid mab NPC was found for this battle");
+            }
+
+            var doesPlayerGoFirst = RandomFirstPlayer();        
+
+            mabCampaignDB.MabBattles!.Add(new MabBattle
             {
                 MabCampaignId = mabCampaignDB.Id,
                 NpcId = randomNpc!.Id,
-                DoesPlayerPlaysFirst = RandomFirstPlayer()
-            };
-
-            this._daoDbContext.Add(newMatch);
+                IsPlayersTurn = doesPlayerGoFirst,
+                IsFinished = false,
+            });
 
             await _daoDbContext.SaveChangesAsync();
 
             var content = new UsersStartMabBattleResponse
-            {
-                MabBattleId = newMatch.Id,
-                MabNpcName = randomNpc.Name
+            {             
+                MabNpcName = randomNpc.Name,
+                DoesPlayerGoFirst = doesPlayerGoFirst
             };
 
             return (content, "A new battle started successfully");
@@ -6434,7 +6439,7 @@ namespace BoardGameGeekLike.Services
 
             var mabPlayerUnavailableCardCopyIds = await _daoDbContext
                 .MabBattles
-                .Where(b => b.MabCampaign.UserId == userId)
+                .Where(b => b.MabPlayerCampaign.UserId == userId)
                 .SelectMany(b => b.MabBattleTurns!)
                 .Where(t => t.MabPlayerCardCopyId != null)
                 .Select(t => t.MabPlayerCardCopyId!.Value)
@@ -6494,68 +6499,139 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-
-            var mabBattleDB = await this._daoDbContext
-                .MabBattles
-                .Include(a => a.MabBattleTurns)
-                .FirstOrDefaultAsync(a => a.IsFinished == false && a.MabCampaign!.UserId == userId);
-
-            if(mabBattleDB == null)
+            var mabCampaignDB = await this._daoDbContext
+                .MabPlayerCampaigns
+                .Include(a => a.MabPlayerDecks!
+                    .Where(b => b.IsActive == true))
+                .ThenInclude(a => a.MabPlayerAssignedCardCopies!)
+                .ThenInclude(a => a.MabCardCopy)                    
+                .ThenInclude(a => a.MabCard)
+                    .Where(b => b.IsDeleted == false)
+                .Include(a => a.MabBattles!
+                    .Where(b => b.IsFinished == false))
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDeleted == false);
+            
+            if (mabCampaignDB == null)
             {
-                return(null, "Error: no mab battle found for this campaign!");
+                return (null, "Error: no mab campaign found for this user!");
             }
 
-            var mabBattleTurns = new List<MabBattleTurn>();
+            var mabPlayerDeck = mabCampaignDB.MabPlayerDecks!.FirstOrDefault();
+            if( mabPlayerDeck == null)
+            {
+                return (null, "Error: no active mab player deck found for this campaign!");
+            }
 
-            var lastMabBattleTurn = new MabBattleTurn();
+            var mabPlayerAssignedCardCopies = mabPlayerDeck!.MabPlayerAssignedCardCopies;
+            if(mabPlayerAssignedCardCopies == null || mabPlayerAssignedCardCopies.Count < Constants.DeckSize)
+            {
+                return (null, "Error: Mab Player's active deck has none or insufficient assigned card copies!");
+            }
+
+            var isCardCopyIdValid = mabPlayerAssignedCardCopies!.Any(a => a.MabCardCopyId == request!.MabCardCopyId);
+            if (isCardCopyIdValid == false)
+            {
+                return (null, "Error: invalid Mab Card Copy Id for this player's active Deck!");
+            }
+
+            var mabCardsDB = mabPlayerAssignedCardCopies!.Select(a => a.MabCardCopy!.MabCard).ToList();            
+
+            var mabBattle = mabCampaignDB!.MabBattles!.FirstOrDefault(a => a.IsFinished == false);
+            if (mabBattle == null)
+            {
+                return (null, "Error: failed to find the requested mab battle!");
+            }
+
+            if(mabBattle.IsPlayersTurn == false)
+            {
+                return (null, "Error: it is not the player's turn!");
+            }
+
+            mabBattle.IsPlayersTurn = !mabBattle.IsPlayersTurn;
+
+            var mabBattleTurns = mabBattle.MabBattleTurns;
+            if(mabBattleTurns!.Count < 1)
+            {              
+                mabBattleTurns = new List<MabBattleTurn>();
+
+                mabBattleTurns.Add(new MabBattleTurn
+                {
+                    MabBattleRoundNumber = 1,
+                    MabPlayerCardCopyId = request!.MabCardCopyId,                  
+                });
+
+                message = "Player's turn ended successfully, now is the NPC's turn!";
+            
+                await this._daoDbContext.SaveChangesAsync();
+                
+                return (
+                    new UsersMabPlayerTurnResponse 
+                    { 
+                        IsRoundFinished = false 
+                    },
+                    message);          
+            }
+
+            var hasCardCopyBeenPlayedAlready = mabBattleTurns.Any(a => a.MabPlayerCardCopyId == request!.MabCardCopyId);
+
+            if (hasCardCopyBeenPlayedAlready == true)
+            {
+                return (null, "Error: this Mab Card Copy has already been played in this battle!");
+            }
 
             int mabBattleRoundNumer = 0;
+
+            var lastMabBattleTurn = mabBattleTurns.OrderByDescending(a => a.Id).FirstOrDefault();
+
+            if(lastMabBattleTurn != null && lastMabBattleTurn.IsRoundFinished == true)
+            {
+                mabBattle.IsPlayersTurn = mabBattle.IsPlayersTurn == true ? false : true;
+
+                mabBattleRoundNumer = mabBattleTurns.Count + 1;
+
+                mabBattle.MabBattleTurns!.Add(new MabBattleTurn
+                {
+                    MabBattleRoundNumber = mabBattleRoundNumer,
+                    MabPlayerCardCopyId = request!.MabCardCopyId,
+                });
+
+                message = "Player's turn ended successfully, now is the NPC's turn!";
+
+                await this._daoDbContext.SaveChangesAsync();
+
+                return (
+                    new UsersMabPlayerTurnResponse
+                    {
+                        IsRoundFinished = false
+                    },
+                    message);
+            }                           
 
             int? mabNpcCardCopyId;
 
             message = "Player's turn ended successfully, now is the NPC's turn!";
 
-            if (mabBattleDB.MabBattleTurns == null || mabBattleDB.MabBattleTurns.Count < 1)
-            {
-                mabBattleDB.MabBattleTurns = new List<MabBattleTurn>()
-                {
-                    new MabBattleTurn
-                    {
-                        MabBattleRoundNumber = 1,
-                        MabPlayerCardCopyId = request!.MabCardCopyId,                              
-                    }
-                };
 
-                return (new UsersMabPlayerTurnResponse { IsRoundFinished = false },
-                    message);            
-            }
+            lastMabBattleTurn.MabBattleRoundNumber = lastMabBattleTurn.MabBattleRoundNumber!.Value;
 
-            
-            mabBattleTurns = mabBattleDB.MabBattleTurns.OrderBy(a => a.Id).ToList();
+            lastMabBattleTurn.MabPlayerCardCopyId = request!.MabCardCopyId;
 
-            lastMabBattleTurn = mabBattleTurns.Last();
+            mabNpcCardCopyId = lastMabBattleTurn.MabNpcDeckEntryId!.Value;
 
-            if(lastMabBattleTurn.IsRoundFinished == true)
-            {
-                mabBattleRoundNumer = mabBattleTurns.Count + 1;
+            var(hasPlayerWon, mabBattleRoundPoints) = await EvaluateMabBattleRound(request!.MabCardCopyId!.Value, mabNpcCardCopyId.Value);
 
-                mabBattleDB.MabBattleTurns.Add(new MabBattleTurn
-                {
-                    MabBattleRoundNumber = mabBattleRoundNumer,
-                    MabPlayerCardCopyId = request!.MabCardCopyId,                  
-                });
+            lastMabBattleTurn.IsRoundFinished = true;
 
-                return (new UsersMabPlayerTurnResponse { IsRoundFinished = false },
-                    message);
-            }         
-                mabBattleRoundNumer = lastMabBattleTurn.MabBattleRoundNumber!.Value;
+            lastMabBattleTurn.HasPlayerWon = hasPlayerWon;
 
-                mabNpcCardCopyId = lastMabBattleTurn.MabNpcDeckEntryId!.Value;
+            lastMabBattleTurn.RoundPoints = mabBattleRoundPoints;
 
-                var(winnerMabCardCopyId, mabBattleRoundPoints) = await EvaluateMabBattleRound(request!.MabCardCopyId!.Value, mabNpcCardCopyId.Value);
+            mabBattle.IsPlayersTurn = mabBattle.IsPlayersTurn == true ? false : true;
+
+            await this._daoDbContext.SaveChangesAsync();
 
             return (new UsersMabPlayerTurnResponse {
-                WinnerCardCopyId = winnerMabCardCopyId,
+                HasPlayerWon = lastMabBattleTurn.HasPlayerWon,
                 MabBattleRoundPoints = mabBattleRoundPoints,
                 IsRoundFinished = true },
                 "Mab Battle Round ended successfully");
@@ -6595,11 +6671,16 @@ namespace BoardGameGeekLike.Services
                 .Include(a => a.MabBattleTurns)
                 .Include(a => a.Npc)
                 .ThenInclude(a => a.Deck)
-                .FirstOrDefaultAsync(a => a.IsFinished == false && a.MabCampaign!.UserId == userId);
+                .FirstOrDefaultAsync(a => a.IsFinished == false && a.MabPlayerCampaign!.UserId == userId);
 
             if (mabBattleDB == null)
             {
                 return (null, "Error: no mab battle found for this campaign!");
+            }
+
+            if(mabBattleDB.IsPlayersTurn == true)
+            {
+                return (null, "Error: it is not the NPC's turn!");
             }
 
             var mabNpcDB = mabBattleDB.Npc;
@@ -6647,7 +6728,11 @@ namespace BoardGameGeekLike.Services
                     IsRoundFinished = false
                 };
 
+                mabBattleDB.IsPlayersTurn = true;
+
                 mabBattleDB.MabBattleTurns!.Add(newTurn);
+
+                await this._daoDbContext.SaveChangesAsync();
 
                 return (new UsersMabNpcTurnResponse { IsRoundFinished = false },
                     "NPC started the first round, now it’s YOUR turn!");
@@ -6665,7 +6750,11 @@ namespace BoardGameGeekLike.Services
                     IsRoundFinished = false
                 };
 
+                mabBattleDB.IsPlayersTurn = true;
+
                 mabBattleDB.MabBattleTurns!.Add(newTurn);
+
+                await this._daoDbContext.SaveChangesAsync();
 
                 return (new UsersMabNpcTurnResponse { IsRoundFinished = false },
                     "NPC started a new round, now it’s your turn!");
@@ -6674,16 +6763,20 @@ namespace BoardGameGeekLike.Services
             // SCENARIO 3: LAST TURN NOT FINISHED: NPC COMPLETES ROUND
             lastTurn.MabNpcDeckEntryId = randomNpcEntry.Id;
 
-            var (winnerMabCardCopyId, mabBattleRoundPoints) =
+            mabBattleDB.IsPlayersTurn = true;
+
+            var (hasPlayerWon, mabBattleRoundPoints) =
                 await EvaluateMabBattleRound(lastTurn.MabPlayerCardCopyId!.Value, randomNpcEntry.CardId);
 
             lastTurn.IsRoundFinished = true;
             lastTurn.RoundPoints = mabBattleRoundPoints;
-            lastTurn.HasPlayerWon = winnerMabCardCopyId == lastTurn.MabPlayerCardCopyId;
+            lastTurn.HasPlayerWon = hasPlayerWon;
+
+            await this._daoDbContext.SaveChangesAsync();
 
             return (new UsersMabNpcTurnResponse
             {
-                WinnerCardCopyId = winnerMabCardCopyId,
+                HasPlayerWon = hasPlayerWon,
                 MabBattleRoundPoints = mabBattleRoundPoints,
                 IsRoundFinished = true
             },
@@ -6704,9 +6797,9 @@ namespace BoardGameGeekLike.Services
         {
             return random.Next(0, 2) == 0;
         }
-        private async Task<(int?, int?)> EvaluateMabBattleRound(int mabPlayerCardCopyId, int mabNpcCardId)
+        private async Task<(bool?, int?)> EvaluateMabBattleRound(int mabPlayerCardCopyId, int mabNpcCardId)
         {
-            var winnerCardId = 0;
+            var hasPlayerWon = false;
 
             var mabBattleRoundPoints = 0;
 
@@ -6734,15 +6827,14 @@ namespace BoardGameGeekLike.Services
 
             mabBattleRoundPoints = Helper.GetDuelingPoints(mabPlayerCardFullPower, mabNpcCardFullPower);
 
-            if(mabBattleRoundPoints == 0)
+            if(mabBattleRoundPoints > 0)
             {
-                winnerCardId = 0;
-                return (winnerCardId, mabBattleRoundPoints);
-            }
+                hasPlayerWon = true;
 
-            winnerCardId = mabBattleRoundPoints > 0 ? mabPlayerCardCopyId : mabNpcCardId;
+                return (hasPlayerWon, mabBattleRoundPoints);
+            }           
 
-            return (winnerCardId, mabBattleRoundPoints);
+            return (hasPlayerWon, mabBattleRoundPoints);
         }
 
 
