@@ -1,7 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersMabPlayerTurnResponse
+    public class UsersResolveMabBattleDuelResponse
     {
-    
     }
 }
