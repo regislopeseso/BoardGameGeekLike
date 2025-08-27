@@ -507,7 +507,7 @@ namespace BoardGameGeekLike.Services
                     var cardsFiltered = cardsDB.Where(a => a.Level == level).ToList();
 
                     // Creating a new list of NpcDeckentries
-                    var validNpcDeckEntries = new List<MabNpcDeckEntry>();
+                    var validNpcDeckEntries = new List<MabNpcCard>();
                     for (int countCards = 0; countCards < 5; countCards++)
                     {
                         // Obtaining one random request out of the list of filtered cards
@@ -516,7 +516,7 @@ namespace BoardGameGeekLike.Services
                         // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:
                         validNpcDeckEntries.Add
                         (
-                            new MabNpcDeckEntry
+                            new MabNpcCard
                             {
                                 Card = card
                             }
@@ -551,7 +551,7 @@ namespace BoardGameGeekLike.Services
                     {
                         Name = npcName,
                         Description = npcDescription,
-                        Deck = validNpcDeckEntries,
+                        MabNpcCards = validNpcDeckEntries,
                         Level = npcLvl,
                         IsDeleted = false,
                         IsDummy = true
@@ -578,7 +578,7 @@ namespace BoardGameGeekLike.Services
                         var levelSequence = Helper.GetPowerSequence(level, i);
 
                         // Criating a new list of valid NPC deck entries:
-                        var validNpcDeckEntries = new List<MabNpcDeckEntry>();
+                        var validNpcDeckEntries = new List<MabNpcCard>();
 
                         // Obtaing a random request of cardLvl corresponding to its position in the sequence:
                         foreach (var cardLvl in levelSequence)
@@ -592,7 +592,7 @@ namespace BoardGameGeekLike.Services
                             // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:                               
                             validNpcDeckEntries.Add
                             (
-                                new MabNpcDeckEntry
+                                new MabNpcCard
                                 {
                                     Card = card
                                 }
@@ -612,7 +612,7 @@ namespace BoardGameGeekLike.Services
                         {
                             Name = npcName,
                             Description = "( " + string.Join(", ", levelSequence) + " )",
-                            Deck = validNpcDeckEntries,
+                            MabNpcCards = validNpcDeckEntries,
                             Level = npcLvl,
                             IsDeleted = false,
                             IsDummy = true
@@ -644,7 +644,7 @@ namespace BoardGameGeekLike.Services
                             var levelSequence = Helper.GetPowerSequence(level, i);
 
                             // Criating a new list of valid NPC deck entries:
-                            var validNpcDeckEntries = new List<MabNpcDeckEntry>();
+                            var validNpcDeckEntries = new List<MabNpcCard>();
 
                             // Obtaing a random cards of cardLvl corresponding to its position in the sequence:
                             foreach (var cardLvl in levelSequence)
@@ -658,7 +658,7 @@ namespace BoardGameGeekLike.Services
                                 // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:                               
                                 validNpcDeckEntries.Add
                                 (
-                                    new MabNpcDeckEntry
+                                    new MabNpcCard
                                     {
                                         Card = card
                                     }
@@ -678,7 +678,7 @@ namespace BoardGameGeekLike.Services
                             {
                                 Name = npcName,
                                 Description = "( " + string.Join(", ", levelSequence) + " )",
-                                Deck = validNpcDeckEntries,
+                                MabNpcCards = validNpcDeckEntries,
                                 Level = npcLvl,
                                 IsDeleted = false,
                                 IsDummy = true
@@ -702,7 +702,7 @@ namespace BoardGameGeekLike.Services
                 var countBotsLvlSix = 0;
                 var countBotsLvlSeven = 0;
 
-                var validDecks = new List<List<MabNpcDeckEntry>>();
+                var validDecks = new List<List<MabNpcCard>>();
                 var npcs = new List<MabNpc>();
 
                 // Obtaining the lists of all unique sequences
@@ -710,7 +710,7 @@ namespace BoardGameGeekLike.Services
                 for (int i = 1; i <= 12; i++)
                 {
                     // Criating a new list of valid NPC deck entries:
-                    var validNpcDeckEntries = new List<MabNpcDeckEntry>();
+                    var validNpcDeckEntries = new List<MabNpcCard>();
 
                     //ex.: cardLvl == 6 and  i == 1 => (4, 4, 6, 8, 8 )
                     var levelSequence = Helper.GetPowerSequence(level, i);
@@ -727,7 +727,7 @@ namespace BoardGameGeekLike.Services
                         // "Converting" the random request into a new NPC DECK ENTRY and adding it to a new list of valid deck entries:
                         validNpcDeckEntries.Add
                         (
-                            new MabNpcDeckEntry
+                            new MabNpcCard
                             {
                                 Card = card
                             }
@@ -794,7 +794,7 @@ namespace BoardGameGeekLike.Services
                     {
                         Name = npcName,
                         Description = "( " + string.Join(", ", levelSequence) + " )",
-                        Deck = validNpcDeckEntries,
+                        MabNpcCards = validNpcDeckEntries,
                         Level = npcLvl,
                         IsDeleted = false,
                         IsDummy = true

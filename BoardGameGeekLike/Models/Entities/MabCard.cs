@@ -28,5 +28,8 @@ namespace BoardGameGeekLike.Models.Entities
 
 
         public List<MabPlayerCardCopy>? MabPlayerCardCopies { get; set; }
+
+        public List<MabNpcCard>? MabNpcCards { get; set; }
+
     }
 }

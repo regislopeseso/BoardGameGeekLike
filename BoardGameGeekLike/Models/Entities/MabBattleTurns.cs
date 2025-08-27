@@ -14,9 +14,9 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? MabPlayerCardCopyId { get; set; } = null;
 
-        public int? MabNpcDeckEntryId { get; set; } = null;  
+        public int? MabNpcDeckEntryId { get; set; } = null;
 
-        public bool? HasPlayerWon { get; set; }
+        public bool? HasPlayerWon { get; set; } = null;
         
         public bool? IsRoundFinished { get; set; } = false;
 

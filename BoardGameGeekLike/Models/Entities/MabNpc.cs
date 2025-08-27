@@ -14,7 +14,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public required string Description { get; set; }
 
-        public List<MabNpcDeckEntry> Deck { get; set; }
+        public List<MabNpcCard> MabNpcCards { get; set; }
 
         public int Level { get; set; }
 

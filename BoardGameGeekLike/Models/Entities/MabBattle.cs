@@ -10,7 +10,9 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public bool? IsPlayersTurn { get; set; }
+        public int? MabBattlePoints { get; set; }
+
+        public bool? IsPlayerTurn { get; set; }
 
         public bool? HasPlayerWon { get; set; }
 

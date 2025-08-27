@@ -821,7 +821,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
         [HttpPut]
         public async Task<IActionResult> ActivateMabDeck([FromBody] UsersActivateMabDeckRequest? request)
         {
@@ -835,9 +834,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-
-
 
         [HttpGet]
         public async Task<IActionResult> ListUnassignedMabCardCopies([FromQuery] UsersListListUnassignedMabCardCopiesRequest? request)
@@ -853,7 +849,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
         public async Task<IActionResult> AddMabPlayerDeck(UsersAddMabCardCopyToDeckRequest? request)
         {
@@ -951,6 +946,34 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        
+        [HttpPost]
+        public async Task<IActionResult> ContinueMabBattle(UsersContinueMabBattleRequest? request)
+        {
+            var (content, message) = await this._usersService.ContinueMabBattle(request);
+
+            var response = new Response<UsersContinueMabBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabBattleTurnManager([FromForm] UsersMabBattleTurnManagerRequest? request)
+        {
+            var (content, message) = await this._usersService.MabBattleTurnManager(request);
+
+            var response = new Response<UsersMabBattleTurnManagerResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpGet]
         public async Task<IActionResult> ListMabAvailableRoundCardCopies(UsersListMabAvailableRoundCardCopiesRequest? request)
@@ -965,35 +988,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> MabPlayerTurn([FromForm] UsersMabPlayerTurnRequest? request)
-        {
-            var (content, message) = await this._usersService.MabPlayerTurn(request);
-
-            var response = new Response<UsersMabPlayerTurnResponse?>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> MabNpcTurn(UsersMabNpcTurnRequest? request)
-        {
-            var (content, message) = await this._usersService.MabNpcTurn(request);
-
-            var response = new Response<UsersMabNpcTurnResponse?>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
         #endregion
     }
 }

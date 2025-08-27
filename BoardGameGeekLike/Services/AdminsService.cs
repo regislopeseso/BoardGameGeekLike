@@ -1955,7 +1955,7 @@ namespace BoardGameGeekLike.Services
             {
                 Name = request.Name,
                 Description = request.Description,
-                Deck = newNpcDeckEntries,
+                MabNpcCards = newNpcDeckEntries,
                 Level = Helper.GetNpcLevel(newNpcDeckEntries.Select(a => a.Card.Level).ToList()),
                 IsDeleted = false
             };
@@ -2026,7 +2026,7 @@ namespace BoardGameGeekLike.Services
                     Description = a.Description,
                     Level = a.Level,                    
                     Cards = a
-                        .Deck
+                        .MabNpcCards
                         .Select(b => new AdminsShowMabNpcDetailsResponse_card
                         {
                             CardId = b.Card.Id,
@@ -2089,7 +2089,7 @@ namespace BoardGameGeekLike.Services
                     NpcDescription = a.Description,
                     NpcLevel = a.Level,
                     NpcIsDeleted = a.IsDeleted,
-                    Deck = a.Deck.Select(b => new AdminsGetNpcsResponse_Deck
+                    Deck = a.MabNpcCards.Select(b => new AdminsGetNpcsResponse_Deck
                     {
                         Name = b.Card.Name,
                         Power = b.Card.Power,
@@ -2139,7 +2139,7 @@ namespace BoardGameGeekLike.Services
 
             var npcDB = await _daoDbContext
                 .MabNpcs
-                .Include(a => a.Deck)
+                .Include(a => a.MabNpcCards)
                 .ThenInclude(b => b.Card)
                 .FirstOrDefaultAsync(a => a.Id == request.NpcId);
 
@@ -2165,12 +2165,12 @@ namespace BoardGameGeekLike.Services
             }
 
             var oldCardIds = npcDB
-                .Deck
+                .MabNpcCards
                 .Select(a => a.Id)
                 .ToList();
 
             await this._daoDbContext
-                .MabNpcDeckEntries
+                .MabNpcCard
                 .Where(a => oldCardIds.Contains(a.CardId) && a.NpcId == request.NpcId)
                 .ExecuteDeleteAsync();
             
@@ -2184,7 +2184,7 @@ namespace BoardGameGeekLike.Services
 
             npcDB.Name = request.NpcName!;
             npcDB.Description = request.NpcDescription!;
-            npcDB.Deck = newNpcDeckEntries;
+            npcDB.MabNpcCards = newNpcDeckEntries;
             npcDB.Level = Helper.GetNpcLevel(newNpcDeckEntries.Select(a => a.Card.Level).ToList());
 
             await this._daoDbContext.SaveChangesAsync();
@@ -2441,7 +2441,7 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
-        private async Task<(List<MabNpcDeckEntry>?, string)> GenerateRandomDeck(List<int> mabCardIds)
+        private async Task<(List<MabNpcCard>?, string)> GenerateRandomDeck(List<int> mabCardIds)
         {
             var cardsDB = await _daoDbContext
                 .MabCards
@@ -2468,7 +2468,7 @@ namespace BoardGameGeekLike.Services
                 return (null, $"Error: invalid cardId: {string.Join(" ,", notFoundIds)}");
             }
 
-            var newDeck = new List<MabNpcDeckEntry>();
+            var newDeck = new List<MabNpcCard>();
 
             foreach (var id in mabCardIds)
             {
@@ -2476,7 +2476,7 @@ namespace BoardGameGeekLike.Services
 
                 if (newCard != null)
                 {
-                    newDeck.Add(new MabNpcDeckEntry()
+                    newDeck.Add(new MabNpcCard()
                     {
                         Card = newCard,
                     });

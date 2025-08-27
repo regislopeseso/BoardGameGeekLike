@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("npcDeckEntries")]
-    public class MabNpcDeckEntry
+    [Table("npcCards")]
+    public class MabNpcCard
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -20,7 +20,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey("Npc")]
         public int NpcId { get; set; }
-        [InverseProperty("Deck")]
+        [InverseProperty("MabNpcCards")]
         public MabNpc Npc { get; set; }
     }
 }
