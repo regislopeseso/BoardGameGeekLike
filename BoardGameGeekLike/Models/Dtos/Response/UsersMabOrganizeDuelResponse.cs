@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersMabBattleTurnManagerResponse
+    public class UsersMabOrganizeDuelResponse
     {
 
         public UsersMabNpcTurnResponse? MabNpcCard { get; set; }

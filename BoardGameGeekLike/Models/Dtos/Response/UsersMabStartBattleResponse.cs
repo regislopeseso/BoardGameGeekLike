@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersStartMabBattleResponse
+    public class UsersMabStartBattleResponse
     {
         public string? MabPlayerNickName { get; set; }
 

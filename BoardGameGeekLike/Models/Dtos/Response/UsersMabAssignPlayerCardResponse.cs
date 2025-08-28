@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersAssignMabCardCopyToDeckResponse
+    public class UsersMabAssignPlayerCardResponse
     {
     }
 }

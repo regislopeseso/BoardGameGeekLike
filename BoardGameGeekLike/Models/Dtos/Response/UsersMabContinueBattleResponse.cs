@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersContinueMabBattleResponse
+    public class UsersMabContinueBattleResponse
     {
         public string? MabPlayerNickName { get; set; }
 
@@ -12,6 +12,6 @@
 
         public int? MabBattlePoints { get; set; }
 
-        public UsersContinueMabBattleResponse_MabNpcCard? MabNpcCard { get; set; }
+        public UsersMabContinueBattleResponse_NpcCard? MabNpcCard { get; set; }
     }
 }

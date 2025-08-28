@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersMabBattleTurnManagerRequest
+    public class UsersMabOrganizeDuelRequest
     {
         public int? MabPlayerCardId { get; set; } = null;
     }

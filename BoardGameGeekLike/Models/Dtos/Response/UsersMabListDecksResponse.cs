@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersListMabPlayerDecksResponse
+    public class UsersMabListDecksResponse
     {
         public int? MabDeckId { get; set; }
 

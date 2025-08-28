@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersResolveMabBattleDuelResponse
+    public class UsersMabResolveDuelResponse
     {
         public int MabPlayerCardFullPower { get; set; }
 
