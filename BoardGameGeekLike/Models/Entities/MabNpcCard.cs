@@ -3,24 +3,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("npcCards")]
+    [Table("MabNpcCards")]
     public class MabNpcCard
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public bool IsDeleted { get; set; } = false;
+        public bool Mab_IsNpcCardDeleted { get; set; } = false;
 
 
-        [ForeignKey("Card")]
-        public int CardId { get; set; }
-        public MabCard Card { get; set; }
+        [ForeignKey(nameof(this.Mab_Card))]
+        public int Mab_CardId { get; set; }
+        [InverseProperty(nameof(MabCard.Mab_NpcCards))]
+        public MabCard Mab_Card { get; set; }
 
 
-        [ForeignKey("Npc")]
-        public int NpcId { get; set; }
-        [InverseProperty("MabNpcCards")]
-        public MabNpc Npc { get; set; }
+        [ForeignKey(nameof(this.Mab_Npc))]
+        public int Mab_NpcId { get; set; }
+        [InverseProperty(nameof(MabNpc.Mab_NpcCards))]
+        public MabNpc Mab_Npc { get; set; }
     }
 }

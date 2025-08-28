@@ -19,22 +19,22 @@
             };
         }
 
-        public static int GetCardLevel(int power, int upperHand)
+        public static int MabGetCardLevel(int power, int upperHand)
         {
             return (int)Math.Ceiling((double)(power + upperHand) / 2d);
         }
 
-        public static int GetNpcLevel(List<int> cardLevels)
+        public static int MabGetNpcLevel(List<int> cardLevels)
         {
             return (int)Math.Ceiling((cardLevels.Sum() / (double)cardLevels.Count));
         }
 
-        public static int GetPlayerDeckLevel(List<int> cardLevels)
+        public static int MabGetPlayerDeckLevel(List<int> cardLevels)
         {
             return (int)Math.Ceiling((cardLevels.Sum() / (double)cardLevels.Count));
         }
 
-        public static List<int> GetPowerSequence(int level, int pos)
+        public static List<int> MabGetPowerSequence(int level, int pos)
         {
             var validCardLvlSequence = new List<int>();
             switch (pos)
@@ -164,7 +164,7 @@
         }
 
 
-        public static int GetCardFullPower(int power, int upperhand, int firstType, int secondType)
+        public static int MabGetCardFullPower(int power, int upperhand, int firstType, int secondType)
         {
             return (firstType, secondType) switch
             {
@@ -188,12 +188,10 @@
             };
         }
 
-        public static int GetDuelingPoints(int playerFullPower, int npcFullPower)
+        public static int MabGetDuelPoints(int playerFullPower, int npcFullPower)
         {
             return playerFullPower - npcFullPower <= 0 ? 0 : 1;
-        }
-
-       
+        }     
 
     }
 }

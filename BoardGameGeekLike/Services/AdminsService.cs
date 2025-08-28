@@ -1336,8 +1336,8 @@ namespace BoardGameGeekLike.Services
             var exists = await this._daoDbContext
                 .MabCards
                 .AnyAsync(a =>
-                    a.Name.Trim().ToLower() == request.CardName.Trim().ToLower() && 
-                    a.IsDeleted == false);
+                    a.Mab_CardName.Trim().ToLower() == request.CardName.Trim().ToLower() && 
+                    a.Mab_IsCardDeleted == false);
 
             if (exists == true)
             {
@@ -1346,12 +1346,12 @@ namespace BoardGameGeekLike.Services
 
             var newCard = new MabCard
             {
-                Name = request.CardName,
-                Power = request.CardPower,
-                UpperHand = request.CardUpperHand,
-                Level = Helper.GetCardLevel(request.CardPower, request.CardUpperHand),
-                Type = request.CardType,
-                IsDeleted = false,
+                Mab_CardName = request.CardName,
+                Mab_CardPower = request.CardPower,
+                Mab_CardUpperHand = request.CardUpperHand,
+                Mab_CardLevel = Helper.MabGetCardLevel(request.CardPower, request.CardUpperHand),
+                Mab_CardType = request.CardType,
+                Mab_IsCardDeleted = false,
             };
 
             this._daoDbContext.Add(newCard);
@@ -1428,11 +1428,11 @@ namespace BoardGameGeekLike.Services
 
             return (new AdminsShowMabCardDetailsResponse
             {
-                CardName = mabCardDB.Name,
-                CardPower = mabCardDB.Power,
-                CardUpperHand = mabCardDB.UpperHand,
-                CardLevel = mabCardDB.Level,
-                CardType = mabCardDB.Type,
+                CardName = mabCardDB.Mab_CardName,
+                CardPower = mabCardDB.Mab_CardPower,
+                CardUpperHand = mabCardDB.Mab_CardUpperHand,
+                CardLevel = mabCardDB.Mab_CardLevel,
+                CardType = mabCardDB.Mab_CardType,
             }, "Mab Card details fetched successfully!");
         }
         private static (bool, string) ShowMabCardDetails_Validation(AdminsShowMabCardDetailsRequest? request)
@@ -1469,7 +1469,7 @@ namespace BoardGameGeekLike.Services
 
             var exist = await this._daoDbContext
                                    .MabCards
-                                   .AnyAsync(a => a.Name.ToLower() == request.CardName.Trim().ToLower());
+                                   .AnyAsync(a => a.Mab_CardName.ToLower() == request.CardName.Trim().ToLower());
 
             if (exist == true)
             {
@@ -1478,18 +1478,18 @@ namespace BoardGameGeekLike.Services
 
             var cardDB = await this._daoDbContext
                                    .MabCards
-                                   .FirstOrDefaultAsync(a => a.Id == request.CardId && a.IsDeleted == false);
+                                   .FirstOrDefaultAsync(a => a.Id == request.CardId && a.Mab_IsCardDeleted == false);
 
             if (cardDB == null)
             {
                 return (null, $"Error: card not found");
             }
 
-            cardDB.Name = request.CardName;
-            cardDB.Power = request.CardPower;
-            cardDB.UpperHand = request.CardUpperHand;
-            cardDB.Level = Helper.GetCardLevel(request.CardPower, request.CardUpperHand);
-            cardDB.Type = request.CardType;
+            cardDB.Mab_CardName = request.CardName;
+            cardDB.Mab_CardPower = request.CardPower;
+            cardDB.Mab_CardUpperHand = request.CardUpperHand;
+            cardDB.Mab_CardLevel = Helper.MabGetCardLevel(request.CardPower, request.CardUpperHand);
+            cardDB.Mab_CardType = request.CardType;
 
             var savingSucceded = await this._daoDbContext.SaveChangesAsync();
 
@@ -1552,7 +1552,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: card not found");
             }
 
-            cardDB.IsDeleted = true;
+            cardDB.Mab_IsCardDeleted = true;
 
             var savingSucceded = await this._daoDbContext.SaveChangesAsync();
 
@@ -1601,7 +1601,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: card not found");
             }
 
-            cardDB.IsDeleted = false;
+            cardDB.Mab_IsCardDeleted = false;
 
             var savingSucceded = await this._daoDbContext.SaveChangesAsync();
 
@@ -1648,12 +1648,12 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new AdminsListMabCardsResponse
                 {
                     CardId = a.Id,
-                    CardName = a.Name,
-                    CardPower = a.Power,
-                    CardUpperHand = a.UpperHand,
-                    CardLevel = a.Level,
-                    CardType = a.Type,
-                    IsDeleted = a.IsDeleted,
+                    CardName = a.Mab_CardName,
+                    CardPower = a.Mab_CardPower,
+                    CardUpperHand = a.Mab_CardUpperHand,
+                    CardLevel = a.Mab_CardLevel,
+                    CardType = a.Mab_CardType,
+                    IsDeleted = a.Mab_IsCardDeleted,
                 })
                 .OrderBy(a => a.IsDeleted)
                 .ThenBy(a => a.CardName)
@@ -1696,7 +1696,7 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new AdminsListMabCardIdsResponse
                 {
                     CardId = a.Id,
-                    CardName = a.Name,                 
+                    CardName = a.Mab_CardName,                 
                 })
                 .OrderBy(a => a.CardName)                
                 .ToListAsync();
@@ -1769,14 +1769,14 @@ namespace BoardGameGeekLike.Services
             var contentQueriable = this._daoDbContext
                                        .MabCards
                                        .AsNoTracking()
-                                       .Where(a => a.IsDeleted == false);
+                                       .Where(a => a.Mab_IsCardDeleted == false);
 
             message = "All cards listed successfully";
 
             #region Filtering by CardName           
             if (string.IsNullOrWhiteSpace(request.CardName) == false)
             {
-                contentQueriable = contentQueriable.Where(a => a.Name.ToLower().Contains(request.CardName.ToLower()));
+                contentQueriable = contentQueriable.Where(a => a.Mab_CardName.ToLower().Contains(request.CardName.ToLower()));
 
                 message = $"The card ->{request.CardName}<- has been successfully filtered";
             }
@@ -1799,7 +1799,7 @@ namespace BoardGameGeekLike.Services
             #region Filtering by CardPower
             if (request.CardPower.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.Power == request.CardPower);
+                contentQueriable = contentQueriable.Where(a => a.Mab_CardPower == request.CardPower);
 
                 message = $"The cards having power = {request.CardPower} have been successfully filtered";
             }
@@ -1808,7 +1808,7 @@ namespace BoardGameGeekLike.Services
             #region Filtering by CardUpperHand           
             if (request.CardUpperHand.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.UpperHand == request.CardUpperHand);
+                contentQueriable = contentQueriable.Where(a => a.Mab_CardUpperHand == request.CardUpperHand);
 
                 message = $"The cards having upper hand = {request.CardUpperHand} have been successfully filtered";
             }
@@ -1817,7 +1817,7 @@ namespace BoardGameGeekLike.Services
             #region Filtering By CardLevel
             if (request.CardLevel.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.Level == request.CardLevel);
+                contentQueriable = contentQueriable.Where(a => a.Mab_CardLevel == request.CardLevel);
 
                 message = $"The cards of level = {request.CardLevel} have been successfully filtered";
             }
@@ -1826,7 +1826,7 @@ namespace BoardGameGeekLike.Services
             #region Filtering by CardType          
             if (request.CardType.HasValue == true)
             {
-                contentQueriable = contentQueriable.Where(a => a.Type == request.CardType);
+                contentQueriable = contentQueriable.Where(a => a.Mab_CardType == request.CardType);
 
                 message = $"The cards of type = {request.CardType} have been successfully filtered";
             }
@@ -1836,11 +1836,11 @@ namespace BoardGameGeekLike.Services
                                     .Select(a => new AdminsFilterCardsResponse
                                     {
                                         CardId = a.Id,
-                                        CardName = a.Name,
-                                        CardPower = a.Power,
-                                        CardUpperHand = a.UpperHand,
-                                        CardLevel = a.Level,
-                                        CardType = a.Type,
+                                        CardName = a.Mab_CardName,
+                                        CardPower = a.Mab_CardPower,
+                                        CardUpperHand = a.Mab_CardUpperHand,
+                                        CardLevel = a.Mab_CardLevel,
+                                        CardType = a.Mab_CardType,
                                     })
                                     .OrderBy(a => a.CardId)
                                     .ThenBy(a => a.CardName)
@@ -1937,7 +1937,7 @@ namespace BoardGameGeekLike.Services
 
             var exists = await _daoDbContext
                 .MabNpcs
-                .AnyAsync(a => a.Name == request.Name && a.IsDeleted == false);
+                .AnyAsync(a => a.Mab_NpcName == request.Name && a.Mab_IsNpcDeleted == false);
 
             if (exists == true)
             {
@@ -1953,11 +1953,11 @@ namespace BoardGameGeekLike.Services
 
             var newNpc = new MabNpc
             {
-                Name = request.Name,
-                Description = request.Description,
-                MabNpcCards = newNpcDeckEntries,
-                Level = Helper.GetNpcLevel(newNpcDeckEntries.Select(a => a.Card.Level).ToList()),
-                IsDeleted = false
+                Mab_NpcName = request.Name,
+                Mab_NpcDescription = request.Description,
+                Mab_NpcCards = newNpcDeckEntries,
+                Mab_NpcLevel = Helper.MabGetNpcLevel(newNpcDeckEntries.Select(a => a.Mab_Card.Mab_CardLevel).ToList()),
+                Mab_IsNpcDeleted = false
             };
 
             this._daoDbContext.Add(newNpc);
@@ -1971,7 +1971,7 @@ namespace BoardGameGeekLike.Services
 
             return (new AdminsAddMabNpcResponse
             {
-                Level = newNpc.Level,
+                Level = newNpc.Mab_NpcLevel,
                 CountCards = newNpcDeckEntries.Count,
             }, "Mab NPC created successfully");
         }
@@ -2022,18 +2022,18 @@ namespace BoardGameGeekLike.Services
                 .Where(a => a.Id == request!.NpcId)
                 .Select(a => new AdminsShowMabNpcDetailsResponse
                 {
-                    NpcName = a.Name,
-                    Description = a.Description,
-                    Level = a.Level,                    
+                    NpcName = a.Mab_NpcName,
+                    Description = a.Mab_NpcDescription,
+                    Level = a.Mab_NpcLevel,                    
                     Cards = a
-                        .MabNpcCards
+                        .Mab_NpcCards
                         .Select(b => new AdminsShowMabNpcDetailsResponse_card
                         {
-                            CardId = b.Card.Id,
-                            CardName = b.Card.Name,
-                            CardPower = b.Card.Power,
-                            CardUpperHand = b.Card.UpperHand,
-                            CardType = b.Card.Type,
+                            CardId = b.Mab_Card.Id,
+                            CardName = b.Mab_Card.Mab_CardName,
+                            CardPower = b.Mab_Card.Mab_CardPower,
+                            CardUpperHand = b.Mab_Card.Mab_CardUpperHand,
+                            CardType = b.Mab_Card.Mab_CardType,
                         })                        
                         .ToList()
                 })
@@ -2085,17 +2085,17 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new AdminsGetNpcsResponse
                 {
                     NpcId = a.Id,
-                    NpcName = a.Name,
-                    NpcDescription = a.Description,
-                    NpcLevel = a.Level,
-                    NpcIsDeleted = a.IsDeleted,
-                    Deck = a.MabNpcCards.Select(b => new AdminsGetNpcsResponse_Deck
+                    NpcName = a.Mab_NpcName,
+                    NpcDescription = a.Mab_NpcDescription,
+                    NpcLevel = a.Mab_NpcLevel,
+                    NpcIsDeleted = a.Mab_IsNpcDeleted,
+                    Deck = a.Mab_NpcCards.Select(b => new AdminsGetNpcsResponse_Deck
                     {
-                        Name = b.Card.Name,
-                        Power = b.Card.Power,
-                        UpperHand = b.Card.UpperHand,
-                        Level = b.Card.Level,
-                        Type = b.Card.Type,
+                        Name = b.Mab_Card.Mab_CardName,
+                        Power = b.Mab_Card.Mab_CardPower,
+                        UpperHand = b.Mab_Card.Mab_CardUpperHand,
+                        Level = b.Mab_Card.Mab_CardLevel,
+                        Type = b.Mab_Card.Mab_CardType,
                     })
                     .ToList()
                 })
@@ -2139,8 +2139,8 @@ namespace BoardGameGeekLike.Services
 
             var npcDB = await _daoDbContext
                 .MabNpcs
-                .Include(a => a.MabNpcCards)
-                .ThenInclude(b => b.Card)
+                .Include(a => a.Mab_NpcCards)
+                .ThenInclude(b => b.Mab_Card)
                 .FirstOrDefaultAsync(a => a.Id == request.NpcId);
 
             if (npcDB == null)
@@ -2148,14 +2148,14 @@ namespace BoardGameGeekLike.Services
                 return (null, $"Error: NPC not found!");
             }
 
-            if (npcDB.IsDeleted == true)
+            if (npcDB.Mab_IsNpcDeleted == true)
             {
                 return (null, $"Error: NPC has been already deleted!");
             }
 
             var availableCardIds = _daoDbContext
                 .MabCards
-                .Where(a => a.IsDeleted == false)
+                .Where(a => a.Mab_IsCardDeleted == false)
                 .Select(a => a.Id)
                 .ToList();
 
@@ -2165,13 +2165,13 @@ namespace BoardGameGeekLike.Services
             }
 
             var oldCardIds = npcDB
-                .MabNpcCards
+                .Mab_NpcCards
                 .Select(a => a.Id)
                 .ToList();
 
             await this._daoDbContext
-                .MabNpcCard
-                .Where(a => oldCardIds.Contains(a.CardId) && a.NpcId == request.NpcId)
+                .MabNpcCards
+                .Where(a => oldCardIds.Contains(a.Mab_CardId) && a.Mab_NpcId == request.NpcId)
                 .ExecuteDeleteAsync();
             
 
@@ -2182,10 +2182,10 @@ namespace BoardGameGeekLike.Services
                 return (null, ErrorMessage);
             }
 
-            npcDB.Name = request.NpcName!;
-            npcDB.Description = request.NpcDescription!;
-            npcDB.MabNpcCards = newNpcDeckEntries;
-            npcDB.Level = Helper.GetNpcLevel(newNpcDeckEntries.Select(a => a.Card.Level).ToList());
+            npcDB.Mab_NpcName = request.NpcName!;
+            npcDB.Mab_NpcDescription = request.NpcDescription!;
+            npcDB.Mab_NpcCards = newNpcDeckEntries;
+            npcDB.Mab_NpcLevel = Helper.MabGetNpcLevel(newNpcDeckEntries.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
 
             await this._daoDbContext.SaveChangesAsync();
 
@@ -2240,8 +2240,8 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new
                 {
                     CardId = a.Id,
-                    CardLvl = a.Level,
-                    IsDeleted = a.IsDeleted
+                    CardLvl = a.Mab_CardLevel,
+                    IsDeleted = a.Mab_IsCardDeleted
                 })
                 .ToListAsync();
 
@@ -2271,7 +2271,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: deck size is invalid!");
             }
 
-            int? calculatedNMabNpcLevel = Helper.GetNpcLevel(cardPowers);
+            int? calculatedNMabNpcLevel = Helper.MabGetNpcLevel(cardPowers);
 
             if (calculatedNMabNpcLevel == null || calculatedNMabNpcLevel < 0 || calculatedNMabNpcLevel > 9)
             {
@@ -2353,7 +2353,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: npc not found");
             }
 
-            mabNpcDB.IsDeleted = true;
+            mabNpcDB.Mab_IsNpcDeleted = true;
 
             var savingSucceded = await this._daoDbContext.SaveChangesAsync();
 
@@ -2410,7 +2410,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: npc not found");
             }
 
-            mabNpcDB.IsDeleted = false;
+            mabNpcDB.Mab_IsNpcDeleted = false;
 
             var savingSucceded = await this._daoDbContext.SaveChangesAsync();
 
@@ -2445,7 +2445,7 @@ namespace BoardGameGeekLike.Services
         {
             var cardsDB = await _daoDbContext
                 .MabCards
-                .Where(a => mabCardIds.Contains(a.Id) && a.IsDeleted == false)
+                .Where(a => mabCardIds.Contains(a.Id) && a.Mab_IsCardDeleted == false)
                 .ToListAsync();
 
             if (cardsDB == null || cardsDB.Count == 0)
@@ -2478,7 +2478,7 @@ namespace BoardGameGeekLike.Services
                 {
                     newDeck.Add(new MabNpcCard()
                     {
-                        Card = newCard,
+                        Mab_Card = newCard,
                     });
                 }
             }

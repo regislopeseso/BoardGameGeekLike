@@ -59,11 +59,11 @@ namespace BoardGameGeekLike.Controllers
         // Medieval Auto Battler (M.A.B.)
 
         [HttpPost]
-        public async Task<IActionResult> MedievalAutoBattlerSeed(DevsMedievalAutoBattlerSeedRequest request)
+        public async Task<IActionResult> MedievalAutoBattlerSeed(DevsMabSeedRequest request)
         {
             var (content, message) = await this._devsService.MedievalAutoBattlerSeed(request);
 
-            var response = new Response<DevsMedievalAutoBattlerSeedResponse>
+            var response = new Response<DevsMabSeedResponse>
             {
                 Content = content,
                 Message = message
@@ -73,11 +73,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> MedievalAutoBattlerDeleteSeed(DevsMedievalAutoBattlerDeleteSeedRequest? request)
+        public async Task<IActionResult> MedievalAutoBattlerDeleteSeed(DevsMabDeleteSeedRequest? request)
         {
             var (content, message) = await this._devsService.MedievalAutoBattlerDeleteSeed(request);
 
-            var response = new Response<DevsMedievalAutoBattlerDeleteSeedResponse>
+            var response = new Response<DevsMabDeleteSeedResponse>
             {
                 Content = content,
                 Message = message

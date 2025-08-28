@@ -1,0 +1,27 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace BoardGameGeekLike.Models.Entities
+{
+    [Table("MabDuels")]
+    public class MabDuel
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }       
+
+        public int? Mab_PlayerCardId { get; set; } = null;
+
+        public int? Mab_NpcCardId { get; set; } = null;
+
+        public bool? Mab_HasPlayerWon { get; set; } = null;
+        
+        public int? Mab_DuelPoints { get; set; } = 0;
+
+
+        [ForeignKey(nameof(this.Mab_Battle))]
+        public int? Mab_BattleId { get; set; }
+        [InverseProperty(nameof(MabBattle.Mab_Duels))]
+        public MabBattle? Mab_Battle { get; set; }
+    }
+}

@@ -33,7 +33,7 @@ namespace BoardGameGeekLike.Models.Entities
 
 
         [InverseProperty("User")]        
-        public MabPlayerCampaign? MabCampaign { get; set; }
+        public MabCampaign? MabCampaign { get; set; }
        
 
         [InverseProperty("User")]

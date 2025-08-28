@@ -5,31 +5,33 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("mabCards")]
+    [Table("MabCards")]
     public class MabCard
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public string Mab_CardName { get; set; }
 
-        public int Power { get; set; }
+        public int Mab_CardPower { get; set; }
 
-        public int UpperHand { get; set; }
+        public int Mab_CardUpperHand { get; set; }
 
-        public int Level { get; set; }
+        public int Mab_CardLevel { get; set; }
 
-        public MabCardType Type { get; set; }
+        public MabCardType Mab_CardType { get; set; }
 
-        public bool IsDeleted { get; set; } = false;
+        public bool Mab_IsCardDeleted { get; set; } = false;
 
-        public bool IsDummy { get; set; } = false;
+        public bool Mab_IsCardDummy { get; set; } = false;
 
 
-        public List<MabPlayerCardCopy>? MabPlayerCardCopies { get; set; }
+        [InverseProperty(nameof(MabPlayerCard.Mab_Card))]
+        public List<MabPlayerCard>? Mab_PlayerCards { get; set; }
 
-        public List<MabNpcCard>? MabNpcCards { get; set; }
+        [InverseProperty(nameof(MabPlayerCard.Mab_Card))]
+        public List<MabNpcCard>? Mab_NpcCards { get; set; }
 
     }
 }

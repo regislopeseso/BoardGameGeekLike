@@ -3,34 +3,34 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
 {
-    [Table("mabBattles")]
+    [Table("MabBattles")]
     public class MabBattle
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        public bool? Mab_IsPlayerTurn { get; set; }
 
-        public int? MabBattlePoints { get; set; }
+        public int? Mab_BattlePoints { get; set; }
 
-        public bool? IsPlayerTurn { get; set; }
+        public bool? Mab_HasPlayerWon { get; set; }
+        
+        public bool Mab_IsBattleFinished { get; set; } = false;
 
-        public bool? HasPlayerWon { get; set; }
-
-        public string? Results { get; set; }
-
-        public bool IsFinished { get; set; } = false;
-
-
-        [ForeignKey("MabCampaign")]
-        public int MabCampaignId { get; set; }
-        public MabPlayerCampaign MabPlayerCampaign { get; set; }
+        public string? Mab_BattleResults { get; set; }
 
 
-        [ForeignKey("Npc")]
-        public int NpcId { get; set; }
-        public MabNpc Npc { get; set; }
+        [ForeignKey(nameof(this.Mab_Campaign))]
+        public int Mab_CampaignId { get; set; }
+        public MabCampaign Mab_Campaign { get; set; }
 
-        [InverseProperty("MabBattle")]
-        public List<MabBattleTurn>? MabBattleTurns { get; set; }
+
+        [ForeignKey(nameof(this.Mab_Npc))]
+        public int Mab_NpcId { get; set; }
+        public MabNpc Mab_Npc { get; set; }
+
+
+        [InverseProperty(nameof(MabDuel.Mab_Battle))]
+        public List<MabDuel>? Mab_Duels { get; set; }
     }
 }

@@ -2,12 +2,12 @@
 {
     public class UsersResolveMabBattleDuelResponse
     {
-        public int MabPlayerDuellingCardCopyFullPower { get; set; }
+        public int MabPlayerCardFullPower { get; set; }
 
-        public int MabNpcDuellingDeckEntryFullPower { get; set; }
+        public int MabNpcCardFullPower { get; set; }
 
-        public int MabBattleRoundPoints { get; set; }
+        public int MabBattleDuelPoints { get; set; }
 
-        public int NextRoundNumber { get; set; }
+        public int NextDuelNumber { get; set; }
     }
 }

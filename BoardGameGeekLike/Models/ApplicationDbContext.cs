@@ -20,6 +20,7 @@ namespace BoardGameGeekLike.Models
         public DbSet<Session> Sessions {get; set;}
 
 
+
         public DbSet<LifeCounterTemplate> LifeCounterTemplates { get; set; }
 
         public DbSet<LifeCounterManager> LifeCounterManagers { get; set; }
@@ -27,17 +28,26 @@ namespace BoardGameGeekLike.Models
         public DbSet<LifeCounterPlayer> LifeCounterPlayers { get; set; }
 
 
+
+
+        public DbSet<MabCampaign> MabCampaigns { get; set; }
+        
         public DbSet<MabCard> MabCards { get; set; }
 
+        
         public DbSet<MabNpc> MabNpcs { get; set; }
-        public DbSet<MabNpcCard> MabNpcCard { get; set; }
+        
+        public DbSet<MabNpcCard> MabNpcCards { get; set; }
 
-        public DbSet<MabPlayerCampaign> MabPlayerCampaigns { get; set; }
 
-        public DbSet<MabPlayerCardCopy> MabPlayerCardCopies { get; set; }
-        public DbSet<MabPlayerAssignedCardCopy> MabPlayerAssignedCardCopies { get; set; }
-        public DbSet<MabPlayerDeck> MabPlayerDecks { get; set; }   
+        public DbSet<MabPlayerCard> MabPlayerCards { get; set; }
+
+        public DbSet<MabAssignedCard> MabAssignedCards { get; set; }
+
+        public DbSet<MabDeck> MabDecks { get; set; }   
+
         public DbSet<MabBattle> MabBattles { get; set; }
-        public DbSet<MabBattleTurn> MabBattleTurns { get; set; }
+
+        public DbSet<MabDuel> MabDuels { get; set; }
     }
 }

@@ -752,11 +752,11 @@ namespace BoardGameGeekLike.Controllers
 
         [Authorize(Roles = "Developer, Administrator, User")]
         [HttpPost]
-        public async Task<IActionResult> StartMabCampaign([FromForm] UsersStartMabCampaignRequest? request)
+        public async Task<IActionResult> MabStartCampaign([FromForm] UsersMabStartCampaignRequest? request)
         {
-            var (content, message) = await this._usersService.StartMabCampaign(request);
+            var (content, message) = await this._usersService.MabStartCampaign(request);
 
-            var response = new Response<UsersStartMabCampaignResponse>
+            var response = new Response<UsersMabStartCampaignResponse>
             {
                 Content = content,
                 Message = message
@@ -766,25 +766,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ShowMabCardDetails([FromQuery] UsersShowMabCardDetailsRequest request)
+        public async Task<IActionResult> MabShowDeckDetails([FromQuery] UsersMabShowDeckDetailsRequest? request)
         {
-            var (content, message) = await this._usersService.ShowMabCardDetails(request);
+            var (content, message) = await this._usersService.MabShowDeckDetails(request);
 
-            var response = new Response<UsersShowMabCardDetailsResponse>()
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ShowMabDeckDetails([FromQuery] UsersShowMabDeckDetailsRequest? request)
-        {
-            var (content, message) = await this._usersService.ShowMabDeckDetails(request);
-
-            var response = new Response<UsersShowMabDeckDetailsResponse>
+            var response = new Response<UsersMabShowDeckDetailsResponse>
             {
                 Content = content,
                 Message = message
@@ -836,11 +822,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListUnassignedMabCardCopies([FromQuery] UsersListListUnassignedMabCardCopiesRequest? request)
+        public async Task<IActionResult> ListUnassignedMabPlayerCards([FromQuery] UsersListUnassignedMabPlayerCardsRequest? request)
         {
             var (content, message) = await this._usersService.ListUnassignedMabCardCopies(request);
 
-            var response = new Response<List<UsersListUnassignedMabCardCopiesResponse>?>
+            var response = new Response<List<UsersListUnassignedMabPlayerCardsResponse>?>
             {
                 Content = content,
                 Message = message
@@ -850,11 +836,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddMabPlayerDeck(UsersAddMabCardCopyToDeckRequest? request)
+        public async Task<IActionResult> MabCreatePlayerDeck(UsersCreateMabPlayerDeckRequest? request)
         {
             var (content, message) = await this._usersService.AddMabPlayerDeck(request);
 
-            var response = new Response<UsersAddMabPlayerDeckResponse>
+            var response = new Response<UsersMabCreatePlayerDeckResponse>
             {
                 Content = content,
                 Message = message
@@ -864,7 +850,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AssignMabCardCopy([FromBody] UsersAssignMabCardCopyRequest? request)
+        public async Task<IActionResult> AssignMabCardCopy([FromBody] UsersAssignMabPlayerCardRequest? request)
         {
             var (content, message) = await this._usersService.AssignMabCardCopy(request);
 
@@ -892,11 +878,11 @@ namespace BoardGameGeekLike.Controllers
         }
    
         [HttpGet]
-        public async Task<IActionResult> ShowMabCampaignStatistics(UsersShowMabCampaignStatisticsRequest? request)
+        public async Task<IActionResult> MabShowCampaignStatistics(UsersMabShowCampaignStatisticsRequest? request)
         {
-            var (content, message) = await this._usersService.ShowMabCampaignStatistics(request);
+            var (content, message) = await this._usersService.MabShowCampaignStatistics(request);
 
-            var response = new Response<UsersShowMabCampaignStatisticsResponse>
+            var response = new Response<UsersMabShowCampaignStatisticsResponse>
             {
                 Content = content,
                 Message = message
@@ -906,11 +892,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> EditMabPlayerNickName([FromBody] UsersEditMabPlayerNickNameRequest? request)
+        public async Task<IActionResult> MabEditPlayerNickname([FromBody] UsersMabEditPlayerNicknameRequest? request)
         {
-            var (content, message) = await this._usersService.EditMabPlayerNickName(request);
+            var (content, message) = await this._usersService.MabEditPlayerNickname(request);
 
-            var response = new Response<UsersEditMabPlayerNickNameResponse>
+            var response = new Response<UsersMabEditPlayerNickNameResponse>
             {
                 Content = content,
                 Message = message
@@ -976,7 +962,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListMabAvailableRoundCardCopies(UsersListMabAvailableRoundCardCopiesRequest? request)
+        public async Task<IActionResult> ListMabAvailableRoundCardCopies(UsersListAvailableMabPlayerCardsRequest? request)
         {
             var (content, message) = await this._usersService.ListMabAvailableRoundCardCopies(request);
 

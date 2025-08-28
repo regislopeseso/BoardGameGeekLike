@@ -385,7 +385,7 @@ namespace BoardGameGeekLike.Services
 
         #region Medieval Auto Battler
 
-        public async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> MedievalAutoBattlerSeed(DevsMedievalAutoBattlerSeedRequest? request)
+        public async Task<(DevsMabSeedResponse?, string)> MedievalAutoBattlerSeed(DevsMabSeedRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -401,7 +401,7 @@ namespace BoardGameGeekLike.Services
             return (null, "Seeding was successful. " + msg1 + ". " + msg2);
         }
 
-        private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedCards()
+        private async Task<(DevsMabSeedResponse?, string)> SeedCards()
         {
             var cardsSeed = new List<MabCard>();
             var cardsCount = 1;
@@ -423,17 +423,17 @@ namespace BoardGameGeekLike.Services
                             "Spear" : cardType.ToString()[0] == 'I' ?
                             "Sword" : "Fist";
 
-                        var cardLevel = Helper.GetCardLevel(power, upperHand);
+                        var cardLevel = Helper.MabGetCardLevel(power, upperHand);
 
                         var newCard = new MabCard
                         {
-                            Name = cardName,
-                            Power = power,
-                            UpperHand = upperHand,
-                            Level = cardLevel,
-                            Type = cardType,
-                            IsDeleted = false,
-                            IsDummy = true
+                            Mab_CardName = cardName,
+                            Mab_CardPower = power,
+                            Mab_CardUpperHand = upperHand,
+                            Mab_CardLevel = cardLevel,
+                            Mab_CardType = cardType,
+                            Mab_IsCardDeleted = false,
+                            Mab_IsCardDummy = true
                         };
                         cardsSeed.Add(newCard);
 
@@ -449,11 +449,11 @@ namespace BoardGameGeekLike.Services
             return (null, $"{cardsSeed.Count} new cards haven been successfully seeded");
         }
 
-        private async Task<(DevsMedievalAutoBattlerSeedResponse?, string)> SeedNpcs()
+        private async Task<(DevsMabSeedResponse?, string)> SeedNpcs()
         {
             var cardsDB = await _daoDbContext
                                     .MabCards
-                                    .Where(a => a.IsDeleted == false)
+                                    .Where(a => a.Mab_IsCardDeleted == false)
                                     .ToListAsync();
 
             if (cardsDB == null || cardsDB.Count == 0)
@@ -462,7 +462,7 @@ namespace BoardGameGeekLike.Services
             }
 
             //Se não existir pelo menos uma carta de cada level não é possível fazer o seed dos NPCs.
-            var countCardsLvl = cardsDB.GroupBy(a => a.Level).Count();
+            var countCardsLvl = cardsDB.GroupBy(a => a.Mab_CardLevel).Count();
             if (countCardsLvl < Constants.MaxCardLevel - Constants.MinCardLevel)
             {
                 return (null, "Error: not enough card variety for seeding NPCs. The existance of at least one card of each level is mandatory for seeding NPCs");
@@ -504,7 +504,7 @@ namespace BoardGameGeekLike.Services
                 while (npcs.Count < 10)
                 {
                     // Filtering all cards having cardLvl iguals to 0 or 9 (currently contains 4 cards npcLvl 0 or 10 npcLvl 9):
-                    var cardsFiltered = cardsDB.Where(a => a.Level == level).ToList();
+                    var cardsFiltered = cardsDB.Where(a => a.Mab_CardLevel == level).ToList();
 
                     // Creating a new list of NpcDeckentries
                     var validNpcDeckEntries = new List<MabNpcCard>();
@@ -518,7 +518,7 @@ namespace BoardGameGeekLike.Services
                         (
                             new MabNpcCard
                             {
-                                Card = card
+                                Mab_Card = card
                             }
                         );
                     }
@@ -526,7 +526,7 @@ namespace BoardGameGeekLike.Services
                     // Creating a new npc with 5 cards (npcLvl 0 or npcLvl 9) and adding it to a list of new NPCs:          
                     var npcName = "";                    
                     var npcDescription = "";
-                    var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
+                    var npcLvl = Helper.MabGetNpcLevel(validNpcDeckEntries.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
                     if (level == 0)
                     {
                         countBotsLvlZero++;
@@ -549,12 +549,12 @@ namespace BoardGameGeekLike.Services
                     }
                     npcs.Add(new MabNpc
                     {
-                        Name = npcName,
-                        Description = npcDescription,
-                        MabNpcCards = validNpcDeckEntries,
-                        Level = npcLvl,
-                        IsDeleted = false,
-                        IsDummy = true
+                        Mab_NpcName = npcName,
+                        Mab_NpcDescription = npcDescription,
+                        Mab_NpcCards = validNpcDeckEntries,
+                        Mab_NpcLevel = npcLvl,
+                        Mab_IsNpcDeleted = false,
+                        Mab_IsNpcDummy = true
                     });
 
                     //This while loop will stop when the list of NPCs has 10 NPCs
@@ -575,7 +575,7 @@ namespace BoardGameGeekLike.Services
                     for (int i = 8; i <= 12; i++)
                     {
                         // Obtaining the list of all 5 unique sequence for cardLvl 1)
-                        var levelSequence = Helper.GetPowerSequence(level, i);
+                        var levelSequence = Helper.MabGetPowerSequence(level, i);
 
                         // Criating a new list of valid NPC deck entries:
                         var validNpcDeckEntries = new List<MabNpcCard>();
@@ -584,7 +584,7 @@ namespace BoardGameGeekLike.Services
                         foreach (var cardLvl in levelSequence)
                         {
                             // Filtering all cards whose cardLvl is 1:
-                            var cardsFiltered = cardsDB.Where(a => a.Level == cardLvl).ToList();
+                            var cardsFiltered = cardsDB.Where(a => a.Mab_CardLevel == cardLvl).ToList();
 
                             // Obtaining one random request out of the list of filtered cards
                             var card = cardsFiltered.OrderBy(a => random.Next()).Take(1).FirstOrDefault();
@@ -594,7 +594,7 @@ namespace BoardGameGeekLike.Services
                             (
                                 new MabNpcCard
                                 {
-                                    Card = card
+                                    Mab_Card = card
                                 }
                             );
                         }
@@ -604,18 +604,18 @@ namespace BoardGameGeekLike.Services
 
                         npcCount = countBotsLvlOne < 10 ? $"0{countBotsLvlOne}" : $"{countBotsLvlOne}";
 
-                        var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
+                        var npcLvl = Helper.MabGetNpcLevel(validNpcDeckEntries.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
                         
                         var npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
                         
                         npcs.Add(new MabNpc
                         {
-                            Name = npcName,
-                            Description = "( " + string.Join(", ", levelSequence) + " )",
-                            MabNpcCards = validNpcDeckEntries,
-                            Level = npcLvl,
-                            IsDeleted = false,
-                            IsDummy = true
+                            Mab_NpcName = npcName,
+                            Mab_NpcDescription = "( " + string.Join(", ", levelSequence) + " )",
+                            Mab_NpcCards = validNpcDeckEntries,
+                            Mab_NpcLevel = npcLvl,
+                            Mab_IsNpcDeleted = false,
+                            Mab_IsNpcDummy = true
                         });
 
                     }
@@ -641,7 +641,7 @@ namespace BoardGameGeekLike.Services
                         if (i == 5 || i == 7 || i == 12)
                         {
                             // Obtaining the list of all 3 unique sequence for cardLvl 8)
-                            var levelSequence = Helper.GetPowerSequence(level, i);
+                            var levelSequence = Helper.MabGetPowerSequence(level, i);
 
                             // Criating a new list of valid NPC deck entries:
                             var validNpcDeckEntries = new List<MabNpcCard>();
@@ -650,7 +650,7 @@ namespace BoardGameGeekLike.Services
                             foreach (var cardLvl in levelSequence)
                             {
                                 // Filtering all cards whose cardLvl is 8:
-                                var cardsFiltered = cardsDB.Where(a => a.Level == cardLvl).ToList();
+                                var cardsFiltered = cardsDB.Where(a => a.Mab_CardLevel == cardLvl).ToList();
 
                                 // Obtaining one random request out of the list of filtered cards
                                 var card = cardsFiltered.OrderBy(a => random.Next()).FirstOrDefault();
@@ -660,7 +660,7 @@ namespace BoardGameGeekLike.Services
                                 (
                                     new MabNpcCard
                                     {
-                                        Card = card
+                                        Mab_Card = card
                                     }
                                 );
                             }
@@ -670,18 +670,18 @@ namespace BoardGameGeekLike.Services
 
                             npcCount = countBotsLvlEight < 10 ? $"0{countBotsLvlEight}" : $"{countBotsLvlEight}";
 
-                            var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
+                            var npcLvl = Helper.MabGetNpcLevel(validNpcDeckEntries.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
 
                             var npcName = "NPC-LVL" + npcLvl + "-" + npcCount;
 
                             npcs.Add(new MabNpc
                             {
-                                Name = npcName,
-                                Description = "( " + string.Join(", ", levelSequence) + " )",
-                                MabNpcCards = validNpcDeckEntries,
-                                Level = npcLvl,
-                                IsDeleted = false,
-                                IsDummy = true
+                                Mab_NpcName = npcName,
+                                Mab_NpcDescription = "( " + string.Join(", ", levelSequence) + " )",
+                                Mab_NpcCards = validNpcDeckEntries,
+                                Mab_NpcLevel = npcLvl,
+                                Mab_IsNpcDeleted = false,
+                                Mab_IsNpcDummy = true
                             });
                         }
                     }
@@ -713,13 +713,13 @@ namespace BoardGameGeekLike.Services
                     var validNpcDeckEntries = new List<MabNpcCard>();
 
                     //ex.: cardLvl == 6 and  i == 1 => (4, 4, 6, 8, 8 )
-                    var levelSequence = Helper.GetPowerSequence(level, i);
+                    var levelSequence = Helper.MabGetPowerSequence(level, i);
 
                     // Obtaing a random request of cardLvl corresponding to its position in the sequence:
                     foreach (var cardLvl in levelSequence)
                     {
                         // Filtering all cards by cardLvl (2, 3, 4, 5, 6 or 7):
-                        var cardsFiltered = cardsDB.Where(a => a.Level == cardLvl).ToList();
+                        var cardsFiltered = cardsDB.Where(a => a.Mab_CardLevel == cardLvl).ToList();
 
                         // Obtaing a random request of cardLvl corresponding to its position in the sequence:
                         var card = cardsFiltered.OrderBy(a => random.Next()).FirstOrDefault();
@@ -729,14 +729,14 @@ namespace BoardGameGeekLike.Services
                         (
                             new MabNpcCard
                             {
-                                Card = card
+                                Mab_Card = card
                             }
                         );
                     }
 
                     // Creating a new npc with 5 cards and adding it to a list of new NPCs:   
                     var npcName = "";
-                    var npcLvl = Helper.GetNpcLevel(validNpcDeckEntries.Select(a => a.Card.Level).ToList());
+                    var npcLvl = Helper.MabGetNpcLevel(validNpcDeckEntries.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
 
                     switch (level)
                     {
@@ -792,12 +792,12 @@ namespace BoardGameGeekLike.Services
 
                     npcs.Add(new MabNpc
                     {
-                        Name = npcName,
-                        Description = "( " + string.Join(", ", levelSequence) + " )",
-                        MabNpcCards = validNpcDeckEntries,
-                        Level = npcLvl,
-                        IsDeleted = false,
-                        IsDummy = true
+                        Mab_NpcName = npcName,
+                        Mab_NpcDescription = "( " + string.Join(", ", levelSequence) + " )",
+                        Mab_NpcCards = validNpcDeckEntries,
+                        Mab_NpcLevel = npcLvl,
+                        Mab_IsNpcDeleted = false,
+                        Mab_IsNpcDummy = true
                     });
 
                     // By the end of this for loop, there will be 12 npcs                  
@@ -808,7 +808,7 @@ namespace BoardGameGeekLike.Services
             }
         }
 
-        public async Task<(DevsMedievalAutoBattlerDeleteSeedResponse?, string)> MedievalAutoBattlerDeleteSeed(DevsMedievalAutoBattlerDeleteSeedRequest request)
+        public async Task<(DevsMabDeleteSeedResponse?, string)> MedievalAutoBattlerDeleteSeed(DevsMabDeleteSeedRequest request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -819,12 +819,12 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext
                             .MabNpcs
-                            .Where(a => a.IsDummy == true)
+                            .Where(a => a.Mab_IsNpcDummy == true)
                             .ExecuteDeleteAsync();
 
             await this._daoDbContext
                 .MabCards
-                .Where(a => a.IsDummy == true)
+                .Where(a => a.Mab_IsCardDummy == true)
                 .ExecuteDeleteAsync();
 
             return (null, "Dummies deleted successfully");
