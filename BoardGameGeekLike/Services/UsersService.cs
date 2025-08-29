@@ -5588,10 +5588,7 @@ namespace BoardGameGeekLike.Services
 
             return new List<int> { startingGoldStash, maxCardLevel, startingCardsCount };
         }
-
-       
-
-       
+  
       
         public async Task<(UsersMabShowDeckDetailsResponse?, string)> MabShowDeckDetails(UsersMabShowDeckDetailsRequest? request = null)
         {
@@ -6262,10 +6259,9 @@ namespace BoardGameGeekLike.Services
             return (
                 new UsersMabStartBattleResponse
                 {         
-                    MabPlayerNickName = mabCampaignDB.Mab_PlayerNickname!,
+                    Mab_PlayerNickName = mabCampaignDB.Mab_PlayerNickname!,
                     MabNpcName = randomNpc.Mab_NpcName,
-                    DoesPlayerGoFirst = doesPlayerGoFirst,
-                    MabBattleRoundNumber = 1,
+                    Mab_DoesPlayerGoFirst = doesPlayerGoFirst,                   
                 },
                 "A new battle started successfully");
         }
@@ -6276,7 +6272,7 @@ namespace BoardGameGeekLike.Services
                 return ( false, "Error: request is null!");
             }
 
-            if(request.MabQuestId.HasValue == false || request.MabQuestId < 1)
+            if(request.Mab_QuestId.HasValue == false || request.Mab_QuestId < 1)
             {
                 return (false, "Error: MabQuestId is invalid or missing");
             }   
@@ -6355,12 +6351,12 @@ namespace BoardGameGeekLike.Services
                             MabBattlePoints = mabBattlePoints,
                             MabNpcCard = new UsersMabContinueBattleResponse_NpcCard
                             {
-                                MabNpcCardId = mabNpcDuellingCard.MabNpcCardId,
-                                MabCardName = mabNpcDuellingCard.MabCardName,
-                                MabCardLevel = mabNpcDuellingCard.MabCardLevel,
-                                MabCardPower = mabNpcDuellingCard.MabCardPower,
-                                MabCardUpperHand = mabNpcDuellingCard.MabCardUpperHand,
-                                MabCardType = mabNpcDuellingCard.MabCardType,
+                                MabNpcCardId = mabNpcDuellingCard.Mab_NpcCardId,
+                                MabCardName = mabNpcDuellingCard.Mab_CardName,
+                                MabCardLevel = mabNpcDuellingCard.Mab_CardLevel,
+                                MabCardPower = mabNpcDuellingCard.Mab_CardPower,
+                                MabCardUpperHand = mabNpcDuellingCard.Mab_CardUpperHand,
+                                MabCardType = mabNpcDuellingCard.Mab_CardType,
                             }
                         }
                         ,"Mab Battle loaded successfully!");
@@ -6419,7 +6415,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersMabOrganizeDuelResponse?, string)> MabOrganizeDuel(UsersMabOrganizeDuelRequest? request)
+        public async Task<(UsersMabOrganizeDuelResponse?, string)> MabOrganizeDuel(UsersMabOrganizeDuelRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -6456,7 +6452,7 @@ namespace BoardGameGeekLike.Services
                     (var MabPlayerTurn_response, message) = await this.MabPlayerTurn(
                         new UsersMabPlayerTurnRequest
                         {
-                            MabCardCopyId = request!.MabPlayerCardId
+                            MabCardCopyId = request!.Mab_PlayerCardId
                         });
 
                     if(MabPlayerTurn_response == null)
@@ -6467,7 +6463,7 @@ namespace BoardGameGeekLike.Services
                     return (
                         new UsersMabOrganizeDuelResponse
                         {
-                            MabNpcCard = null
+                            Mab_NpcCard = null
                         }, 
                         "Mab Player Turn executed successfully");
                 case false:
@@ -6480,7 +6476,7 @@ namespace BoardGameGeekLike.Services
 
                     return (new UsersMabOrganizeDuelResponse
                     {
-                        MabNpcCard = mabNpcTurn_response
+                        Mab_NpcCard = mabNpcTurn_response
                     }, "Mab NPC Turn executed successfully");
                 default:
                     return (null, "Error: failed to compute whose turn it is!");
@@ -6488,7 +6484,7 @@ namespace BoardGameGeekLike.Services
         }
         private static (bool, string) MabBattleTurnManager_Validation(UsersMabOrganizeDuelRequest? request)
         {
-            if (request != null && request.MabPlayerCardId.HasValue == false)
+            if (request != null && request.Mab_PlayerCardId.HasValue == false)
             {
                 return (false, "Error: request.MabPlayerCardId is missing or invalid!");
             }
@@ -6544,20 +6540,18 @@ namespace BoardGameGeekLike.Services
                 .Where(a => avalailableMabPlayerCards.Contains(a.Id))
                 .Select(a => new UsersMabListUnusedCardsResponse
                 {
-                    MabCardCopyId = a.Id,
-                    MabCardName = a.Mab_Card.Mab_CardName,
-                    MabCardPower = a.Mab_Card.Mab_CardPower,
-                    MabCardUpperHand = a.Mab_Card.Mab_CardUpperHand,
-                    MabCardLevel = a.Mab_Card.Mab_CardLevel,
-                    MabCardType = a.Mab_Card.Mab_CardType,
+                    Mab_PlayerCardId = a.Id,
+                    Mab_CardName = a.Mab_Card!.Mab_CardName,
+                    Mab_CardPower = a.Mab_Card.Mab_CardPower,
+                    Mab_CardUpperHand = a.Mab_Card.Mab_CardUpperHand,
+                    Mab_CardLevel = a.Mab_Card.Mab_CardLevel,
+                    Mab_CardType = a.Mab_Card.Mab_CardType,
                 })
-                .OrderBy(a => a.MabCardLevel)
-                .ToListAsync();
-
-            
+                .OrderBy(a => a.Mab_CardLevel)
+                .ToListAsync();            
 
             return (content,
-                "Mab Player Card Copies available for this round have been listed successfully!");
+                "Mab Player's UNUSED assigned cards fetched successfully!");
         }
         private static (bool, string) ListMabPlayerRoundCardCopies_Validation(UsersMabListUnusedCardsRequest? request)
         {
@@ -6779,12 +6773,12 @@ namespace BoardGameGeekLike.Services
 
             return (new UsersMabNpcTurnResponse
             {
-                MabNpcCardId = mabCardDB.NpcCardId,
-                MabCardName = mabCardDB.CardName,
-                MabCardLevel = mabCardDB.CardLevel,
-                MabCardPower = mabCardDB.CardPower,
-                MabCardUpperHand = mabCardDB.CardUpperHand,
-                MabCardType = mabCardDB.CardType
+                Mab_NpcCardId = mabCardDB.NpcCardId,
+                Mab_CardName = mabCardDB.CardName,
+                Mab_CardLevel = mabCardDB.CardLevel,
+                Mab_CardPower = mabCardDB.CardPower,
+                Mab_CardUpperHand = mabCardDB.CardUpperHand,
+                Mab_CardType = mabCardDB.CardType
             },
             "Round ended, winner evaluated successfully!");
         }

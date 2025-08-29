@@ -2,12 +2,12 @@
 {
     public class UsersMabStartBattleResponse
     {
-        public string? MabPlayerNickName { get; set; }
+        public string? Mab_PlayerNickName { get; set; }
 
         public string? MabNpcName { get; set; }
 
-        public bool? DoesPlayerGoFirst { get; set; }
+        public bool? Mab_DoesPlayerGoFirst { get; set; }
 
-        public int? MabBattleRoundNumber { get; set; } = 0;        
+        public int? Mab_DuelNumber { get; set; } = 1;        
     }
 }

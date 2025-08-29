@@ -2,6 +2,6 @@
 {
     public class UsersMabStartBattleRequest
     {
-        public int? MabQuestId { get; set; }
+        public int? Mab_QuestId { get; set; }
     }
 }

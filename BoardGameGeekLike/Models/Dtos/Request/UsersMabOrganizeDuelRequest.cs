@@ -2,6 +2,6 @@
 {
     public class UsersMabOrganizeDuelRequest
     {
-        public int? MabPlayerCardId { get; set; } = null;
+        public int? Mab_PlayerCardId { get; set; } = null;
     }
 }

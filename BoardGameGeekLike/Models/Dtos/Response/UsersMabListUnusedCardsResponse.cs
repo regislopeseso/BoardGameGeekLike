@@ -5,17 +5,17 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersMabListUnusedCardsResponse
     {
-        public int? MabCardCopyId { get; set; }
+        public int? Mab_PlayerCardId { get; set; }
 
-        public string? MabCardName { get; set; }
+        public string? Mab_CardName { get; set; }
 
-        public int? MabCardPower { get; set; }
+        public int? Mab_CardPower { get; set; }
 
-        public int? MabCardUpperHand { get; set; }
+        public int? Mab_CardUpperHand { get; set; }
 
-        public int? MabCardLevel { get; set; }
+        public int? Mab_CardLevel { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public MabCardType? MabCardType { get; set; }
+        public MabCardType? Mab_CardType { get; set; }
     }
 }
