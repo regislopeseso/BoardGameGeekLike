@@ -2,8 +2,8 @@
 {
     public class UsersMabListDecksResponse
     {
-        public int? MabDeckId { get; set; }
+        public int? Mab_DeckId { get; set; }
 
-        public string? MabDeckDescription { get; set; }
+        public string? Mab_DeckName { get; set; }
     }
 }

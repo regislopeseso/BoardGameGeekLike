@@ -2,6 +2,6 @@
 {
     public class UsersMabDeleteDeckRequest
     {
-        public int? MabDeckId { get; set; }
+        public int? Mab_DeckId { get; set; }
     }
 }

@@ -894,7 +894,7 @@ namespace BoardGameGeekLike.Controllers
         [HttpGet]
         public async Task<IActionResult> MabListDecks(UsersMabListDecksRequest? request)
         {
-            var (content, message) = await this._usersService.ListMabPlayerDecks(request);
+            var (content, message) = await this._usersService.MabListDecks(request);
 
             var response = new Response<List<UsersMabListDecksResponse>?>
             {
@@ -908,7 +908,7 @@ namespace BoardGameGeekLike.Controllers
         [HttpPost]
         public async Task<IActionResult> MabStartBattle([FromForm] UsersMabStartBattleRequest? request)
         {
-            var (content, message) = await this._usersService.StartMabBattle(request);
+            var (content, message) = await this._usersService.MabStartBattle(request);
 
             var response = new Response<UsersMabStartBattleResponse?>
             {
