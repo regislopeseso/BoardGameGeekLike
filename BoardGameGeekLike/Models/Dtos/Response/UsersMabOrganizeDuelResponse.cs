@@ -2,7 +2,6 @@
 {
     public class UsersMabOrganizeDuelResponse
     {
-
         public UsersMabNpcTurnResponse? Mab_NpcCard { get; set; }
     }
 }

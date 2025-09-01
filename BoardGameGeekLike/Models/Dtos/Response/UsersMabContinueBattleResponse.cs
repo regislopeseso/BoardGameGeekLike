@@ -2,16 +2,16 @@
 {
     public class UsersMabContinueBattleResponse
     {
-        public string? MabPlayerNickName { get; set; }
+        public string? Mab_PlayerNickName { get; set; }
 
-        public string? MabNpcName { get; set; }
+        public string? Mab_NpcName { get; set; }
   
-        public bool? IsPlayerTurn { get; set; }
+        public bool? Mab_IsPlayerTurn { get; set; }
 
-        public int? MabBattleRoundNumber { get; set; }
+        public int? Mab_DuelNumber { get; set; }
 
-        public int? MabBattlePoints { get; set; }
+        public int? Mab_CurrentBattlePoints { get; set; }
 
-        public UsersMabContinueBattleResponse_NpcCard? MabNpcCard { get; set; }
+        public UsersMabContinueBattleResponse_NpcCard? Mab_NpcCard { get; set; }
     }
 }
