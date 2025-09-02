@@ -6,8 +6,6 @@
 
         public int Mab_NpcCardFullPower { get; set; }
 
-        public int Mab_BattleDuelPoints { get; set; }
-
-        public int Mab_NextDuelNumber { get; set; }
+        public int Mab_DuelPoints { get; set; }
     }
 }

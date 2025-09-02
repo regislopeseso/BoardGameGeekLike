@@ -2,6 +2,6 @@
 {
     public class UsersMabPlayerTurnRequest
     {        
-        public int? MabCardCopyId { get; set; }
+        public int? Mab_PlayerCardId { get; set; }
     }
 }

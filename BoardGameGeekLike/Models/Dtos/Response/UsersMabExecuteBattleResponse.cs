@@ -8,6 +8,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_DuelResult { get; set; } = 0;
 
+        public int? Mab_PlayerCardFullPower { get; set; } = null;
+
         
         public string? Mab_NpcCardName { get; set; } = null;
         
@@ -18,5 +20,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public int? Mab_NpcCardUpperHand { get; set; } = null;
 
         public MabCardType? Mab_NpcCardType { get; set; } = null;
+
+        public int? Mab_NpcCardFullPower { get; set; } = null;
     }
 }

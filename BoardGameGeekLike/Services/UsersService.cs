@@ -13,6 +13,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
 using Constants = BoardGameGeekLike.Utilities.Constants;
 
 
@@ -6206,6 +6207,8 @@ namespace BoardGameGeekLike.Services
                 .MabCampaigns!
                 .Include(a => a.Mab_Battles!)
                 .ThenInclude(b => b.Mab_Npc)
+                .Include(a => a.Mab_Battles!)
+                .ThenInclude(c => c.Mab_Duels)
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.Mab_IsCampaignDeleted == false);
 
             if (mabCampaignDB == null)
@@ -6235,7 +6238,11 @@ namespace BoardGameGeekLike.Services
 
             var doesPlayerGoFirst = RandomFirstPlayer();
 
-            var newMabBattleTurns = new List<MabDuel>();                      
+            var newMabBattleTurns = new List<MabDuel>();
+            newMabBattleTurns.Add(new MabDuel
+            {
+
+            });
 
             mabCampaignDB.Mab_Battles!.Add(new MabBattle
             {
@@ -6277,135 +6284,135 @@ namespace BoardGameGeekLike.Services
             return random.Next(0, 2) == 0;
         }
 
-        public async Task<(UsersMabContinueBattleResponse?, string)> ContinueMabBattle(UsersMabContinueBattleRequest? request)
-        {
-            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        //public async Task<(UsersMabContinueBattleResponse?, string)> ContinueMabBattle(UsersMabContinueBattleRequest? request)
+        //{
+        //    var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (null, "Error: User is not authenticated");
-            }
+        //    if (string.IsNullOrEmpty(userId))
+        //    {
+        //        return (null, "Error: User is not authenticated");
+        //    }
 
-            var (isValid, message) = ContinueMabBattle_Validation(request);
+        //    var (isValid, message) = ContinueMabBattle_Validation(request);
             
-            if (isValid == false)
-            {
-                return (null, message);
-            }
+        //    if (isValid == false)
+        //    {
+        //        return (null, message);
+        //    }
 
-            var onGoingMabBattleDB = await this._daoDbContext
-                .MabBattles
-                .AsNoTracking()
-                .Where(a => a.Mab_Campaign!.UserId == userId && a.Mab_Campaign.Mab_IsCampaignDeleted == false && a.Mab_IsBattleFinished == false)
-                .Select(a => new
-                {
-                    MabPlayerNickName = a.Mab_Campaign.Mab_PlayerNickname,
-                    MabNpcName = a.Mab_Npc.Mab_NpcName,
-                    IsPlayerTurn = a.Mab_IsPlayerTurn,
-                    MabBattleTurnsCount = a.Mab_Duels!.Count,
-                    LastMabNpcDeckEntryId = a.Mab_Duels!.OrderByDescending(b => b.Id).FirstOrDefault()!.Mab_NpcCardId,
-                    MabBattlePoints = a.Mab_BattlePoints
-                })
-                .FirstOrDefaultAsync();
+        //    var onGoingMabBattleDB = await this._daoDbContext
+        //        .MabBattles
+        //        .AsNoTracking()
+        //        .Where(a => a.Mab_Campaign!.UserId == userId && a.Mab_Campaign.Mab_IsCampaignDeleted == false && a.Mab_IsBattleFinished == false)
+        //        .Select(a => new
+        //        {
+        //            MabPlayerNickName = a.Mab_Campaign.Mab_PlayerNickname,
+        //            MabNpcName = a.Mab_Npc.Mab_NpcName,
+        //            IsPlayerTurn = a.Mab_IsPlayerTurn,
+        //            MabBattleTurnsCount = a.Mab_Duels!.Count,
+        //            LastMabNpcDeckEntryId = a.Mab_Duels!.OrderByDescending(b => b.Id).FirstOrDefault()!.Mab_NpcCardId,
+        //            MabBattlePoints = a.Mab_BattlePoints
+        //        })
+        //        .FirstOrDefaultAsync();
 
-            if(onGoingMabBattleDB == null)
-            {
-                return (null, "Error: no ongoing mab battle was found!");
-            }
-
-
-            var mabPlayerNickName = onGoingMabBattleDB.MabPlayerNickName;
-            var mabNpcName = onGoingMabBattleDB.MabNpcName;
-            var isPlayerTurn = onGoingMabBattleDB.IsPlayerTurn;
-            var mabBattleRoundNumber = onGoingMabBattleDB.MabBattleTurnsCount;
-            var mabNpcDeckEntryId = onGoingMabBattleDB.LastMabNpcDeckEntryId;
-            var mabBattlePoints = onGoingMabBattleDB.MabBattlePoints;
-
-            //It is no the Player's turn...
-            if (isPlayerTurn == false)
-            {
-                // Mab_Npc has not played yet, so we need to make its turn now...
-                if (mabNpcDeckEntryId == null)
-                {
-                    (var mabNpcDuellingCard, message) = await this.MabNpcTurn();
-
-                    if(mabNpcDuellingCard == null)
-                    {
-                        return (null, message);
-                    }                    
-
-                    return (
-                        new UsersMabContinueBattleResponse
-                        {
-                            Mab_PlayerNickName = mabPlayerNickName,
-                            Mab_NpcName = mabNpcName,
-                            Mab_IsPlayerTurn = isPlayerTurn,
-                            Mab_DuelNumber = mabBattleRoundNumber,
-                            Mab_CurrentBattlePoints = mabBattlePoints,
-                            Mab_NpcCard = new UsersMabContinueBattleResponse_NpcCard
-                            {
-                                Mab_NpcCardId = mabNpcDuellingCard.Mab_NpcCardId,
-                                Mab_CardName = mabNpcDuellingCard.Mab_CardName,
-                                Mab_CardLevel = mabNpcDuellingCard.Mab_CardLevel,
-                                Mab_CardPower = mabNpcDuellingCard.Mab_CardPower,
-                                Mab_CardUpperHand = mabNpcDuellingCard.Mab_CardUpperHand,
-                                Mab_CardType = mabNpcDuellingCard.Mab_CardType,
-                            }
-                        }
-                        ,"Mab Battle loaded successfully!");
-                }
-                //It is the NPC'S turn, and he has already played, fetching its card data...
-                var mabNpcCard = await this._daoDbContext
-                        .MabNpcCards
-                        .Where(a => a.Id == mabNpcDeckEntryId)
-                        .Select(a => new UsersMabContinueBattleResponse_NpcCard
-                        {
-                            Mab_NpcCardId = a.Id,
-                            Mab_CardName = a.Mab_Card.Mab_CardName,
-                            Mab_CardLevel = a.Mab_Card.Mab_CardLevel,
-                            Mab_CardPower = a.Mab_Card.Mab_CardPower,
-                            Mab_CardUpperHand = a.Mab_Card.Mab_CardUpperHand,
-                            Mab_CardType = a.Mab_Card.Mab_CardType,
-                        })
-                        .FirstOrDefaultAsync();
-
-                if (mabNpcCard == null)
-                {
-                    return (null, "Error: failed to fetch MabNpcCard data");
-                }
-
-                return (new UsersMabContinueBattleResponse
-                {
-                    Mab_PlayerNickName = mabPlayerNickName,
-                    Mab_NpcName = mabNpcName,
-                    Mab_IsPlayerTurn = isPlayerTurn,
-                    Mab_DuelNumber = mabBattleRoundNumber,
-                    Mab_CurrentBattlePoints = mabBattlePoints,
-                    Mab_NpcCard = mabNpcCard
-                }, "Mab Battle loaded successfully!");
+        //    if(onGoingMabBattleDB == null)
+        //    {
+        //        return (null, "Error: no ongoing mab battle was found!");
+        //    }
 
 
-            }        
+        //    var mabPlayerNickName = onGoingMabBattleDB.MabPlayerNickName;
+        //    var mabNpcName = onGoingMabBattleDB.MabNpcName;
+        //    var isPlayerTurn = onGoingMabBattleDB.IsPlayerTurn;
+        //    var mabBattleRoundNumber = onGoingMabBattleDB.MabBattleTurnsCount;
+        //    var mabNpcDeckEntryId = onGoingMabBattleDB.LastMabNpcDeckEntryId;
+        //    var mabBattlePoints = onGoingMabBattleDB.MabBattlePoints;
+
+        //    //It is no the Player's turn...
+        //    if (isPlayerTurn == false)
+        //    {
+        //        // Mab_Npc has not played yet, so we need to make its turn now...
+        //        if (mabNpcDeckEntryId == null)
+        //        {
+        //            (var mabNpcDuellingCard, message) = await this.MabNpcTurn();
+
+        //            if(mabNpcDuellingCard == null)
+        //            {
+        //                return (null, message);
+        //            }                    
+
+        //            return (
+        //                new UsersMabContinueBattleResponse
+        //                {
+        //                    Mab_PlayerNickName = mabPlayerNickName,
+        //                    Mab_NpcName = mabNpcName,
+        //                    Mab_IsPlayerTurn = isPlayerTurn,
+        //                    Mab_DuelNumber = mabBattleRoundNumber,
+        //                    Mab_CurrentBattlePoints = mabBattlePoints,
+        //                    Mab_NpcCard = new UsersMabContinueBattleResponse_NpcCard
+        //                    {
+        //                        Mab_NpcCardId = mabNpcDuellingCard.Mab_NpcCardId,
+        //                        Mab_CardName = mabNpcDuellingCard.Mab_CardName,
+        //                        Mab_CardLevel = mabNpcDuellingCard.Mab_CardLevel,
+        //                        Mab_CardPower = mabNpcDuellingCard.Mab_CardPower,
+        //                        Mab_CardUpperHand = mabNpcDuellingCard.Mab_CardUpperHand,
+        //                        Mab_CardType = mabNpcDuellingCard.Mab_CardType,
+        //                    }
+        //                }
+        //                ,"Mab Battle loaded successfully!");
+        //        }
+        //        //It is the NPC'S turn, and he has already played, fetching its card data...
+        //        var mabNpcCard = await this._daoDbContext
+        //                .MabNpcCards
+        //                .Where(a => a.Id == mabNpcDeckEntryId)
+        //                .Select(a => new UsersMabContinueBattleResponse_NpcCard
+        //                {
+        //                    Mab_NpcCardId = a.Id,
+        //                    Mab_CardName = a.Mab_Card.Mab_CardName,
+        //                    Mab_CardLevel = a.Mab_Card.Mab_CardLevel,
+        //                    Mab_CardPower = a.Mab_Card.Mab_CardPower,
+        //                    Mab_CardUpperHand = a.Mab_Card.Mab_CardUpperHand,
+        //                    Mab_CardType = a.Mab_Card.Mab_CardType,
+        //                })
+        //                .FirstOrDefaultAsync();
+
+        //        if (mabNpcCard == null)
+        //        {
+        //            return (null, "Error: failed to fetch MabNpcCard data");
+        //        }
+
+        //        return (new UsersMabContinueBattleResponse
+        //        {
+        //            Mab_PlayerNickName = mabPlayerNickName,
+        //            Mab_NpcName = mabNpcName,
+        //            Mab_IsPlayerTurn = isPlayerTurn,
+        //            Mab_DuelNumber = mabBattleRoundNumber,
+        //            Mab_CurrentBattlePoints = mabBattlePoints,
+        //            Mab_NpcCard = mabNpcCard
+        //        }, "Mab Battle loaded successfully!");
+
+
+        //    }        
     
-            return (new UsersMabContinueBattleResponse
-            {
-                Mab_PlayerNickName = mabPlayerNickName,
-                Mab_NpcName = mabNpcName,
-                Mab_IsPlayerTurn = isPlayerTurn,
-                Mab_DuelNumber = mabBattleRoundNumber,
-                Mab_CurrentBattlePoints = mabBattlePoints,
-                Mab_NpcCard = null
-            }, "Mab Battle loaded successfully!");
-        }
-        private static (bool, string) ContinueMabBattle_Validation(UsersMabContinueBattleRequest? request)
-        {
-            if (request != null)
-            {
-                return (false, "Error: request is NOT null, however it must be null!");
-            }           
+        //    return (new UsersMabContinueBattleResponse
+        //    {
+        //        Mab_PlayerNickName = mabPlayerNickName,
+        //        Mab_NpcName = mabNpcName,
+        //        Mab_IsPlayerTurn = isPlayerTurn,
+        //        Mab_DuelNumber = mabBattleRoundNumber,
+        //        Mab_CurrentBattlePoints = mabBattlePoints,
+        //        Mab_NpcCard = null
+        //    }, "Mab Battle loaded successfully!");
+        //}
+        //private static (bool, string) ContinueMabBattle_Validation(UsersMabContinueBattleRequest? request)
+        //{
+        //    if (request != null)
+        //    {
+        //        return (false, "Error: request is NOT null, however it must be null!");
+        //    }           
 
-            return (true, string.Empty);
-        }
+        //    return (true, string.Empty);
+        //}
 
 
         public async Task<(UsersMabOrganizeDuelResponse?, string)> MabOrganizeDuel(UsersMabOrganizeDuelRequest? request = null)
@@ -6445,7 +6452,7 @@ namespace BoardGameGeekLike.Services
                     (var MabPlayerTurn_response, message) = await this.MabPlayerTurn(
                         new UsersMabPlayerTurnRequest
                         {
-                            MabCardCopyId = request!.Mab_PlayerCardId
+                            Mab_PlayerCardId = request!.Mab_PlayerCardId
                         });
 
                     if(MabPlayerTurn_response == null)
@@ -6557,372 +6564,10 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersMabPlayerTurnResponse?, string)> MabPlayerTurn(UsersMabPlayerTurnRequest? request)
-        {
-            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+    
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (null, "Error: User is not authenticated");
-            }
 
-            var (isValid, message) = MabPlayerTurn_Validation(request);
-
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var isMabCardCopyIdValid = await this._daoDbContext
-                .MabAssignedCards
-                .AnyAsync(a => a.Mab_PlayerCardId == request!.MabCardCopyId &&
-                               a.Mab_Deck!.Mab_Campaign!.UserId == userId &&
-                               a.Mab_Deck.Mab_IsDeckActive == true);
-
-            if (isMabCardCopyIdValid == false)
-            {
-               return (null, "Error: MabCardCopyId is invalid or not assigned to the active deck!");
-            }
-
-            var isMabBattleUnique = await this._daoDbContext
-                .MabBattles                
-                .CountAsync(a => a.Mab_IsBattleFinished == false && a.Mab_Campaign!.UserId == userId);
-
-            if(isMabBattleUnique != 1)
-            {
-                return (null, "Error: more than one ongoing battle were found!");
-            }
-
-            var mabBattleDB = await this._daoDbContext
-                .MabBattles
-                .OrderByDescending(a => a.Id)
-                .Include(a => a.Mab_Duels)
-                .FirstOrDefaultAsync(a => a.Mab_IsBattleFinished == false && a.Mab_Campaign!.UserId == userId);
-
-            if(mabBattleDB == null)
-            {
-               return (null, "Error: no mab battle found for this campaign!");
-            }
-
-            if (mabBattleDB.Mab_IsPlayerTurn == false)
-            {
-                return (null, "Error: its not the players turn!");
-            }
-
-            var isMabCardCopyAvailable = mabBattleDB
-                .Mab_Duels!
-                .Any(a => a.Mab_PlayerCardId == request!.MabCardCopyId) == false;
-
-            if(isMabCardCopyAvailable == false)
-            {
-                return (null, "Error: MabCardCopyId has already been used in this battle!");
-            }
-
-            var mabBattleLastDuel = mabBattleDB
-                .Mab_Duels?              
-                .FirstOrDefault(a => a.Mab_PlayerCardId == null);                
-
-            if (mabBattleLastDuel == null)
-            {
-                mabBattleDB.Mab_Duels.Add(new MabDuel
-                {
-                    Mab_PlayerCardId = request!.MabCardCopyId,
-                });
-            }
-            else
-            {
-                mabBattleLastDuel.Mab_PlayerCardId = request!.MabCardCopyId;
-            }
-
-            
-            mabBattleDB.Mab_IsPlayerTurn = false;
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (new UsersMabPlayerTurnResponse(),"Mab Player Battle Round ended successfully");
-        }
-        private static (bool, string) MabPlayerTurn_Validation(UsersMabPlayerTurnRequest? request)
-        {
-            if (request == null)
-            {
-                return (false, "Error: request is null!");
-            }
-
-            if (request.MabCardCopyId.HasValue == false || request.MabCardCopyId < 1)
-            {
-                return (false, "Error: MabCardCopyId is invalid or missing");
-            }
-
-            return (true, string.Empty);
-        }
-
-
-        public async Task<(UsersMabNpcTurnResponse?, string)> MabNpcTurn(UsersMabNpcTurnRequest? request = null)
-        {
-            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (null, "Error: User is not authenticated");
-            }
-
-            var (isValid, message) = MabNpcTurn_Validation(request);
-            if (!isValid)
-            {
-                return (null, message);
-            }
-
-            var isMabBattleUnique = await this._daoDbContext
-              .MabBattles
-              .CountAsync(a => a.Mab_IsBattleFinished == false && a.Mab_Campaign!.UserId == userId);
-
-            if (isMabBattleUnique != 1)
-            {
-                return (null, "Error: more than one ongoing battle were found!");
-            }
-
-            var mabBattleDB = await this._daoDbContext
-                .MabBattles
-                .Include(a => a.Mab_Duels)
-                .Include(a => a.Mab_Npc)
-                .ThenInclude(a => a.Mab_NpcCards)
-                .OrderByDescending(a => a.Id)
-                .FirstOrDefaultAsync(a => a.Mab_IsBattleFinished == false && a.Mab_Campaign!.UserId == userId);
-
-            if (mabBattleDB == null)
-            {
-                return (null, "Error: no mab battle found for this campaign!");
-            }
-
-            if(mabBattleDB.Mab_IsPlayerTurn == true)
-            {
-                return (null, "Error: it is not the NPC's turn!");
-            }
-
-            var mabNpcDB = mabBattleDB.Mab_Npc;
-            if (mabNpcDB == null)
-            {
-                return (null, "Error: no mab NPC found for this battle!");
-            }
-
-            var mabNpcCardsDB = mabNpcDB.Mab_NpcCards;
-            if (mabNpcCardsDB == null || mabNpcCardsDB.Count < Constants.DeckSize)
-            {
-                return (null, "Error: NPC cards missing or insufficient!");
-            }
-
-            // already used entries
-            var usedNpcDeckEntryIds = mabBattleDB
-                .Mab_Duels!
-                .Where(a => a.Mab_NpcCardId != null)
-                .Select(a => a.Mab_NpcCardId!.Value)
-                .ToList();
-
-            // available entries (copies not yet used)
-            var availableNpcDeckEntries = mabNpcCardsDB
-                .Where(a => !usedNpcDeckEntryIds.Contains(a.Id))
-                .ToList();
-
-            if (availableNpcDeckEntries.Any() == false)
-            {
-                return (null, "Error: NPC has no more available cards!");
-            }
-
-            var randomNpcEntry = availableNpcDeckEntries.OrderBy(_ => random.Next()).First();
-            var npcDeckEntryId = randomNpcEntry.Id;
-
-            mabBattleDB.Mab_IsPlayerTurn = true;
-           
-            var mabLastBattleTurn = mabBattleDB
-                .Mab_Duels!
-                .FirstOrDefault(a => a.Mab_NpcCardId == null);
-
-            if (mabLastBattleTurn == null)
-            {
-                mabBattleDB.Mab_Duels!.Add(new MabDuel
-                {
-                    Mab_NpcCardId = npcDeckEntryId,
-                });
-            }
-            else
-            {
-                mabLastBattleTurn.Mab_NpcCardId = npcDeckEntryId;
-            }
-
-            var mabCardDB = await this._daoDbContext
-                .MabNpcCards
-                .AsNoTracking()
-                .Where(a => a.Id == npcDeckEntryId)
-                .Select(a => new
-                {
-                    NpcCardId = a.Id,
-                    CardName = a.Mab_Card.Mab_CardName,
-                    CardLevel = a.Mab_Card.Mab_CardLevel,
-                    CardPower = a.Mab_Card.Mab_CardPower,
-                    CardUpperHand = a.Mab_Card.Mab_CardUpperHand,
-                    CardType = a.Mab_Card.Mab_CardType,
-                })
-                .FirstOrDefaultAsync();
-
-            if (mabCardDB == null)
-            {
-                return (null, "Error: failed to fecth mab card data of the card used by this npc");
-            }
-            
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (new UsersMabNpcTurnResponse
-            {
-                Mab_NpcCardId = mabCardDB.NpcCardId,
-                Mab_CardName = mabCardDB.CardName,
-                Mab_CardLevel = mabCardDB.CardLevel,
-                Mab_CardPower = mabCardDB.CardPower,
-                Mab_CardUpperHand = mabCardDB.CardUpperHand,
-                Mab_CardType = mabCardDB.CardType
-            },
-            "Round ended, winner evaluated successfully!");
-        }
-        private static (bool, string) MabNpcTurn_Validation(UsersMabNpcTurnRequest? request) 
-        { 
-            if(request != null)
-            {
-                return (false, "Error: request is NOT null, however it MUST be null!");
-            }
-
-            return (true, string.Empty);
-        }
-
-
-        public async Task<(UsersMabResolveDuelResponse?, string)> MabResolveDuel(UsersMabResolveDuelRequest request)
-        {
-            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (null, "Error: User is not authenticated");
-            }
-
-            var (isValid, message) = MabResolveDuel_Validation(request);
-
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
-            var mabBattleDB = await this._daoDbContext
-                .MabBattles
-                .Include(a => a.Mab_Duels)
-                .FirstOrDefaultAsync(a => a.Mab_Campaign!.UserId == userId && a.Mab_IsBattleFinished == false);
-
-            if (mabBattleDB == null)
-            {
-                return (null, "Error: no ongoing battle found for this campaign!");
-            }
-
-            var mabBattleDuels = mabBattleDB.Mab_Duels;
-
-            if (mabBattleDuels == null || mabBattleDuels.Count == 0)
-            {
-                return (null, "Error: no duels found for this battle!");
-            }
-
-            var isBattleFinished = mabBattleDuels.Count == 5 && mabBattleDuels.All(a => a.Mab_PlayerCardId != null && a.Mab_NpcCardId != null);
-
-            if (isBattleFinished == true)
-            {
-                return (new UsersMabResolveDuelResponse
-                {
-
-                }, "This mab battle is now finished!");
-            }
-
-            var duelDB = mabBattleDB
-                .Mab_Duels!                
-                .FirstOrDefault(a => 
-                    (a.Mab_DuelPoints != null || a.Mab_DuelPoints == 0) &&                                      
-                    a.Mab_PlayerCardId != null && a.Mab_NpcCardId != null);
-
-            if (duelDB == null)
-            {
-                return (null, "Error: no valid duel found to be resolved!");
-            }
-
-            var mabPlayerDuellingCardId = duelDB.Mab_PlayerCardId!.Value;
-
-            var mabNpcDuellingCardId = duelDB.Mab_NpcCardId!.Value;
-
-            var duellingCards = await this._daoDbContext
-            .MabCards
-            .AsNoTracking()
-            .Where(a => !a.Mab_IsCardDeleted &&
-                        (a.Mab_PlayerCards!.Any(b => b.Id == mabPlayerDuellingCardId) || a.Id == mabNpcDuellingCardId))
-            .Select(a => new
-            {
-                a.Id,
-                a.Mab_CardPower,
-                a.Mab_CardUpperHand,
-                a.Mab_CardType,
-                IsPlayer = a.Mab_PlayerCards!.Any(b => b.Id == mabPlayerDuellingCardId),
-                IsNpc = a.Id == mabNpcDuellingCardId
-            })
-            .ToListAsync();
-
-            var mabPlayerDuellingCard = duellingCards.FirstOrDefault(c => c.IsPlayer);
-
-            var mabNpcDuellingCard = duellingCards.FirstOrDefault(c => c.IsNpc);
-
-            var mabPlayerDuellingCard_FullPower = Helper.MabGetCardFullPower(
-                mabPlayerDuellingCard!.Mab_CardPower,
-                mabPlayerDuellingCard.Mab_CardUpperHand,
-                (int)mabPlayerDuellingCard.Mab_CardType!,
-                (int)mabNpcDuellingCard.Mab_CardType!);
-
-            var mabNpcDuellingCard_FullPower = Helper.MabGetCardFullPower(
-                mabNpcDuellingCard!.Mab_CardPower,
-                mabNpcDuellingCard.Mab_CardUpperHand,
-                (int)mabNpcDuellingCard.Mab_CardType!,
-                (int)mabPlayerDuellingCard.Mab_CardType!);
-
-            var mabBattleRoundPoints = Helper.MabGetDuelPoints(mabPlayerDuellingCard_FullPower, mabNpcDuellingCard_FullPower);
-
-            duelDB.Mab_DuelPoints = mabBattleRoundPoints;
-
-            switch (Math.Sign(mabBattleRoundPoints))
-            {
-                case 1: // player wins                    
-                    duelDB.Mab_HasPlayerWon = true;
-                    break;
-                case -1: // npc wins                   
-                    duelDB.Mab_HasPlayerWon = false;
-                    break;
-                case 0: // draw
-                    duelDB.Mab_HasPlayerWon = false;
-                    break;
-                default:
-                    return (null, "Error: unexpected error while trying to resolve mab battle duel!");
-            }
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            var content = new UsersMabResolveDuelResponse
-            {
-                Mab_PlayerCardFullPower = mabPlayerDuellingCard_FullPower,
-                Mab_NpcCardFullPower = mabNpcDuellingCard_FullPower,
-                Mab_BattleDuelPoints = mabBattleRoundPoints,
-                Mab_NextDuelNumber = mabBattleDB.Mab_Duels.Count + 1
-            };
-
-            return (content, "Mab Battle resolved successfully!");
-        }
-        private static (bool, string) MabResolveDuel_Validation(UsersMabResolveDuelRequest? request)
-        {
-            if (request != null)
-            {
-                return (false, "Error: request is NOT null, however it MUST be null!");
-            }
-
-            return (true, string.Empty);
-        }
-
+       
 
         public async Task<(UsersMabCheckDuelStatusResponse?, string)> CheckMabDuel(UsersMabCheckDuelStatusRequest? request = null)
         {
@@ -7084,14 +6729,35 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+            var content = new UsersMabExecuteBattleResponse();
+
+            // MAB CAMPAIGN
             var mabCampaignDB = await this._daoDbContext
                 .MabCampaigns
                 .FirstOrDefaultAsync(a => a.Mab_IsCampaignDeleted == false && a.UserId == userId);
 
+            // MAB BATTLE
             var mabBattleDB = await this._daoDbContext
                 .MabBattles
                 .Include(a => a.Mab_Duels)
                 .FirstOrDefaultAsync(a => a.Mab_CampaignId == mabCampaignDB.Id && a.Mab_IsBattleFinished == false);
+
+            // MAB DUELS (ALWAYS AT LEAST 1)
+            var mabDuelsDB = mabBattleDB.Mab_Duels.ToList();
+
+            // MAB NEW DUEL (MOST RECENTLY STARTED ONE WHICH NO TURN HAS YET BEEN PLAYED)
+            var mabNewDuel = mabDuelsDB.FirstOrDefault(a => a.Mab_NpcCardId == null && a.Mab_PlayerCardId == null);
+
+            // MAB ONGOING DUEL (MOST RECENT NOT YET FINISHED)
+            var onGoingMabDuel = mabDuelsDB.FirstOrDefault(a => a.Mab_PlayerCardId == null && a.Mab_NpcCardId != null);
+
+            // MAB DUEL RESULTS
+            var duelResults = new UsersMabResolveDuelResponse();
+
+            // MAB NPC
+            var npcTurnResult = new UsersMabNpcTurnResponse();
+
+            var mabCard_npc = new MabCard();
 
             var mabNpcDB = await this._daoDbContext
                 .MabNpcs
@@ -7103,6 +6769,12 @@ namespace BoardGameGeekLike.Services
                 .ToListAsync();
 
             var mabNpcUsedCards = new List<MabNpcCard>();
+
+
+            // MAB PLAYER
+            var playerTurnResult = new UsersMabPlayerTurnResponse();
+
+            var mabCard_player = new MabCard();
 
             var mabPlayerActiveDeck = await this._daoDbContext
                 .MabDecks
@@ -7120,172 +6792,94 @@ namespace BoardGameGeekLike.Services
 
             var mabPlayerUsedCards = new List<MabPlayerCard>();
 
-            var mabDuellingCards = await this._daoDbContext
+
+            // MAB CARDS
+            var mabBattleCards = await this._daoDbContext
                 .MabCards
                 .Where(a =>
                     mabPlayerCards.Select(b => b.Mab_CardId).Contains(a.Id) ||
                     mabNpcCards.Select(b => b.Mab_CardId).Contains(a.Id)
                 )
-                .ToListAsync();
+                .ToListAsync();           
 
-            var mabDuelsDB = mabBattleDB.Mab_Duels.ToList();           
-
-            // #2st Scenario: The Battle has just begun: it is now the FIRST DUEL...
-            if (mabDuelsDB == null || mabDuelsDB.Count == 0)
+            // #1st Scenario: Ongoing duel, and the player must play to finish it...
+            #region #1         
+            if (onGoingMabDuel != null)
             {
-                var firstDuel = new MabDuel();
+                // 1.A: Player plays by submiting a playerCardId...
+                (playerTurnResult, message) = await this.MabPlayerTurn(new UsersMabPlayerTurnRequest
+                {
+                    Mab_PlayerCardId = request!.Mab_PlayerCardId
+                });
 
-
-                // 2.1: PLAYER goes first...
-                if (mabBattleDB.Mab_IsPlayerTurn == true)
-                {                  
-                    // 2.1.A: Player plays by submiting a playerCardId...
-                    var playerCard = mabPlayerCards.FirstOrDefault(a => a.Id == request.Mab_PlayerCardId);
-
-                    mabPlayerUsedCards.Add(playerCard);
-
-                    var cardDB_player = mabDuellingCards.FirstOrDefault(a => a.Id == playerCard.Mab_CardId);
-
-                    firstDuel.Mab_PlayerCardId = request.Mab_PlayerCardId;
-
-
-                    // 2.1.B: Then Npc plays, chosing a random card (AFTERWARDS THIS CARD WILL BE PICKED ACCORDING TO WHAT THE PLAYER PLAYED)...
-                    var random_Mab_NpcCard = mabNpcCards.OrderBy(_ => random.Next()).First();
-
-                    mabNpcUsedCards.Add(random_Mab_NpcCard);
-
-                    var cardDB_npc = mabDuellingCards.FirstOrDefault(a => a.Id == random_Mab_NpcCard.Mab_CardId);
-
-                    firstDuel.Mab_NpcCardId = random_Mab_NpcCard.Mab_CardId; // request.MabPlayerCardId == null;
-
-
-                    // 2.1.C: Calculates player and npc cards full power...
-                    var playerCard_FullPower = Helper.MabGetCardFullPower(
-                        cardDB_player!.Mab_CardPower,
-                        cardDB_player.Mab_CardUpperHand,
-                        (int)cardDB_player.Mab_CardType!,
-                        (int)cardDB_npc.Mab_CardType!);
-
-                    firstDuel.Mab_PlayerCardFullPower = playerCard_FullPower;
-
-                    var npcCard_FullPower = Helper.MabGetCardFullPower(
-                       cardDB_npc!.Mab_CardPower,
-                       cardDB_npc.Mab_CardUpperHand,
-                       (int)cardDB_npc.Mab_CardType!,
-                       (int)cardDB_player.Mab_CardType!);
-
-                    firstDuel.Mab_PlayerCardFullPower = npcCard_FullPower;
-
-                    // 2.1.D: Resolves duel...
-                    var mabDuelResult = Helper.MabGetDuelPoints(playerCard_FullPower, npcCard_FullPower);
-
-                    firstDuel.Mab_DuelPoints = mabDuelResult;
-                    firstDuel.Mab_HasPlayerWon = mabDuelResult > 0 ? true : false;
-
-                    mabBattleDB.Mab_BattlePoints = mabDuelResult;
-                    
-                    mabBattleDB.Mab_Duels.Add(firstDuel);
-                    
-                    mabBattleDB.Mab_IsPlayerTurn = false;
-
-                    await this._daoDbContext.SaveChangesAsync();
-
-                    // 2.1.E: Finishes completely the FIRST duel of the ongoing battle...
-                    return (new UsersMabExecuteBattleResponse
-                    {
-                        Mab_DuelResult = mabDuelResult
-                    }, $"Duel finished successfully! 1 of {Constants.DeckSize}");
-
+                if (playerTurnResult == null)
+                {
+                    return (null, message);
                 }
-                // 2.2: NPC goes first...
-                else
-                {                  
-                    // 2.2.A: Npc plays, chosing a random card...
-                    var random_Mab_NpcCard = mabNpcCards.OrderBy(_ => random.Next()).FirstOrDefault();
 
-                    mabNpcUsedCards.Add(random_Mab_NpcCard);
-
-                    var mabCard_npc = mabDuellingCards.FirstOrDefault(a => a.Id == random_Mab_NpcCard.Mab_CardId);
-
-                    firstDuel.Mab_NpcCardId = random_Mab_NpcCard.Mab_CardId; // request.MabPlayerCardId == null;
-
-                    mabBattleDB.Mab_Duels.Add(firstDuel);
-
-                    mabBattleDB.Mab_IsPlayerTurn = true;
-
-                    await this._daoDbContext.SaveChangesAsync();
-
-                    // 2.2.B: NPC Turn has ended but the duel is not yet finished,
-                    // npc card data is shown and
-                    // the player must play now...
-                    return (new UsersMabExecuteBattleResponse
-                    {
-                        Mab_NpcCardName = mabCard_npc.Mab_CardName,
-                        Mab_NpcCardLevel = mabCard_npc.Mab_CardLevel,
-                        Mab_NpcCardPower = mabCard_npc.Mab_CardPower,
-                        Mab_NpcCardUpperHand = mabCard_npc.Mab_CardUpperHand,
-                        Mab_NpcCardType = mabCard_npc.Mab_CardType
-
-                    }, $"Npc has played now it is the players turn!");
-                }
-            }
-
-            // #3rd Scenario: The Batte has a ongoing duel, and the player must play to finish it...
-            var onGoingMabDuel = mabDuelsDB.FirstOrDefault(a => a.Mab_PlayerCardId == null && a.Mab_NpcCardId != null);
-            if (mabDuelsDB != null  && onGoingMabDuel != null && mabBattleDB.Mab_IsPlayerTurn == true)
-            {
-                // 3.A: Player plays by submiting a playerCardId...
                 var playerCard = mabPlayerCards.FirstOrDefault(a => a.Id == request.Mab_PlayerCardId);
 
-                mabPlayerUsedCards.Add(playerCard);
-
-                var cardDB_player = mabDuellingCards.FirstOrDefault(a => a.Id == playerCard.Mab_CardId);
-
-                onGoingMabDuel.Mab_PlayerCardId = request.Mab_PlayerCardId;
+                mabCard_player = mabBattleCards.FirstOrDefault(a => a.Id == playerCard.Mab_CardId);
 
 
-                // 3.B: Fetch NPC play data
-
+                // 1.B: Fetch NPC play data
                 var mabNpcCardId = onGoingMabDuel.Mab_NpcCardId;
 
-                var mabNpcCard = mabNpcCards.FirstOrDefault(a => a.Mab_CardId == mabNpcCardId);
+                var mabNpcCard = mabNpcCards.FirstOrDefault(a => a.Id == mabNpcCardId);
 
-                var cardDB_npc = mabDuellingCards.FirstOrDefault(a => a.Id == mabNpcCard.Mab_CardId);
+                mabCard_npc = mabBattleCards.FirstOrDefault(a => a.Id == mabNpcCard.Mab_CardId);
 
-                // 3.C: Calculates player and npc cards full power...
-                var playerCard_FullPower = Helper.MabGetCardFullPower(
-                    cardDB_player!.Mab_CardPower,
-                    cardDB_player.Mab_CardUpperHand,
-                    (int)cardDB_player.Mab_CardType!,
-                    (int)cardDB_npc.Mab_CardType!);
+                var duelsCount = mabBattleDB.Mab_Duels.Count;
 
-                onGoingMabDuel.Mab_PlayerCardFullPower = playerCard_FullPower;
+                // 1.C: Calculates player and npc cards full power...
+                (duelResults, message) = await this.MabResolveDuel(new UsersMabResolveDuelRequest
+                {
+                    Mab_CardPower_player = mabCard_player.Mab_CardPower,
+                    Mab_CardUpperHand_player = mabCard_player.Mab_CardUpperHand,
+                    Mab_CardType_player = mabCard_player.Mab_CardType,
 
-                var npcCard_FullPower = Helper.MabGetCardFullPower(
-                   cardDB_npc!.Mab_CardPower,
-                   cardDB_npc.Mab_CardUpperHand,
-                   (int)cardDB_npc.Mab_CardType!,
-                   (int)cardDB_player.Mab_CardType!);
+                    Mab_CardPower_npc = mabCard_npc.Mab_CardPower,
+                    Mab_CardUpperHand_npc = mabCard_npc.Mab_CardUpperHand,
+                    Mab_CardType_npc = mabCard_npc.Mab_CardType,
+                });
 
-                onGoingMabDuel.Mab_NpcCardFullPower = npcCard_FullPower;
+                if (duelResults == null)
+                {
+                    return (null, message);
+                }
 
-                // 3.D: Resolves duel...
-                var mabDuelResult = Helper.MabGetDuelPoints(playerCard_FullPower, npcCard_FullPower);
+                // 3.E: Resolves duel...
+                onGoingMabDuel.Mab_PlayerCardFullPower = duelResults.Mab_PlayerCardFullPower;               
 
-                onGoingMabDuel.Mab_DuelPoints = mabDuelResult;
+                onGoingMabDuel.Mab_NpcCardFullPower = duelResults.Mab_NpcCardFullPower;    
 
-                onGoingMabDuel.Mab_HasPlayerWon = mabDuelResult > 0 ? true : false;         
+                onGoingMabDuel.Mab_DuelPoints = duelResults.Mab_DuelPoints;
+
+                onGoingMabDuel.Mab_HasPlayerWon = duelResults.Mab_DuelPoints > 0;         
 
                 mabBattleDB.Mab_BattlePoints = 
                     mabBattleDB.Mab_BattlePoints == null || mabBattleDB.Mab_BattlePoints == 0? 
-                    mabDuelResult:
-                    mabBattleDB.Mab_BattlePoints + mabDuelResult;
-                
-                var duelsCount = mabBattleDB.Mab_Duels.Count;
+                    duelResults.Mab_DuelPoints :
+                    mabBattleDB.Mab_BattlePoints + duelResults.Mab_DuelPoints;             
+               
+                mabBattleDB.Mab_IsPlayerTurn = duelsCount switch
+                {
+                    0 => true,
+                    1 or 3 or 5 => !mabBattleDB.Mab_DoesPlayerGoesFirst,
+                    2 or 4 => mabBattleDB.Mab_DoesPlayerGoesFirst,
+                    _ => null
+                };
 
-                mabBattleDB.Mab_Duels.Add(onGoingMabDuel);
+                message = $"Duel finished successfully! {duelsCount} of {Constants.DeckSize}. ";
 
-                message = $"Duel finished successfully! {duelsCount} of {Constants.DeckSize}";
+                content.Mab_DuelResult = duelResults.Mab_DuelPoints;
+                content.Mab_PlayerCardFullPower = duelResults.Mab_PlayerCardFullPower;
+                content.Mab_NpcCardName = mabCard_npc.Mab_CardName;
+                content.Mab_NpcCardLevel = mabCard_npc.Mab_CardLevel;
+                content.Mab_NpcCardPower = mabCard_npc.Mab_CardPower;
+                content.Mab_NpcCardUpperHand = mabCard_npc.Mab_CardUpperHand;
+                content.Mab_NpcCardType = mabCard_npc.Mab_CardType;
+                content.Mab_NpcCardFullPower = duelResults.Mab_NpcCardFullPower;
 
                 // If this is the last duel, the battle ends...
                 if (mabDuelsDB.Count >= Constants.DeckSize && mabDuelsDB.All(a => a.Mab_PlayerCardId != null && a.Mab_NpcCardId != null))
@@ -7299,91 +6893,87 @@ namespace BoardGameGeekLike.Services
 
                     mabBattleDB.Mab_IsPlayerTurn = null;
 
-                    await this._daoDbContext.SaveChangesAsync();
+                    content.Mab_BattleResult = battleResult;
 
-                    return (new UsersMabExecuteBattleResponse
-                    {
-                        Mab_BattleResult = battleResult
-                    }, message + " Mab Battle is now finished!");
+                    message += "Mab Battle is now finished!";
                 }
 
                 await this._daoDbContext.SaveChangesAsync();
-
-                mabBattleDB.Mab_IsPlayerTurn = duelsCount switch
-                {
-                    0 => true,
-                    1 or 3 or 5 => !mabBattleDB.Mab_DoesPlayerGoesFirst,
-                    2 or 4 => mabBattleDB.Mab_DoesPlayerGoesFirst,
-                    _ => null
-                };
-
-                // 3.E: Finishes completely the ONGOING duel of the ongoing battle...
-                return (new UsersMabExecuteBattleResponse
-                {
-                    Mab_DuelResult = mabDuelResult
-                }, message);
+              
+                // 1.E: Finishes completely the ONGOING duel of the ongoing battle...
+                return (content, message);
 
             }
+            #endregion
 
-
-          
-            // #4th Scenario: The Batte has NO ongoing duel, and a NEW one must be STARTED
-           
-            var newDuel = new MabDuel();
-
-            // 4.1: It is the PLAYER'S turn
+            // #2nd Scenario: NEW duel, player plays first...
+            #region #2         
             if (mabBattleDB.Mab_IsPlayerTurn == true)
             {
-                // 4.1.A: Player plays by submiting a playerCardId...
+                // 2.1.A: Filters the NEW duel...              
+                if(mabNewDuel == null)
+                {
+                    return (null, "Error: no recently started and not yet playerd mab duel found!");
+                }
+
+                // 2.1.B: Player plays by submiting a playerCardId...
+                (playerTurnResult, message) = await this.MabPlayerTurn(new UsersMabPlayerTurnRequest
+                {
+                    Mab_PlayerCardId = request!.Mab_PlayerCardId
+                });
+
+                if (playerTurnResult == null)
+                {
+                    return (null, message);
+                }
+
                 var playerCard = mabPlayerCards.FirstOrDefault(a => a.Id == request.Mab_PlayerCardId);
 
-                mabPlayerUsedCards.Add(playerCard);
-
-                var cardDB_player = mabDuellingCards.FirstOrDefault(a => a.Id == playerCard.Mab_CardId);
-
-                newDuel.Mab_PlayerCardId = request.Mab_PlayerCardId;
+                mabCard_player = mabBattleCards.FirstOrDefault(a => a.Id == playerCard.Mab_CardId);
 
 
-                // 4.1.B: Then Npc plays, chosing a random card (AFTERWARDS THIS CARD WILL BE PICKED ACCORDING TO WHAT THE PLAYER PLAYED)...
-                var random_Mab_NpcCard = mabNpcCards.OrderBy(_ => random.Next()).First();
+                // 2.1.C: Then Npc plays, chosing a random card (AFTERWARDS THIS CARD WILL BE PICKED ACCORDING TO WHAT THE PLAYER PLAYED)...
+                (npcTurnResult, message) = await this.MabNpcTurn(new UsersMabNpcTurnRequest());
 
-                mabNpcUsedCards.Add(random_Mab_NpcCard);
+                if (npcTurnResult == null)
+                {
+                    return (null, message);
+                }
 
-                var cardDB_npc = mabDuellingCards.FirstOrDefault(a => a.Id == random_Mab_NpcCard.Mab_CardId);
+                mabCard_npc = mabBattleCards.FirstOrDefault(a => a.Id == npcTurnResult.Mab_CardId);
 
-                newDuel.Mab_NpcCardId = random_Mab_NpcCard.Mab_CardId; // request.MabPlayerCardId == null;
-
-
-                // 4.1.C: Calculates player and npc cards full power...
-                var playerCard_FullPower = Helper.MabGetCardFullPower(
-                    cardDB_player!.Mab_CardPower,
-                    cardDB_player.Mab_CardUpperHand,
-                    (int)cardDB_player.Mab_CardType!,
-                    (int)cardDB_npc.Mab_CardType!);
-
-                newDuel.Mab_PlayerCardFullPower = playerCard_FullPower;
-
-                var npcCard_FullPower = Helper.MabGetCardFullPower(
-                    cardDB_npc!.Mab_CardPower,
-                    cardDB_npc.Mab_CardUpperHand,
-                    (int)cardDB_npc.Mab_CardType!,
-                    (int)cardDB_player.Mab_CardType!);
-
-                newDuel.Mab_NpcCardFullPower = npcCard_FullPower;
-
-
-                // 4.1.D: Resolves duel...
-                var mabDuelResult = Helper.MabGetDuelPoints(playerCard_FullPower, npcCard_FullPower);
-
-                newDuel.Mab_DuelPoints = mabDuelResult;
-
-                newDuel.Mab_HasPlayerWon = mabDuelResult > 0 ? true : false;              
-
-                mabBattleDB.Mab_BattlePoints = mabBattleDB.Mab_BattlePoints + mabDuelResult;
-
-                mabBattleDB.Mab_Duels.Add(newDuel);
-                
                 var duelsCount = mabBattleDB.Mab_Duels.Count;
+
+                // 2.1.D: Calculates player and npc cards full power...
+                (duelResults, message) = await this.MabResolveDuel(new UsersMabResolveDuelRequest
+                {
+                    Mab_CardPower_player = mabCard_player.Mab_CardPower,
+                    Mab_CardUpperHand_player = mabCard_player.Mab_CardUpperHand,
+                    Mab_CardType_player = mabCard_player.Mab_CardType,
+
+                    Mab_CardPower_npc = mabCard_npc.Mab_CardPower,
+                    Mab_CardUpperHand_npc = mabCard_npc.Mab_CardUpperHand,
+                    Mab_CardType_npc = mabCard_npc.Mab_CardType,
+                });
+
+                if (duelResults == null)
+                {
+                    return (null, message);
+                }
+
+                // 2.1.E: Resolves duel...
+                mabNewDuel.Mab_PlayerCardFullPower = duelResults.Mab_PlayerCardFullPower;
+
+                mabNewDuel.Mab_NpcCardFullPower = duelResults.Mab_NpcCardFullPower;                 
+
+                mabNewDuel.Mab_DuelPoints = duelResults.Mab_DuelPoints;
+
+                mabNewDuel.Mab_HasPlayerWon = duelResults.Mab_DuelPoints > 0;              
+
+                mabBattleDB.Mab_BattlePoints = 
+                    mabBattleDB.Mab_BattlePoints == null || mabBattleDB.Mab_BattlePoints == 0? 
+                    duelResults.Mab_DuelPoints :
+                    mabBattleDB.Mab_BattlePoints + duelResults.Mab_DuelPoints;
 
                 mabBattleDB.Mab_IsPlayerTurn = duelsCount switch
                 {
@@ -7393,60 +6983,317 @@ namespace BoardGameGeekLike.Services
                     _ => null
                 };
 
+                message = $"Duel finished successfully! {duelsCount} of {Constants.DeckSize}. ";
+
+                content.Mab_DuelResult = duelResults.Mab_DuelPoints;
+                content.Mab_PlayerCardFullPower = duelResults.Mab_PlayerCardFullPower;
+                content.Mab_NpcCardName = mabCard_npc.Mab_CardName;
+                content.Mab_NpcCardLevel = mabCard_npc.Mab_CardLevel;
+                content.Mab_NpcCardPower = mabCard_npc.Mab_CardPower;
+                content.Mab_NpcCardUpperHand = mabCard_npc.Mab_CardUpperHand;
+                content.Mab_NpcCardType = mabCard_npc.Mab_CardType;
+                content.Mab_NpcCardFullPower = duelResults.Mab_NpcCardFullPower;
+
+                // If this is the last duel, the battle ends...
+                if (mabDuelsDB.Count >= Constants.DeckSize && mabDuelsDB.All(a => a.Mab_PlayerCardId != null && a.Mab_NpcCardId != null))
+                {
+                    // gold pieces, positive for won battles and negative for lost battles (if player has none to loose, he looses the campaign);
+                    var battleResult = mabDuelsDB.Select(a => a.Mab_DuelPoints).Sum();
+
+                    mabBattleDB.Mab_HasPlayerWon = battleResult > 0;
+
+                    mabBattleDB.Mab_IsBattleFinished = true;
+
+                    mabBattleDB.Mab_IsPlayerTurn = null;                
+                    
+                    content.Mab_BattleResult = battleResult;
+
+                    message += "Mab Battle is now finished!";
+                }
+                
                 await this._daoDbContext.SaveChangesAsync();
 
-                // 4.1.E: Finishes completely the FIRST duel of the ongoing battle...
-                return (new UsersMabExecuteBattleResponse
-                {
-                    Mab_DuelResult = mabDuelResult
-                }, $"Duel finished successfully! ${duelsCount} of {Constants.DeckSize}");
+                // 2.1.F: Finishes completely the NEW duel of the ongoing battle...
+                return (content, message);
             }
-            // 4.2 It is the NPC's turn
+            #endregion
 
-            // 4.2.A: Then Npc plays, chosing a random card...
-            // pegue os Ids já usados
-            var usedIds = mabNpcUsedCards.Select(c => c.Id).ToHashSet();
+            // #3rd Scenario: NEW duel, npc plays first...
+            #region #3           
+            // 3.A: Npc plays, chosing a random card...
+            if (mabNewDuel == null)
+            {
+                return (null, "Error: no recently started and not yet playerd mab duel found!");
+            }
 
-            // filtre cartas disponíveis
-            var availableCards = mabNpcCards.Where(c => !usedIds.Contains(c.Id)).ToList();
+            (npcTurnResult, message) = await this.MabNpcTurn(new UsersMabNpcTurnRequest());
 
-            // escolha uma carta aleatória
-            MabNpcCard? new_random_Mab_NpcCard = null;
-            
-            var index = random.Next(availableCards.Count);
+            if (npcTurnResult == null)
+            {
+                return (null, message);
+            }
 
-            new_random_Mab_NpcCard = availableCards[index];         
+            mabCard_npc = mabBattleCards.FirstOrDefault(a => a.Id == npcTurnResult.Mab_CardId);      
 
-            mabNpcUsedCards.Add(new_random_Mab_NpcCard);
-
-            var new_mabCard_npc = mabDuellingCards.FirstOrDefault(a => a.Id == new_random_Mab_NpcCard.Mab_CardId);
-
-            newDuel.Mab_NpcCardId = new_random_Mab_NpcCard.Mab_CardId; // request.MabPlayerCardId == null;
-
-            mabBattleDB.Mab_IsPlayerTurn = true;
-
-            mabBattleDB.Mab_Duels.Add(newDuel);
+            mabBattleDB.Mab_IsPlayerTurn = true;   
 
             await this._daoDbContext.SaveChangesAsync();
 
-            // 4.2.B: NPC Turn has ended but the duel is not yet finished,
+            // 3.B: NPC Turn has ended but the duel is not yet finished,
             // npc card data is shown and
             // the player must play now...
             return (new UsersMabExecuteBattleResponse
             {
-                Mab_NpcCardName = new_mabCard_npc.Mab_CardName,
-                Mab_NpcCardLevel = new_mabCard_npc.Mab_CardLevel,
-                Mab_NpcCardPower = new_mabCard_npc.Mab_CardPower,
-                Mab_NpcCardUpperHand = new_mabCard_npc.Mab_CardUpperHand,
-                Mab_NpcCardType = new_mabCard_npc.Mab_CardType
+                Mab_NpcCardName = mabCard_npc.Mab_CardName,
+                Mab_NpcCardLevel = mabCard_npc.Mab_CardLevel,
+                Mab_NpcCardPower = mabCard_npc.Mab_CardPower,
+                Mab_NpcCardUpperHand = mabCard_npc.Mab_CardUpperHand,
+                Mab_NpcCardType = mabCard_npc.Mab_CardType
 
-            }, $"Npc has played now it is the players turn!");      
+            }, $"Npc has played now it is the players turn!");
+            #endregion
         }
         private static (bool, string) MabExecuteBattle_Validation(UsersMabExecuteBattleRequest? request)
         { 
             return (true, string.Empty);
         }
 
+
+        private async Task<(UsersMabPlayerTurnResponse?, string)> MabPlayerTurn(UsersMabPlayerTurnRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabPlayerTurn_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var isMabCardCopyIdValid = await this._daoDbContext
+                .MabAssignedCards
+                .AnyAsync(a => a.Mab_PlayerCardId == request!.Mab_PlayerCardId &&
+                               a.Mab_Deck!.Mab_Campaign!.UserId == userId &&
+                               a.Mab_Deck.Mab_IsDeckActive == true);
+
+            if (isMabCardCopyIdValid == false)
+            {
+                return (null, "Error: MabCardCopyId is invalid or not assigned to the active deck!");
+            }
+
+            var mabBattleDB = await this._daoDbContext
+                .MabBattles
+                .OrderByDescending(a => a.Id)
+                .Include(a => a.Mab_Duels)
+                .FirstOrDefaultAsync(a => a.Mab_IsBattleFinished == false && a.Mab_Campaign!.UserId == userId);
+
+            if (mabBattleDB == null)
+            {
+                return (null, "Error: no mab battle found for this campaign!");
+            }          
+
+            var isMabCardCopyAvailable = mabBattleDB
+                .Mab_Duels!
+                .Any(a => a.Mab_PlayerCardId == request!.Mab_PlayerCardId) == false;
+
+            if (isMabCardCopyAvailable == false)
+            {
+                return (null, "Error: MabCardCopyId has already been used in this battle!");
+            }
+
+            var mabDuel = mabBattleDB
+                .Mab_Duels?
+                .FirstOrDefault(a => a.Mab_PlayerCardId == null);
+
+            if(mabDuel == null) 
+            {
+                return (null, "Error: no mab duel was found during player's turn");
+            }
+          
+            mabDuel.Mab_PlayerCardId = request!.Mab_PlayerCardId;        
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabPlayerTurnResponse(), "Mab Player has finished his turn successfully!");
+        }
+        private static (bool, string) MabPlayerTurn_Validation(UsersMabPlayerTurnRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: request is null!");
+            }
+
+            if (request.Mab_PlayerCardId.HasValue == false || request.Mab_PlayerCardId < 1)
+            {
+                return (false, "Error: MabCardCopyId is invalid or missing");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private async Task<(UsersMabNpcTurnResponse?, string)> MabNpcTurn(UsersMabNpcTurnRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var mabBattleDB = await this._daoDbContext
+                .MabBattles
+                .Include(a => a.Mab_Duels)
+                .Include(a => a.Mab_Npc)
+                .ThenInclude(a => a.Mab_NpcCards)
+                .OrderByDescending(a => a.Id)
+                .FirstOrDefaultAsync(a => a.Mab_IsBattleFinished == false && a.Mab_Campaign!.UserId == userId);
+
+            if (mabBattleDB == null)
+            {
+                return (null, "Error: no mab battle found for this campaign!");
+            }           
+
+            var mabNpcDB = mabBattleDB.Mab_Npc;
+            if (mabNpcDB == null)
+            {
+                return (null, "Error: no mab NPC found for this battle!");
+            }
+
+            var mabNpcCardsDB = mabNpcDB.Mab_NpcCards;
+            if (mabNpcCardsDB == null || mabNpcCardsDB.Count < Constants.DeckSize)
+            {
+                return (null, "Error: NPC cards missing or insufficient!");
+            }
+
+            // already used entries
+            var usedNpcDeckEntryIds = mabBattleDB
+                .Mab_Duels!
+                .Where(a => a.Mab_NpcCardId != null)
+                .Select(a => a.Mab_NpcCardId!.Value)
+                .ToList();
+
+            // available entries (copies not yet used)
+            var availableNpcDeckEntries = mabNpcCardsDB
+                .Where(a => usedNpcDeckEntryIds.Contains(a.Id) == false)
+                .ToList();         
+
+            var randomNpcEntry = availableNpcDeckEntries.OrderBy(_ => random.Next()).First();
+            var npcDeckEntryId = randomNpcEntry.Id;         
+
+            var mabDuel = mabBattleDB
+                .Mab_Duels!
+                .FirstOrDefault(a => a.Mab_NpcCardId == null);
+
+            if(mabDuel == null)
+            {
+                return (null, "Error: no mab duel found during npc's turn!");
+            }
+           
+            mabDuel.Mab_NpcCardId = npcDeckEntryId;           
+         
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabNpcTurnResponse
+            {
+                Mab_CardId = randomNpcEntry.Mab_CardId,
+            }, "Mab Npc has finished his turn successfully!");
+        }
+      
+
+        private async Task<(UsersMabResolveDuelResponse?, string)> MabResolveDuel(UsersMabResolveDuelRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }           
+
+            var mabBattleDB = await this._daoDbContext
+                .MabBattles
+                .Include(a => a.Mab_Duels)
+                .FirstOrDefaultAsync(a => a.Mab_Campaign!.UserId == userId && a.Mab_IsBattleFinished == false);
+
+            if (mabBattleDB == null)
+            {
+                return (null, "Error: no ongoing battle found for this campaign!");
+            }
+
+            var mabBattleDuels = mabBattleDB.Mab_Duels;
+
+            if (mabBattleDuels == null || mabBattleDuels.Count == 0)
+            {
+                return (null, "Error: no duels found for this battle!");
+            }          
+
+            var duelDB = mabBattleDB
+                .Mab_Duels!
+                .FirstOrDefault(a =>
+                    (a.Mab_DuelPoints != null || a.Mab_DuelPoints == 0) &&
+                    (a.Mab_PlayerCardId != null && a.Mab_NpcCardId != null)
+                    );
+
+            if (duelDB == null)
+            {
+                return (null, "Error: no valid duel found to be resolved!");
+            }     
+
+            var mabPlayerDuellingCard_FullPower = Helper.MabGetCardFullPower(
+                request!.Mab_CardPower_player!.Value,
+                request.Mab_CardUpperHand_player!.Value,
+                (int)request.Mab_CardType_player!,
+                (int)request.Mab_CardType_npc!);
+
+            var mabNpcDuellingCard_FullPower = Helper.MabGetCardFullPower(
+                request.Mab_CardPower_npc!.Value,
+                request.Mab_CardUpperHand_npc!.Value,
+                (int)request.Mab_CardType_npc!,
+                (int)request.Mab_CardType_player!);
+
+            var mabBattleRoundPoints = Helper.MabGetDuelPoints(mabPlayerDuellingCard_FullPower, mabNpcDuellingCard_FullPower);
+
+            duelDB.Mab_DuelPoints = mabBattleRoundPoints;
+
+            switch (Math.Sign(mabBattleRoundPoints))
+            {
+                case 1: // player wins                    
+                    duelDB.Mab_HasPlayerWon = true;
+                    break;
+                case -1: // npc wins                   
+                    duelDB.Mab_HasPlayerWon = false;
+                    break;
+                case 0: // draw
+                    duelDB.Mab_HasPlayerWon = false;
+                    break;
+                default:
+                    return (null, "Error: unexpected error while trying to resolve mab battle duel!");
+            }
+
+            if (mabBattleDB.Mab_Duels!.Count < 5)
+            {
+                mabBattleDB.Mab_Duels.Add(new MabDuel
+                {
+                    Mab_DuelPoints = 0
+                });
+            }
+
+            await this._daoDbContext.SaveChangesAsync();
+           
+            var content = new UsersMabResolveDuelResponse
+            {
+                Mab_PlayerCardFullPower = mabPlayerDuellingCard_FullPower,
+                Mab_NpcCardFullPower = mabNpcDuellingCard_FullPower,
+                Mab_DuelPoints = mabBattleRoundPoints,               
+            };
+
+            return (content, "Mab Duel resolved successfully!");
+        }
+      
 
         #endregion
     }
