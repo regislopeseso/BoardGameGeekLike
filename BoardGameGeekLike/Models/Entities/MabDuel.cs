@@ -12,7 +12,11 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Mab_PlayerCardId { get; set; } = null;
 
+        public int? Mab_PlayerCardFullPower { get; set; } = null;
+
         public int? Mab_NpcCardId { get; set; } = null;
+
+        public int? Mab_NpcCardFullPower { get; set; } = null;
 
         public bool? Mab_HasPlayerWon { get; set; } = null;
         

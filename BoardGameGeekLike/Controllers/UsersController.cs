@@ -976,6 +976,19 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> MabExecuteBattle([FromForm] UsersMabExecuteBattleRequest? request)
+        {
+            var (content, message) = await this._usersService.MabExecuteBattle(request);
+
+            var response = new Response<UsersMabExecuteBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         #endregion
     }

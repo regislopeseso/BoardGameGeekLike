@@ -9,15 +9,16 @@ namespace BoardGameGeekLike.Models.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
+        public bool? Mab_DoesPlayerGoesFirst { get; set; }
+
         public bool? Mab_IsPlayerTurn { get; set; }
 
-        public int? Mab_BattlePoints { get; set; }
+        public int? Mab_BattlePoints { get; set; } = 0;
 
         public bool? Mab_HasPlayerWon { get; set; }
         
-        public bool Mab_IsBattleFinished { get; set; } = false;
-
-        public string? Mab_BattleResults { get; set; }
+        public bool Mab_IsBattleFinished { get; set; } = false;    
 
 
         [ForeignKey(nameof(this.Mab_Campaign))]
