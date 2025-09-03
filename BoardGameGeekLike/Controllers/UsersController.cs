@@ -57,7 +57,7 @@ namespace BoardGameGeekLike.Controllers
         #endregion
 
         #region USER'S PROFILE
-        
+
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> SignUp([FromForm] UsersSignUpRequest? request)
@@ -72,7 +72,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> SignIn([FromForm] UsersSignInRequest? request)
@@ -102,7 +102,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> GetRole()
         {
@@ -117,7 +117,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-      
+
         [HttpPost]
         public async Task<IActionResult> SignOut()
         {
@@ -131,7 +131,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-     
+
         [HttpPut]
         public async Task<IActionResult> EditProfile([FromBody] UsersEditProfileRequest? request)
         {
@@ -159,7 +159,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-                
+
         [HttpDelete]
         public async Task<IActionResult> DeleteProfile([FromBody] UsersDeleteProfileRequest? request)
         {
@@ -173,7 +173,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-    
+
         [HttpGet]
         public async Task<IActionResult> ExportUserData([FromBody] UsersExportUserDataRequest? request = null)
         {
@@ -193,7 +193,7 @@ namespace BoardGameGeekLike.Controllers
         #region USER'S BOARD GAMES
 
         // BOARD GAMES        
-        
+
         [HttpPost]
         public async Task<IActionResult> LogSession([FromForm] UsersLogSessionRequest? request)
         {
@@ -207,7 +207,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> ListPlayedBoardGames(UsersListPlayedBoardGamesRequest? request)
         {
@@ -221,7 +221,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-      
+
         [HttpGet]
         public async Task<IActionResult> GetSessions([FromQuery] UsersGetSessionsRequest? request)
         {
@@ -235,7 +235,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-                
+
         [HttpPut]
         public async Task<IActionResult> EditSession([FromBody] UsersEditSessionRequest? request)
         {
@@ -249,7 +249,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-              
+
         [HttpDelete]
         public async Task<IActionResult> DeleteSession([FromQuery] UsersDeleteSessionRequest? request)
         {
@@ -263,7 +263,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-               
+
         [HttpPost]
         public async Task<IActionResult> Rate([FromForm] UsersRateRequest? request)
         {
@@ -274,10 +274,10 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
-           
+
             return new JsonResult(response);
         }
-           
+
         [HttpGet]
         public async Task<IActionResult> ListRatedBoardGames([FromQuery] UsersListRatedBoardGamesRequest? request)
         {
@@ -291,7 +291,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-         
+
         [HttpPut]
         public async Task<IActionResult> EditRating([FromBody] UsersEditRatingRequest? request)
         {
@@ -305,7 +305,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-                
+
         [HttpDelete]
         public async Task<IActionResult> DeleteRating([FromQuery] UsersDeleteRatingRequest? request)
         {
@@ -328,7 +328,7 @@ namespace BoardGameGeekLike.Controllers
 
         // LIFE COUNTERS
 
-        // 1º LIFE COUNTER SYNC DATA
+        // 1ï¿½ LIFE COUNTER SYNC DATA
         [HttpPost]
         public async Task<IActionResult> SyncLifeCounterData([FromBody] UsersSyncLifeCounterDataRequest? request)
         {
@@ -343,7 +343,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        // 2º LIFE COUNTER QUICK START
+        // 2ï¿½ LIFE COUNTER QUICK START
         [HttpPost]
         public async Task<IActionResult> QuickStartLifeCounter([FromBody] UsersQuickStartLifeCounterRequest? request)
         {
@@ -358,8 +358,8 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        
-        // 3º LIFE COUNTER TEMPLATES    
+
+        // 3ï¿½ LIFE COUNTER TEMPLATES    
         [HttpPost]
         public async Task<IActionResult> CreateLifeCounterTemplate([FromForm] UsersCreateLifeCounterTemplateRequest? request)
         {
@@ -375,7 +375,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> CountLifeCounterTemplates(UsersCountLifeCounterTemplatesRequest? request)
         {
@@ -391,7 +391,7 @@ namespace BoardGameGeekLike.Controllers
 
         }
 
-       
+
         [HttpGet]
         public async Task<IActionResult> GetLastLifeCounterTemplateId(UsersGetLastLifeCounterTemplateRequest? request)
         {
@@ -406,9 +406,9 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-      
+
         [HttpGet]
-        public async Task<IActionResult> ListLifeCounterTemplates( UsersListLifeCounterTemplatesRequest? request)
+        public async Task<IActionResult> ListLifeCounterTemplates(UsersListLifeCounterTemplatesRequest? request)
         {
             var (content, message) = await this._usersService.ListLifeCounterTemplates(request);
 
@@ -435,7 +435,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-       
+
         [HttpPut]
         public async Task<IActionResult> EditLifeCounterTemplate([FromBody] UsersEditLifeCounterTemplateRequest? request)
         {
@@ -467,8 +467,8 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-       
-        // 4º LIFE COUNTER MANAGERS
+
+        // 4ï¿½ LIFE COUNTER MANAGERS
         [HttpPost]
         public async Task<IActionResult> StartLifeCounterManager([FromForm] UsersStartLifeCounterManagerRequest request)
         {
@@ -498,7 +498,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-       
+
         [HttpGet]
         public async Task<IActionResult> GetLastLifeCounterManager([FromQuery] UsersGetLastLifeCounterManagerRequest? request)
         {
@@ -512,7 +512,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> ListUnfinishedLifeCounterManagers([FromQuery] UsersListUnfinishedLifeCounterManagersRequest? request)
         {
@@ -587,8 +587,8 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        
-        // 5º LIFE COUNTER PLAYERS
+
+        // 5ï¿½ LIFE COUNTER PLAYERS
         [HttpGet]
         public async Task<IActionResult> GetLifeCounterPlayersDetails([FromQuery] UsersGetLifeCounterPlayersDetailsRequest? request)
         {
@@ -632,7 +632,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> DecreaseLifePoints([FromForm] UsersDecreaseLifePointsRequest request)
         {
@@ -712,8 +712,8 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        
-        // 6º LIFE COUNTER STATISTICS
+
+        // 6ï¿½ LIFE COUNTER STATISTICS
         [HttpGet]
         public async Task<IActionResult> GetLifeCounterStatistics(UsersGetLifeCounterStatisticsRequest? request)
         {
@@ -736,7 +736,7 @@ namespace BoardGameGeekLike.Controllers
         #region PLAYABLE GAMES
 
         // MEDIEVAL AUTO BATTLER (MAB)
-        
+
         [HttpPost]
         public async Task<IActionResult> MabStartCampaign([FromForm] UsersMabStartCampaignRequest? request)
         {
@@ -862,7 +862,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-   
+
         [HttpGet]
         public async Task<IActionResult> MabShowCampaignStatistics(UsersMabShowCampaignStatisticsRequest? request)
         {
@@ -918,7 +918,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-        
+
         //[HttpPost]
         //public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
         //{
@@ -932,20 +932,6 @@ namespace BoardGameGeekLike.Controllers
 
         //    return new JsonResult(response);
         //}
-
-        [HttpPost]
-        public async Task<IActionResult> MabOrganizeDuel([FromForm] UsersMabOrganizeDuelRequest? request)
-        {
-            var (content, message) = await this._usersService.MabOrganizeDuel(request);
-
-            var response = new Response<UsersMabOrganizeDuelResponse?>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
 
         [HttpGet]
         public async Task<IActionResult> MabListUnusedCards(UsersMabListUnusedCardsRequest? request)
@@ -961,14 +947,26 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
-       
         [HttpPost]
         public async Task<IActionResult> MabExecuteBattle([FromForm] UsersMabExecuteBattleRequest? request)
         {
             var (content, message) = await this._usersService.MabExecuteBattle(request);
 
             var response = new Response<UsersMabExecuteBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabAutoBattle([FromForm] UsersMabAutoBattleRequest? request)
+        {
+            var (content, message) = await this._usersService.MabAutoBattle(request);
+
+            var response = new Response<UsersMabAutoBattleResponse?>
             {
                 Content = content,
                 Message = message

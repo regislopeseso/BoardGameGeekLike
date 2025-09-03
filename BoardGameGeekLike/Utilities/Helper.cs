@@ -190,7 +190,7 @@
 
         public static int MabGetDuelPoints(int playerFullPower, int npcFullPower)
         {
-            return playerFullPower - npcFullPower <= 0 ? 0 : 1;
+            return playerFullPower - npcFullPower;
         }     
 
     }

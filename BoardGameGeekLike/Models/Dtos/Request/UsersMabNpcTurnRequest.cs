@@ -2,5 +2,6 @@
 {
     public class UsersMabNpcTurnRequest
     {
+        public required string UserId { get; set; }
     }
 }
