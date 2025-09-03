@@ -6792,7 +6792,6 @@ namespace BoardGameGeekLike.Services
 
             var mabPlayerUsedCards = new List<MabPlayerCard>();
 
-
             // MAB CARDS
             var mabBattleCards = await this._daoDbContext
                 .MabCards
