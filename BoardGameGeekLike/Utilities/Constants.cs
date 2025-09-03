@@ -42,5 +42,18 @@
 
         public const int BoosterPrice = 5;
         public const int BoosterSize = 3;
+
+        public const int NpcLvl_MaxUpperDifference = 2;
+
+        public const int LevelOneExpThreshold = 25;
+        public const int LevelTwoExpThreshold = 50;
+        public const int LevelThreeExpThreshold = 75;
+        public const int LevelFourExpThreshold = 100;
+        public const int LevelFiveExpThreshold = 200;
+        public const int LevelSixExpThreshold = 300;
+        public const int LevelSevenExpThreshold = 450;
+        public const int LevelEightExpThreshold = 600;
+        public const int LevelNineExpThreshold = 800;
+        public const int LevelTenExpThreshold = 1000;
     }
 }

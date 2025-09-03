@@ -16,6 +16,8 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Mab_PlayerLevel { get; set; } = 0;
 
+        public int? Mab_PlayerExperience { get; set; } = 0;
+
         public MabCampaignDifficulty? Mab_Difficulty{ get; set; }
 
         public int? Mab_GoldStash { get; set; }

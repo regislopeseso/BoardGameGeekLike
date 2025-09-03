@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BoardGameGeekLike.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
@@ -14,7 +15,13 @@ namespace BoardGameGeekLike.Models.Entities
 
         public bool? Mab_IsPlayerTurn { get; set; }
 
-        public int? Mab_BattlePoints { get; set; } = 0;
+        public int? Mab_EarnedGold { get; set; } = 0;
+
+        public int? Mab_EarnedXp { get; set; } = 0;
+
+        public int? Mab_BonusXp { get; set; } = 0;
+
+        public MabPlayerState? Mab_FinalPlayerState { get; set; } = 0;
 
         public bool? Mab_HasPlayerWon { get; set; }
         

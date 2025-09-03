@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BoardGameGeekLike.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BoardGameGeekLike.Models.Entities
@@ -14,6 +15,8 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Mab_PlayerCardFullPower { get; set; } = null;
 
+        public MabPlayerState? Mab_PlayerState { get; set; }
+
         public int? Mab_NpcCardId { get; set; } = null;
 
         public int? Mab_NpcCardFullPower { get; set; } = null;
@@ -22,6 +25,9 @@ namespace BoardGameGeekLike.Models.Entities
         
         public int? Mab_DuelPoints { get; set; } = 0;
 
+        public int? Mab_EarnedXp { get; set; } = 0; 
+
+        public int? Mab_BonusXp { get; set; } = 0;
 
         [ForeignKey(nameof(this.Mab_Battle))]
         public int? Mab_BattleId { get; set; }

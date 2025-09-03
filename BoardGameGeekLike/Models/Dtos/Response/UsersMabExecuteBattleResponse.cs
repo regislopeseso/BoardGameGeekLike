@@ -1,4 +1,5 @@
 ﻿using BoardGameGeekLike.Models.Enums;
+using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
@@ -19,6 +20,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_NpcCardUpperHand { get; set; } = null;
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public MabCardType? Mab_NpcCardType { get; set; } = null;
 
         public int? Mab_NpcCardFullPower { get; set; } = null;
