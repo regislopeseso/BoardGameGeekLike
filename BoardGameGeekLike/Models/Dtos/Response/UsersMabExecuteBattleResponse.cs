@@ -7,7 +7,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     {
         public int? Mab_BattleResult { get; set; } = null;
 
-        public int? Mab_DuelResult { get; set; } = 0;
+        public int? Mab_DuelResult { get; set; } = null;
 
         public int? Mab_PlayerCardFullPower { get; set; } = null;
 
