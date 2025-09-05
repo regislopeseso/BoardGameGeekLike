@@ -947,12 +947,13 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> MabExecuteBattle([FromForm] UsersMabExecuteBattleRequest? request)
-        {
-            var (content, message) = await this._usersService.MabExecuteBattle(request);
 
-            var response = new Response<UsersMabExecuteBattleResponse?>
+        [HttpGet]
+        public async Task<IActionResult> MabCheckDuelStatus(UsersMabCheckDuelStatusRequest? request)
+        {
+            var (content, message) = await this._usersService.MabCheckDuelStatus(request);
+
+            var response = new Response<UsersMabCheckDuelStatusResponse?>
             {
                 Content = content,
                 Message = message
@@ -960,6 +961,7 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> MabAutoBattle([FromForm] UsersMabAutoBattleRequest? request)
@@ -974,6 +976,8 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+
 
         #endregion
     }

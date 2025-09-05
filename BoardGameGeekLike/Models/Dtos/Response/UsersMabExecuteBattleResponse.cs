@@ -9,8 +9,9 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_DuelResult { get; set; } = null;
 
-        public int? Mab_PlayerCardFullPower { get; set; } = null;
 
+        public int? Mab_PlayerCardFullPower { get; set; } = null;
+        
         
         public string? Mab_NpcCardName { get; set; } = null;
         

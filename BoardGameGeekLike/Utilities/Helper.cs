@@ -1,4 +1,9 @@
-﻿namespace BoardGameGeekLike.Utilities
+﻿using BoardGameGeekLike.Models.Entities;
+using BoardGameGeekLike.Models.Enums;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
+
+namespace BoardGameGeekLike.Utilities
 {
     public static class Helper
     {
@@ -86,6 +91,50 @@
             }
         }
 
+        public static MabPlayerState MabGetPlayerState 
+        (
+            List<int?> orderedMabPlayerCardIds, 
+            List<bool?> orderedMabDuelResults, 
+            bool? isMabBattleOvercome
+        )
+        {
+            if(orderedMabPlayerCardIds == null || 
+                orderedMabPlayerCardIds.Count == 0 ||
+                orderedMabDuelResults == null ||
+                orderedMabDuelResults.Count(a => a == true) < 1)
+            {
+                return MabPlayerState.None;
+            }
+
+            var winningStreak = 0;
+
+            foreach (var duelResult in orderedMabDuelResults)
+            {
+                winningStreak =
+                    duelResult == true ?
+                    winningStreak + 1 : 0;
+            }
+
+            MabPlayerState mabPlayerState =
+                winningStreak switch
+                {
+                    1 => MabPlayerState.Flawless,
+                    2 => MabPlayerState.Matchless,
+                    3 => MabPlayerState.Impredictable,
+                    4 => MabPlayerState.Unstoppable,
+                    5 => MabPlayerState.Triumphant,
+                    _ => MabPlayerState.None,
+                };
+
+            if (isMabBattleOvercome == true &&
+                 mabPlayerState == MabPlayerState.Triumphant &&
+                 orderedMabPlayerCardIds.Skip(1).All(a => a == 0))
+            {
+                mabPlayerState = MabPlayerState.Glorious;
+            }
+
+            return mabPlayerState;
+        }
         public static int MabGetPlayerDeckLevel(List<int> cardLevels)
         {
             return (int)Math.Ceiling((cardLevels.Sum() / (double)cardLevels.Count));
@@ -221,34 +270,42 @@
         }
 
 
-        public static int MabGetCardFullPower(int power, int upperhand, int firstType, int secondType)
+        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, int attackerCardType, int defenderCardPower, int? defenderCardType)
         {
-            return (firstType, secondType) switch
-            {
-                (0, 0) => power,
-                (0, 1) => power,
-                (0, 2) => power,
-                (0, 3) => power,
-                (1, 0) => power + 2*upperhand,
-                (1, 1) => power,
-                (1, 2) => power + upperhand,
-                (1, 3) => power,
-                (2, 0) => power + 2*upperhand,
-                (2, 1) => power,
-                (2, 2) => power,
-                (2, 3) => power + upperhand,
-                (3, 0) => power + 2*upperhand,
-                (3, 1) => power + upperhand,
-                (3, 2) => power,
-                (3, 3) => power,
-                _ => power
-            };
-        }
+            var attackerCardFullPower = MabGetCardFullPower(attackerCardPower, attackerCardUpperHand, attackerCardType, defenderCardType);
 
-        public static int MabGetDuelPoints(int playerFullPower, int npcFullPower)
-        {
-            return playerFullPower - npcFullPower;
+            var duelPoints = MabGetDuelPoints(attackerCardFullPower, defenderCardPower);
+
+            return (attackerCardFullPower, duelPoints);
+
         }
+        public static int MabGetDuelPoints(int attackerCardFullPower, int defenderCardPower)
+        {
+            return attackerCardFullPower - defenderCardPower;
+        }
+        public static int MabGetCardFullPower(int cardPower, int cardUpperHand, int attackerCardType, int? defenderCardType)
+        {
+            return (attackerCardType, defenderCardType) switch
+            {
+                (0, 0) => cardPower,
+                (0, 1) => cardPower,
+                (0, 2) => cardPower,
+                (0, 3) => cardPower,
+                (1, 0) => cardPower + 2 * cardUpperHand,
+                (1, 1) => cardPower,
+                (1, 2) => cardPower + cardUpperHand,
+                (1, 3) => cardPower,
+                (2, 0) => cardPower + 2 * cardUpperHand,
+                (2, 1) => cardPower,
+                (2, 2) => cardPower,
+                (2, 3) => cardPower + cardUpperHand,
+                (3, 0) => cardPower + 2 * cardUpperHand,
+                (3, 1) => cardPower + cardUpperHand,
+                (3, 2) => cardPower,
+                (3, 3) => cardPower,
+                _ => cardPower + 3 * cardUpperHand, 
+            };
+        }     
 
         public static int MabGetEarnedGold(int duelPoints)
         {
@@ -272,58 +329,76 @@
 
         public static (int, int) MabGetEarnedXp(int playerLevel, int npcLevel, int duelPoints, int playerState)
         {
-            if (duelPoints < 0) return (0, 0);
+            if (duelPoints < 0)
             {
-                // --- Tunables ---
-                const double Alpha = 2.0;   // baseline XP
-                const double Beta = 1.0;    // scales with sqrt(duelPoints)
-                const double Gamma = 0.25;  // bonus per NPC level >= player
-                const double Eta = 0.20;    // penalty per NPC level < player
-                const double MMin = 0.25;   // minimum level multiplier
-                const double MMax = 1.50;   // maximum level multiplier
-
-                // State multipliers (index by playerState enum int value)
-                double[] StateMultiplier =  
-                {
-                    1.00, // None
-                    1.10, // Flawless
-                    1.20, // Matchless
-                    1.30, // Impredictable
-                    1.40, // Unstoppable
-                    1.55, // Triumphant
-                    1.75  // Glorious
-                };
-
-                int delta = npcLevel - playerLevel;
-
-                // Base XP from duel performance
-                double baseXp = Alpha + Beta * Math.Sqrt(Math.Max(0, duelPoints));
-
-                // Level difference multiplier
-                double mlvl = (delta >= 0)
-                    ? (1.0 + Gamma * delta)
-                    : (1.0 / (1.0 + Eta * Math.Abs(delta)));
-                mlvl = Math.Clamp(mlvl, MMin, MMax);
-
-                // Calculate XP without state multiplier first
-                double xpWithoutState = baseXp * mlvl;
-
-                // State multiplier
-                double mstate = (playerState >= 0 && playerState < StateMultiplier.Length)
-                    ? StateMultiplier[playerState]
-                    : 1.0;
-
-                // Calculate final XP with state multiplier
-                double finalXp = xpWithoutState * mstate;
-
-                // Calculate gained and bonus XP
-                int gainedXp = (int)Math.Floor(Math.Max(0.0, finalXp));
-                int bonusXp = (int)Math.Floor(Math.Max(0.0, finalXp - xpWithoutState));
-
-                return (gainedXp, bonusXp);
+                return (0, 0);
             }
-        }
-        }
+         
+            // --- Tunables ---
+            const double Alpha = 2.0;   // baseline XP
+            const double Beta = 1.0;    // scales with sqrt(duelPoints)
+            const double Gamma = 0.25;  // bonus per NPC level >= player
+            const double Eta = 0.20;    // penalty per NPC level < player
+            const double MMin = 0.25;   // minimum level multiplier
+            const double MMax = 1.50;   // maximum level multiplier
 
-    }
+            // State multipliers (index by playerState enum int value)
+            double[] StateMultiplier =  
+            {
+                1.00, // None
+                1.10, // Flawless
+                1.20, // Matchless
+                1.30, // Impredictable
+                1.40, // Unstoppable
+                1.55, // Triumphant
+                1.75  // Glorious
+            };
+
+            int delta = npcLevel - playerLevel;
+
+            // Base XP from duel performance
+            double baseXp = Alpha + Beta * Math.Sqrt(Math.Max(0, duelPoints));
+
+            // Level difference multiplier
+            double mlvl = (delta >= 0)
+                ? (1.0 + Gamma * delta)
+                : (1.0 / (1.0 + Eta * Math.Abs(delta)));
+            mlvl = Math.Clamp(mlvl, MMin, MMax);
+
+            // Calculate XP without state multiplier first
+            double xpWithoutState = baseXp * mlvl;
+
+            // State multiplier
+            double mstate = (playerState >= 0 && playerState < StateMultiplier.Length)
+                ? StateMultiplier[playerState]
+                : 1.0;
+
+            // Calculate final XP with state multiplier
+            double finalXp = xpWithoutState * mstate;
+
+            // Calculate gained and bonus XP
+            int gainedXp = (int)Math.Floor(Math.Max(0.0, finalXp));
+            int bonusXp = (int)Math.Floor(Math.Max(0.0, finalXp - xpWithoutState));
+
+            return (gainedXp, bonusXp);            
+        }
+    
+        
+        public static bool MabIsPlayerAttacking(bool wasPlayerFirstAttacker, int currentDuelNumber)
+        {
+            var isCurrrentRoundNumberEven = currentDuelNumber % 2 == 0;
+
+            var isPlayerAttacking = (wasPlayerFirstAttacker, isCurrrentRoundNumberEven) switch
+            {
+                (true, true) => false,
+                (true, false) => true,
+                (false, true) => true,
+                (false, false) => false,
+            };           
+
+            return isPlayerAttacking;
+        }
+    
+    }        
+}
 
