@@ -103,7 +103,7 @@ namespace BoardGameGeekLike.Utilities
                 orderedMabDuelResults == null ||
                 orderedMabDuelResults.Count(a => a == true) < 1)
             {
-                return MabPlayerState.None;
+                return MabPlayerState.Normal;
             }
 
             var winningStreak = 0;
@@ -123,7 +123,7 @@ namespace BoardGameGeekLike.Utilities
                     3 => MabPlayerState.Impredictable,
                     4 => MabPlayerState.Unstoppable,
                     5 => MabPlayerState.Triumphant,
-                    _ => MabPlayerState.None,
+                    _ => MabPlayerState.Normal,
                 };
 
             if (isMabBattleOvercome == true &&
@@ -345,7 +345,7 @@ namespace BoardGameGeekLike.Utilities
             // State multipliers (index by playerState enum int value)
             double[] StateMultiplier =  
             {
-                1.00, // None
+                1.00, // Normal
                 1.10, // Flawless
                 1.20, // Matchless
                 1.30, // Impredictable
@@ -386,6 +386,8 @@ namespace BoardGameGeekLike.Utilities
         
         public static bool MabIsPlayerAttacking(bool wasPlayerFirstAttacker, int currentDuelNumber)
         {
+            currentDuelNumber = currentDuelNumber == 0 ? 1 : currentDuelNumber;
+
             var isCurrrentRoundNumberEven = currentDuelNumber % 2 == 0;
 
             var isPlayerAttacking = (wasPlayerFirstAttacker, isCurrrentRoundNumberEven) switch

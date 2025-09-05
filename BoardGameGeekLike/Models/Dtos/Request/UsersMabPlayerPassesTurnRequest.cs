@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersMabResolveDuelRequest
+    public class UsersMabPlayerPassesTurnRequest
     {
     }
 }

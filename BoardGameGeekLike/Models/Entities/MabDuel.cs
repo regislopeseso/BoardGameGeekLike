@@ -15,9 +15,9 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Mab_PlayerCardFullPower { get; set; } = null;
 
-        public MabPlayerState? Mab_PlayerState { get; set; }
+        public MabPlayerState? Mab_PlayerState { get; set; } = MabPlayerState.Normal;
 
-        public bool? IsPlayerAttacking { get; set; }
+        public bool? Mab_IsPlayerAttacking { get; set; }
 
         public int? Mab_NpcCardId { get; set; } = null;
 

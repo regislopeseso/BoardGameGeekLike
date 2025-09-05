@@ -1,7 +1,7 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersMabPlayerStrikesRequest
-    {
+    public class UsersMabPlayerAttacksRequest
+    {       
         public int? Mab_PlayerCardId { get; set; }
     }
 }

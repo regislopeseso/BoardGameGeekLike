@@ -2,7 +2,7 @@
 {
     public enum MabPlayerState
     {
-        None = 0,
+        Normal = 0,
         Flawless = 1,
         Matchless = 2,
         Impredictable = 3,

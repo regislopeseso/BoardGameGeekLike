@@ -919,6 +919,76 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> MabStartDuel(UsersMabStartDuelRequest? request)
+        {
+            var (content, message) = await this._usersService.MabStartDuel(request);
+
+            var response = new Response<UsersMabStartDuelResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> MabResolveDuel(UsersMabResolveDuelRequest? request)
+        {
+            var (content, message) = await this._usersService.MabResolveDuel(request);
+
+            var response = new Response<UsersMabResolveDuelResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabPlayerAttacks([FromForm] UsersMabPlayerAttacksRequest? request)
+        {
+            var (content, message) = await this._usersService.MabPlayerAttacks(request);
+
+            var response = new Response<UsersMabPlayerAttacksResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabPlayerPassesTurn(UsersMabPlayerPassesTurnRequest? request)
+        {
+            var (content, message) = await this._usersService.MabPlayerPassesTurn(request);
+
+            var response = new Response<UsersMabPlayerPassesTurnResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabNpcAttacks(UsersMabNpcAttacksRequest? request)
+        {
+            var (content, message) = await this._usersService.MabNpcAttacks(request);
+
+            var response = new Response<UsersMabNpcAttacksResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         //[HttpPost]
         //public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
         //{
@@ -964,7 +1034,7 @@ namespace BoardGameGeekLike.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> MabAutoBattle([FromForm] UsersMabAutoBattleRequest? request)
+        public async Task<IActionResult> MabAutoBattle(UsersMabAutoBattleRequest? request)
         {
             var (content, message) = await this._usersService.MabAutoBattle(request);
 
