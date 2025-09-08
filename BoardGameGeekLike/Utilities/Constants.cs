@@ -45,6 +45,8 @@
 
         public const int NpcLvl_MaxUpperDifference = 2;
 
+        public const int RetreatGoldPenalty = 1 * BoosterPrice;
+
         public const int LevelOneExpThreshold = 25;
         public const int LevelTwoExpThreshold = 50;
         public const int LevelThreeExpThreshold = 75;

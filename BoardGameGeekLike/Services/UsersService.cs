@@ -6546,7 +6546,7 @@ namespace BoardGameGeekLike.Services
 
             return shuffledMabNpcs.FirstOrDefault();
         }
-      
+
 
         //public async Task<(UsersMabContinueBattleResponse?, string)> ContinueMabBattle(UsersMabContinueBattleRequest? request)
         //{
@@ -6679,6 +6679,107 @@ namespace BoardGameGeekLike.Services
         //}
 
 
+        public async Task<(UsersMabFinishBattleResponse?, string)> MabFinishBattle(UsersMabFinishBattleRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabFinishBattle_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns!
+                .Include(a => a.Mab_Battles!)
+                .ThenInclude(b => b.Mab_Npc)
+                .Include(a => a.Mab_Battles!)
+                .ThenInclude(c => c.Mab_Duels)
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.Mab_IsCampaignDeleted == false);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: MabFinishBattle failed ! Requested mab campaign could not be found!");
+            }
+
+            var mabBattlesDB = mabCampaignDB.Mab_Battles;
+            if (mabBattlesDB == null || mabBattlesDB.Count < 1)
+            {
+                return (null, "Error: MabFinishBattle failed! MAB BATTLES could be found in this campaign!");
+            }
+
+            var currentMabBattle =
+                mabBattlesDB
+                .OrderByDescending(a => a.Id)
+                .FirstOrDefault(a => a.Mab_IsBattleFinished == false);
+            if (currentMabBattle == null)
+            {
+                return (null, "Error: MabFinishBattle failed! No ongoing unfinished MAB BATTLE could be found!");
+            }
+
+            var mabDuelsDB = currentMabBattle.Mab_Duels;
+            if (mabDuelsDB == null || mabDuelsDB.Count < Constants.DeckSize)
+            {
+                return (null, "Error: MabFinishBattle failed! Mab Duels not found or not yet finished!");
+            }
+
+            var earnedGold = mabDuelsDB.Sum(a => a.Mab_DuelPoints);
+            var earnedXp = mabDuelsDB.Sum(a => a.Mab_EarnedXp);
+            var bonusXp = mabDuelsDB.Sum(a => a.Mab_BonusXp);
+            var finalPlayerState = mabDuelsDB[Constants.DeckSize - 1].Mab_PlayerState;
+            var hasPlayerWon = mabDuelsDB.Sum(a => a.Mab_DuelPoints) > 0;
+
+            currentMabBattle.Mab_EarnedGold = earnedGold;
+            currentMabBattle.Mab_EarnedXp = earnedXp;
+            currentMabBattle.Mab_BonusXp = bonusXp;
+            currentMabBattle.Mab_FinalPlayerState = finalPlayerState;
+            currentMabBattle.Mab_HasPlayerWon = hasPlayerWon;
+            currentMabBattle.Mab_IsBattleFinished = true;
+
+            mabCampaignDB.Mab_GoldStash += earnedGold;
+            mabCampaignDB.Mab_PlayerExperience += earnedXp;
+            mabCampaignDB.Mab_BattlesCount++;
+
+            if (hasPlayerWon == true)
+            {
+                mabCampaignDB.Mab_BattleVictoriesCount++;
+            }
+            else
+            {
+                mabCampaignDB.Mab_BattleDefeatsCount++;
+            }
+
+            await _daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabFinishBattleResponse
+            {
+                Mab_HasPlayerWon = hasPlayerWon,
+                Mab_EarnedGold = earnedGold,
+                Mab_UpdatedGoldStash = mabCampaignDB.Mab_GoldStash,
+                Mab_EarnedXp = earnedXp,
+                Mab_BonustXp = bonusXp,
+                Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience,
+                Mab_PlayerState = finalPlayerState
+            },
+            "MAB BATTLE finished successfully! Results were successfully computed for the campaign");
+        }
+        private static (bool, string) MabFinishBattle_Validation(UsersMabFinishBattleRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(List<UsersMabListUnusedCardsResponse>?, string)> MabListUnusedCards(UsersMabListUnusedCardsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -6750,6 +6851,66 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(UsersMabManageTurnResponse?, string)> MabManageTurn(UsersMabManageTurnRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabManageTurn_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabDuelsDB = await this._daoDbContext
+                .MabDuels
+                .Where(a =>
+                    a.Mab_Battle!.Mab_Campaign.Mab_IsCampaignDeleted == false &&
+                    a.Mab_Battle.Mab_Campaign.UserId == userId)
+                .ToListAsync();
+
+            if (mabDuelsDB == null || mabDuelsDB.Count < 1)
+            {
+                return (null, "Error: No valid MAB DUELS found while checking current duel status!");
+            }
+
+            var currentMabDuelDB = mabDuelsDB.OrderByDescending(a => a.Id).FirstOrDefault();
+
+            if (currentMabDuelDB == null ||
+                (currentMabDuelDB.Mab_PlayerCardId != null && currentMabDuelDB.Mab_NpcCardId != null))
+            {
+                return (null, "Error: No valid CURRENT MAB DUEL found while checking current duel status");
+            }                    
+
+            if (currentMabDuelDB.Mab_PlayerCardId != null) 
+            {
+                currentMabDuelDB.Mab_IsPlayerAttacking = false;
+            }
+            else
+            {
+                currentMabDuelDB.Mab_IsPlayerAttacking = true;
+            }
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabManageTurnResponse(), "Mab Turn Manager runned successfully!");
+        }
+        private static (bool, string) MabManageTurn_Validation(UsersMabManageTurnRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }
+            return (true, string.Empty);
+        }
+
+
+
         public async Task<(UsersMabCheckDuelStatusResponse?, string)> MabCheckDuelStatus(UsersMabCheckDuelStatusRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -6766,189 +6927,58 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var content = new UsersMabCheckDuelStatusResponse();
+            var mabDuelsDB = await this._daoDbContext
+                .MabDuels
+                .Where(a =>
+                    a.Mab_Battle!.Mab_Campaign.Mab_IsCampaignDeleted == false &&
+                    a.Mab_Battle.Mab_Campaign.UserId == userId)
+                .ToListAsync();                
 
-            var mabCampaingDB = await this._daoDbContext
-                .MabCampaigns
-                .AsSplitQuery()
-
-                .Include(a => a.Mab_PlayerCards!.Where(b => b.Mab_AssignedCards!.Any(c => c.Mab_PlayerCardId == a.Id)))
-                .ThenInclude(a => a.Mab_Card)
-
-                .Include(a => a.Mab_Battles!.OrderByDescending(b => b.Id).FirstOrDefault())
-                .ThenInclude(a => a.Mab_Duels)
-
-                .Include(a => a.Mab_Battles!.OrderByDescending(b => b.Id).FirstOrDefault())
-                .ThenInclude(a => a.Mab_Npc)
-                .ThenInclude(a => a.Mab_NpcCards)
-                .ThenInclude(a => a.Mab_Card)
-
-                .FirstOrDefaultAsync(a => a.Mab_IsCampaignDeleted == false && a.UserId == userId);
-
-            var mabBattleDB = mabCampaingDB!.Mab_Battles![0];
-
-            var mabDuelsDB = mabBattleDB.Mab_Duels;
-
-            var mabNpcDB = mabBattleDB.Mab_Npc;
-
-            var mabNpcCardsDB = mabNpcDB.Mab_NpcCards;
-
-            var mabPlayerCardsDB = mabCampaingDB.Mab_PlayerCards;
-
-            var mabCardsDB = mabPlayerCardsDB!.Select(a => a.Mab_Card!).ToList();
-            var mabCards_ = mabNpcCardsDB!.Select(a => a.Mab_Card!).ToList();
-            mabCardsDB.AddRange(mabCards_);
-
-
-            if (mabBattleDB == null)
+            if(mabDuelsDB == null || mabDuelsDB.Count < 1)
             {
-                return (null, "Error: failed to find a valid mab battle");
+                return (null, "Error: No valid MAB DUELS found while checking current duel status!");
             }
 
-            var newMabDuel = mabDuelsDB.FirstOrDefault(a => a.Mab_PlayerCardId == null && a.Mab_NpcCardId == null);
+            var currentMabDuelDB = mabDuelsDB.OrderByDescending(a => a.Id).FirstOrDefault();
 
-            if (newMabDuel != null)
+            if(currentMabDuelDB == null)
             {
-
-                content.IsPlayerTurn = mabBattleDB.Mab_IsPlayerTurn;
-
-                var whoPlayesNext = mabBattleDB.Mab_IsPlayerTurn == true ? "Player's" : "Npc's";
-
-                return (content, $"There is an ongoing duel and now it's the {whoPlayesNext} turn!");
+                return (null, "Error: No valid CURRENT MAB DUEL found while checking current duel status");
             }
 
-            var onGoingMabDuel = mabDuelsDB.FirstOrDefault(a =>
-                (a.Mab_PlayerCardId != null && a.Mab_NpcCardId == null) ||
-                (a.Mab_PlayerCardId == null && a.Mab_NpcCardId != null));
+            var mabDuelsCount = mabDuelsDB.Count;            
 
-            if (onGoingMabDuel != null)
+            var isMabPlayerTurn = currentMabDuelDB.Mab_IsPlayerAttacking;
+
+            var areMabTurnsFinished =
+                currentMabDuelDB.Mab_PlayerCardId != null &&
+                currentMabDuelDB.Mab_NpcCardId != null;
+
+            var isMabDuelResolved =
+                currentMabDuelDB.Mab_PlayerCardId != null &&
+                currentMabDuelDB.Mab_NpcCardId != null &&
+                currentMabDuelDB.Mab_PlayerCardFullPower != null &&
+                currentMabDuelDB.Mab_NpcCardFullPower != null &&
+                currentMabDuelDB.Mab_HasPlayerWon != null;
+
+
+            var isMabBattleFinished =
+                mabDuelsCount >= Constants.DeckSize &&
+                mabDuelsDB.All(a =>
+                    a.Mab_PlayerCardId != null &&
+                    a.Mab_NpcCardId != null &&
+                    a.Mab_PlayerCardFullPower != null &&
+                    a.Mab_NpcCardFullPower != null &&
+                    a.Mab_HasPlayerWon != null);
+
+            return (new UsersMabCheckDuelStatusResponse
             {
-                content.IsPlayerTurn = onGoingMabDuel.Mab_PlayerCardId == null ? true : false;
-
-                var whoPlayesNext = content.IsPlayerTurn == true ? "Player's" : "Npc's";
-
-                return (content, $"There is an ongoing duel and now it's the {whoPlayesNext} turn!");
-            }
-
-            var finishedMabDuel = mabDuelsDB.FirstOrDefault(a =>
-                a.Mab_PlayerCardId != null &&
-                a.Mab_NpcCardId != null &&
-                a.Mab_HasPlayerWon == null);
-
-            if (finishedMabDuel != null)
-            {
-                var mabPlayerDuellingCard = mabCardsDB
-                    .FirstOrDefault(a => a.Mab_PlayerCards!
-                        .Any(b => b.Id == finishedMabDuel.Mab_PlayerCardId));
-
-                var mabNpcDuellingCard = mabCardsDB
-                    .FirstOrDefault(a => a.Mab_PlayerCards!
-                        .Any(b => b.Id == finishedMabDuel.Mab_PlayerCardId));
-
-                var isPlayerAttacking = finishedMabDuel.Mab_IsPlayerAttacking;
-
-                var (mabAttackerCardFullPower, mabDuelPoints) = (0, 0);
-
-                if (isPlayerAttacking == true)
-                {
-                    var attackerCardPower = mabPlayerDuellingCard.Mab_CardPower;
-                    var attackerCardUpperHand = mabPlayerDuellingCard.Mab_CardUpperHand;
-                    var attackerCardType = mabPlayerDuellingCard.Mab_CardType;
-
-                    var defenderCardPower = mabNpcDuellingCard.Mab_CardPower;
-                    var defenderCardType = mabNpcDuellingCard.Mab_CardType;
-
-                    (mabAttackerCardFullPower, mabDuelPoints) = Helper.MabResolveDuel(
-                        attackerCardPower,
-                        attackerCardUpperHand,
-                        (int)attackerCardType,
-                        defenderCardPower,
-                        (int)defenderCardType);
-
-                    finishedMabDuel.Mab_PlayerCardFullPower = mabAttackerCardFullPower;
-                    finishedMabDuel.Mab_NpcCardFullPower = defenderCardPower;
-                }
-                else
-                {
-                    var attackerCardPower = mabNpcDuellingCard.Mab_CardPower;
-                    var attackerCardUpperHand = mabNpcDuellingCard.Mab_CardUpperHand;
-                    var attackerCardType = mabNpcDuellingCard.Mab_CardType;
-
-                    var defenderCardPower = mabPlayerDuellingCard.Mab_CardPower;
-                    var defenderCardType = mabPlayerDuellingCard.Mab_CardType;
-
-                    (mabAttackerCardFullPower, mabDuelPoints) = Helper.MabResolveDuel(
-                        attackerCardPower,
-                        attackerCardUpperHand,
-                        (int)attackerCardType,
-                        defenderCardPower,
-                        (int)defenderCardType);
-
-                    finishedMabDuel.Mab_PlayerCardFullPower = mabAttackerCardFullPower;
-                    finishedMabDuel.Mab_NpcCardFullPower = defenderCardPower;
-                }
-
-                var orderedMabPlayerCardIds = mabDuelsDB.OrderBy(a => a.Id).Select(a => a.Mab_PlayerCardId).ToList();
-
-                var orderedMabDuelResults = mabDuelsDB.OrderBy(a => a.Id).Select(a => a.Mab_HasPlayerWon).ToList();
-
-                var isMabBattleOvercome = mabBattleDB.Mab_HasPlayerWon;
-
-                var mabPlayerState = Helper.MabGetPlayerState(orderedMabPlayerCardIds, orderedMabDuelResults, isMabBattleOvercome);
-
-                var (earnedXp, bonusXp) = Helper.MabGetEarnedXp(
-                    mabCampaingDB.Mab_PlayerLevel!.Value, mabNpcDB.Mab_NpcLevel, mabDuelPoints, (int)mabPlayerState);
-
-                finishedMabDuel.Mab_PlayerState = mabPlayerState;
-
-                finishedMabDuel.Mab_EarnedXp = earnedXp;
-
-                finishedMabDuel.Mab_BonusXp = bonusXp;
-
-                finishedMabDuel.Mab_HasPlayerWon = mabDuelPoints > 0;
-            }
-
-            var IsLastMabDuel = mabBattleDB.Mab_Duels!.Count == Constants.DeckSize && onGoingMabDuel != null;
-            if (IsLastMabDuel == true)
-            {
-                mabBattleDB.Mab_IsBattleFinished = true;
-
-                mabBattleDB.Mab_HasPlayerWon = mabDuelsDB.Sum(a => a.Mab_DuelPoints) > 0;
-
-                mabCampaingDB.Mab_GoldStash =
-                    mabCampaingDB.Mab_GoldStash == null || mabCampaingDB.Mab_GoldStash == 0 ?
-                    mabBattleDB.Mab_EarnedGold : mabCampaingDB.Mab_GoldStash + mabBattleDB.Mab_EarnedGold;
-
-                mabCampaingDB.Mab_PlayerExperience =
-                    mabCampaingDB.Mab_PlayerExperience == null || mabCampaingDB.Mab_PlayerExperience == 0 ?
-                    mabBattleDB.Mab_EarnedXp : mabCampaingDB.Mab_PlayerExperience + mabBattleDB.Mab_EarnedXp;
-
-                mabCampaingDB.Mab_BattlesCount++;
-
-                if (mabBattleDB.Mab_HasPlayerWon == true)
-                {
-                    mabCampaingDB.Mab_BattleVictoriesCount++;
-                }
-                else
-                {
-                    mabCampaingDB.Mab_BattleDefeatsCount++;
-                }
-            }
-            else
-            {
-                var isPlayerAttacking = false;
-
-                mabBattleDB.Mab_Duels.Add(new MabDuel
-                {
-                    Mab_PlayerState = MabPlayerState.Normal,
-                    Mab_IsPlayerAttacking = isPlayerAttacking,
-                });
-            }
-
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (content, "Successfully checked who goes next.");
-
+                Mab_DuelsCount = mabDuelsCount,
+                Mab_IsPlayerTurn = isMabPlayerTurn,
+                Mab_AreTurnsFinished = areMabTurnsFinished,
+                Mab_IsDuelResolved = isMabDuelResolved,
+                Mab_IsBattleFinished = isMabBattleFinished,
+            }, "Successfully checked who goes next.");
         }
         private static (bool, string) MabGetWhoGoesNext_Validation(UsersMabCheckDuelStatusRequest? request)
         {
@@ -7390,6 +7420,95 @@ namespace BoardGameGeekLike.Services
             {
                 return (false, "Error: request is NOT null!");
             }          
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabPlayerRetreatsResponse?, string)> MabPlayerRetreats(UsersMabPlayerRetreatsRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabPlayerRetreats_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns!
+                .Include(a => a.Mab_Battles!)
+                .ThenInclude(b => b.Mab_Npc)
+                .Include(a => a.Mab_Battles!)
+                .ThenInclude(c => c.Mab_Duels)
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.Mab_IsCampaignDeleted == false);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: MabPlayerRetreats failed ! Requested mab campaign could not be found!");
+            }
+
+            var mabBattlesDB = mabCampaignDB.Mab_Battles;
+            if (mabBattlesDB == null || mabBattlesDB.Count < 1)
+            {
+                return (null, "Error: MabPlayerRetreats failed! MAB BATTLES could be found in this campaign!");
+            }
+
+            var currentMabBattle =
+                mabBattlesDB
+                .OrderByDescending(a => a.Id)
+                .FirstOrDefault(a => a.Mab_IsBattleFinished == false);
+            if (currentMabBattle == null)
+            {
+                return (null, "Error: MabPlayerRetreats failed! No ongoing unfinished MAB BATTLE could be found!");
+            }
+
+            var mabDuelsDB = currentMabBattle.Mab_Duels;
+            if (mabDuelsDB == null)
+            {
+                return (null, "Error: MabPlayerRetreats failed! Mab Duels not found!");
+            }
+
+            var earnedGold = Constants.RetreatGoldPenalty;
+            var earnedXp = 0;
+            var bonusXp = 0;
+            var finalPlayerState = MabPlayerState.Panicking;
+            var hasPlayerWon = false;
+
+            currentMabBattle.Mab_EarnedGold = earnedGold;
+            currentMabBattle.Mab_EarnedXp = earnedXp;
+            currentMabBattle.Mab_BonusXp = bonusXp;
+            currentMabBattle.Mab_FinalPlayerState = finalPlayerState;
+            currentMabBattle.Mab_HasPlayerWon = hasPlayerWon;
+            currentMabBattle.Mab_IsBattleFinished = true;
+
+            mabCampaignDB.Mab_GoldStash += earnedGold;
+            mabCampaignDB.Mab_PlayerExperience += earnedXp;
+            mabCampaignDB.Mab_BattlesCount++;
+            mabCampaignDB.Mab_BattleDefeatsCount++;         
+
+            await _daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabPlayerRetreatsResponse
+            {
+                Mab_UpdatedGoldStash = mabCampaignDB.Mab_GoldStash,
+
+                Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience
+            },
+            "MAB PLAYER retreated from the battle successfully! Results were successfully computed for the campaign");
+        }
+        private static (bool, string) MabPlayerRetreats_Validation(UsersMabPlayerRetreatsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: request is NOT null, however it MUST be null!");
+            }
 
             return (true, string.Empty);
         }

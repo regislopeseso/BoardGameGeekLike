@@ -919,6 +919,34 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
+        //{
+        //    var (content, message) = await this._usersService.ContinueMabBattle(request);
+
+        //    var response = new Response<UsersMabContinueBattleResponse?>
+        //    {
+        //        Content = content,
+        //        Message = message
+        //    };
+
+        //    return new JsonResult(response);
+        //}
+
+        [HttpPost]
+        public async Task<IActionResult> MabFinishBattle(UsersMabFinishBattleRequest? request)
+        {
+            var (content, message) = await this._usersService.MabFinishBattle(request);
+
+            var response = new Response<UsersMabFinishBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> MabStartDuel(UsersMabStartDuelRequest? request)
         {
@@ -989,20 +1017,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
-        //{
-        //    var (content, message) = await this._usersService.ContinueMabBattle(request);
-
-        //    var response = new Response<UsersMabContinueBattleResponse?>
-        //    {
-        //        Content = content,
-        //        Message = message
-        //    };
-
-        //    return new JsonResult(response);
-        //}
-
         [HttpGet]
         public async Task<IActionResult> MabListUnusedCards(UsersMabListUnusedCardsRequest? request)
         {
@@ -1016,7 +1030,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
 
         [HttpGet]
         public async Task<IActionResult> MabCheckDuelStatus(UsersMabCheckDuelStatusRequest? request)
@@ -1032,6 +1045,19 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> MabManageTurn(UsersMabManageTurnRequest? request)
+        {
+            var (content, message) = await this._usersService.MabManageTurn(request);
+
+            var response = new Response<UsersMabManageTurnResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpPost]
         public async Task<IActionResult> MabAutoBattle(UsersMabAutoBattleRequest? request)
@@ -1046,8 +1072,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-
 
         #endregion
     }
