@@ -329,58 +329,24 @@ namespace BoardGameGeekLike.Utilities
 
         public static (int, int) MabGetEarnedXp(int playerLevel, int npcLevel, int duelPoints, int playerState)
         {
-            if (duelPoints < 0)
+            if (duelPoints <= 0)
             {
                 return (0, 0);
             }
-         
-            // --- Tunables ---
-            const double Alpha = 2.0;   // baseline XP
-            const double Beta = 1.0;    // scales with sqrt(duelPoints)
-            const double Gamma = 0.25;  // bonus per NPC level >= player
-            const double Eta = 0.20;    // penalty per NPC level < player
-            const double MMin = 0.25;   // minimum level multiplier
-            const double MMax = 1.50;   // maximum level multiplier
 
-            // State multipliers (index by playerState enum int value)
-            double[] StateMultiplier =  
+            var lvlDif = npcLevel - playerLevel;
+            if(lvlDif < 0)
             {
-                1.00, // Normal
-                1.10, // Flawless
-                1.20, // Matchless
-                1.30, // Impredictable
-                1.40, // Unstoppable
-                1.55, // Triumphant
-                1.75  // Glorious
-            };
+                lvlDif = 0;
+            }
 
-            int delta = npcLevel - playerLevel;
+            int basisXp = 1;
 
-            // Base XP from duel performance
-            double baseXp = Alpha + Beta * Math.Sqrt(Math.Max(0, duelPoints));
+            int earnedXp = basisXp + duelPoints;
 
-            // Level difference multiplier
-            double mlvl = (delta >= 0)
-                ? (1.0 + Gamma * delta)
-                : (1.0 / (1.0 + Eta * Math.Abs(delta)));
-            mlvl = Math.Clamp(mlvl, MMin, MMax);
+            int bonusXp = playerState + lvlDif;        
 
-            // Calculate XP without state multiplier first
-            double xpWithoutState = baseXp * mlvl;
-
-            // State multiplier
-            double mstate = (playerState >= 0 && playerState < StateMultiplier.Length)
-                ? StateMultiplier[playerState]
-                : 1.0;
-
-            // Calculate final XP with state multiplier
-            double finalXp = xpWithoutState * mstate;
-
-            // Calculate gained and bonus XP
-            int gainedXp = (int)Math.Floor(Math.Max(0.0, finalXp));
-            int bonusXp = (int)Math.Floor(Math.Max(0.0, finalXp - xpWithoutState));
-
-            return (gainedXp, bonusXp);            
+            return (earnedXp, bonusXp);            
         }
     
         

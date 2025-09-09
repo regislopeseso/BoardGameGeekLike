@@ -919,19 +919,19 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
-        //{
-        //    var (content, message) = await this._usersService.ContinueMabBattle(request);
+        [HttpGet]
+        public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
+        {
+            var (content, message) = await this._usersService.ContinueMabBattle(request);
 
-        //    var response = new Response<UsersMabContinueBattleResponse?>
-        //    {
-        //        Content = content,
-        //        Message = message
-        //    };
+            var response = new Response<UsersMabContinueBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
 
-        //    return new JsonResult(response);
-        //}
+            return new JsonResult(response);
+        }
 
         [HttpPost]
         public async Task<IActionResult> MabFinishBattle(UsersMabFinishBattleRequest? request)
@@ -1002,6 +1002,21 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> MabPlayerRetreats(UsersMabPlayerRetreatsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabPlayerRetreats(request);
+
+            var response = new Response<UsersMabPlayerRetreatsResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> MabNpcAttacks(UsersMabNpcAttacksRequest? request)

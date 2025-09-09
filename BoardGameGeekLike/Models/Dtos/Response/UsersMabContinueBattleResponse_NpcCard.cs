@@ -15,6 +15,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_CardUpperHand { get; set; }
 
+        public int? Mab_CardFullPower { get; set; }
+
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public MabCardType? Mab_CardType { get; set; }
     }
