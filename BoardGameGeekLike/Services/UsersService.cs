@@ -6876,16 +6876,20 @@ namespace BoardGameGeekLike.Services
 
             if (mabDuelsDB == null || mabDuelsDB.Count < 1)
             {
-                return (null, "Error: No valid MAB DUELS found while checking current duel status!");
+                return (null, "Error: No valid MAB DUELS found while running duel manager!");
             }
 
             var currentMabDuelDB = mabDuelsDB.OrderByDescending(a => a.Id).FirstOrDefault();
 
-            if (currentMabDuelDB == null ||
-                (currentMabDuelDB.Mab_PlayerCardId != null && currentMabDuelDB.Mab_NpcCardId != null))
+            if (currentMabDuelDB == null)           
             {
-                return (null, "Error: No valid CURRENT MAB DUEL found while checking current duel status");
-            }                    
+                return (null, "Error: No valid CURRENT MAB DUEL found while running duel manager");
+            }
+
+            if(currentMabDuelDB.Mab_PlayerCardId != null && currentMabDuelDB.Mab_NpcCardId != null)
+            {
+                return (new(), "Mab Turn Manager runned successfully! Nothing was done this duel is over.");
+            }
 
             if (currentMabDuelDB.Mab_PlayerCardId != null) 
             {
@@ -7079,7 +7083,7 @@ namespace BoardGameGeekLike.Services
 
             if (string.IsNullOrEmpty(userId))
             {
-                return (null, "Error: User is not authenticated");
+                return (null, "Error: MabResolveDuel failed! User is not authenticated");
             }
 
             var (isValid, message) = MabMabResolveDuel_Validation(request);
@@ -7106,7 +7110,7 @@ namespace BoardGameGeekLike.Services
 
             if (mabCampaignDB == null)
             {
-                return (null, "Error: A valid mab campaign could not be found!");
+                return (null, "Error: MabResolveDuel failed! A valid mab campaign could not be found!");
             }
 
             var mabBattleDB = mabCampaignDB
@@ -7115,14 +7119,14 @@ namespace BoardGameGeekLike.Services
 
             if (mabBattleDB == null)
             {
-                return (null, "Error: No ongoing valid mab battle could not be found!");
+                return (null, "Error: MabResolveDuel failed! No ongoing valid mab battle could not be found!");
             }
 
             var mabDuelsDB = mabBattleDB.Mab_Duels;
 
             if(mabDuelsDB == null)
             {
-                return (null, "Error: No valid mab duels found!");
+                return (null, "Error: MabResolveDuel failed! No valid mab duels found!");
             }
 
             var finishedMabDuelDB = mabDuelsDB                
@@ -7137,7 +7141,7 @@ namespace BoardGameGeekLike.Services
 
             if(finishedMabDuelDB == null)
             {
-                return (null, "Error: No mab duel not yet resolved was found!");
+                return (null, "Error: MabResolveDuel failed! No mab duel not yet resolved was found!");
             }
 
             var mabNpcDB = mabBattleDB.Mab_Npc;
