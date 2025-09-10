@@ -972,6 +972,8 @@ namespace BoardGameGeekLike.Controllers
                 Message = message
             };
 
+            await Task.Delay(2000);
+
             return new JsonResult(response);
         }
 
@@ -981,20 +983,6 @@ namespace BoardGameGeekLike.Controllers
             var (content, message) = await this._usersService.MabPlayerAttacks(request);
 
             var response = new Response<UsersMabPlayerAttacksResponse?>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> MabPlayerPassesTurn(UsersMabPlayerPassesTurnRequest? request)
-        {
-            var (content, message) = await this._usersService.MabPlayerPassesTurn(request);
-
-            var response = new Response<UsersMabPlayerPassesTurnResponse?>
             {
                 Content = content,
                 Message = message

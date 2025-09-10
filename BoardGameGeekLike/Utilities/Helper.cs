@@ -270,7 +270,7 @@ namespace BoardGameGeekLike.Utilities
         }
 
 
-        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, int attackerCardType, int defenderCardPower, int? defenderCardType)
+        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, MabCardType? attackerCardType, int defenderCardPower, MabCardType? defenderCardType)
         {
             var attackerCardFullPower = MabGetCardFullPower(attackerCardPower, attackerCardUpperHand, attackerCardType, defenderCardType);
 
@@ -283,26 +283,29 @@ namespace BoardGameGeekLike.Utilities
         {
             return attackerCardFullPower - defenderCardPower;
         }
-        public static int MabGetCardFullPower(int cardPower, int cardUpperHand, int attackerCardType, int? defenderCardType)
+        public static int MabGetCardFullPower(int cardPower, int cardUpperHand, MabCardType? attackerCardType, MabCardType? defenderCardType)
         {
             return (attackerCardType, defenderCardType) switch
             {
-                (0, 0) => cardPower,
-                (0, 1) => cardPower,
-                (0, 2) => cardPower,
-                (0, 3) => cardPower,
-                (1, 0) => cardPower + 2 * cardUpperHand,
-                (1, 1) => cardPower,
-                (1, 2) => cardPower + cardUpperHand,
-                (1, 3) => cardPower,
-                (2, 0) => cardPower + 2 * cardUpperHand,
-                (2, 1) => cardPower,
-                (2, 2) => cardPower,
-                (2, 3) => cardPower + cardUpperHand,
-                (3, 0) => cardPower + 2 * cardUpperHand,
-                (3, 1) => cardPower + cardUpperHand,
-                (3, 2) => cardPower,
-                (3, 3) => cardPower,
+                (MabCardType.Neutral, MabCardType.Neutral) => cardPower,
+                (MabCardType.Neutral, MabCardType.Ranged) => cardPower,
+                (MabCardType.Neutral, MabCardType.Cavalry) => cardPower,
+                (MabCardType.Neutral, MabCardType.Infantry) => cardPower,
+
+                (MabCardType.Ranged, MabCardType.Neutral) => cardPower + cardUpperHand,
+                (MabCardType.Ranged, MabCardType.Ranged) => cardPower,
+                (MabCardType.Ranged, MabCardType.Cavalry) => cardPower,
+                (MabCardType.Ranged, MabCardType.Infantry) => cardPower + cardUpperHand,
+
+                (MabCardType.Cavalry, MabCardType.Neutral) => cardPower + cardUpperHand,
+                (MabCardType.Cavalry, MabCardType.Ranged) => cardPower + cardUpperHand,
+                (MabCardType.Cavalry, MabCardType.Cavalry) => cardPower,
+                (MabCardType.Cavalry, MabCardType.Infantry) => cardPower,
+
+                (MabCardType.Infantry, MabCardType.Neutral) => cardPower + cardUpperHand,
+                (MabCardType.Infantry, MabCardType.Ranged) => cardPower,
+                (MabCardType.Infantry, MabCardType.Cavalry) => cardPower + cardUpperHand,
+                (MabCardType.Infantry, MabCardType.Infantry) => cardPower,
                 _ => cardPower + 3 * cardUpperHand, 
             };
         }     

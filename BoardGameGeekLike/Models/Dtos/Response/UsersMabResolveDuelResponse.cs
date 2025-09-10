@@ -12,6 +12,6 @@
 
         public int? Mab_BonusXp { get; set; }
 
-        public bool? Has_PlayerWon {  get; set; }
+        public bool? Mab_HasPlayerWon {  get; set; }
     }
 }

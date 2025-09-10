@@ -1,4 +1,6 @@
-﻿namespace BoardGameGeekLike.Models.Dtos.Response
+﻿using BoardGameGeekLike.Utilities;
+
+namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersMabStartBattleResponse
     {
@@ -10,5 +12,8 @@
         public string? Mab_NpcName { get; set; }    
         
         public int? Mab_NpcLevel { get; set; }
+
+
+        public int? Mab_DeckSize { get; set; } = Constants.DeckSize;
     }
 }
