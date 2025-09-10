@@ -7041,28 +7041,138 @@ namespace BoardGameGeekLike.Services
                 .OrderBy(a => a.Mab_CardLevel)
                 .ToListAsync();
 
-            //continuar a partir daqui
+            // continuar a partir daqui
+            var response = new List<UsersMabListUnusedCardsResponse>();            
+
             var mabBattleDB = await this._daoDbContext
                 .MabBattles
+                .AsNoTracking()
+                .Include(a => a.Mab_Duels!)
                 .Include(a => a.Mab_Campaign!)
                 .ThenInclude(a => a.Mab_PlayerCards!)
                 .ThenInclude(a => a.Mab_Card)
-                .Include(a => a.Mab_Duels)
-                .FirstOrDefaultAsync(a => 
+                .Include(a => a.Mab_Campaign!)
+                .ThenInclude(a => a.Mab_PlayerCards!)
+                .ThenInclude(a => a.Mab_AssignedCards)
+                .FirstOrDefaultAsync(a =>
                     a.Mab_Campaign.Mab_IsCampaignDeleted == false &&
                     a.Mab_Campaign.UserId == userId &&
                     a.Mab_IsBattleFinished == false);
+            if (mabBattleDB == null)
+            {
+                return (null, "MabListUnusedCards failed! No Mab Battles were found!");
+            }
 
-            var mabCampaignDB = mabBattleDB.Mab_Campaign;
+            var mabDuelsDB = mabBattleDB.Mab_Duels;
+            if (mabDuelsDB == null || mabDuelsDB.Count < 1)
+            {
+                return (null, "MabListUnusedCards failed! Mab Duels not found!");
+            }
 
-            var mabDuelsDB = mabBattleDB.Mab_Duels.OrderBy(a => a.Id).ToList();
-            var mabPlayerCards = mabCampaignDB.Mab_PlayerCards;
-            var cardsDB = mabCampaignDB.Mab_PlayerCards.Select(a => a.Mab_Card).ToList();
+            var mabCardsDB = mabBattleDB
+                .Mab_Campaign!
+                .Mab_PlayerCards!
+                .Select(a => a.Mab_Card)
+                .ToList();
+
+            var mabAssignedCardsDB = mabBattleDB
+                .Mab_Campaign!
+                .Mab_PlayerCards!
+                .Where(a => a.Mab_AssignedCards!.Any(b => b.Mab_PlayerCardId == a.Id))
+                .ToList();
 
 
+            var assignedMabCardsDB = mabCardsDB
+                .Where(a => mabAssignedCardsDB.Any(b => b.Mab_CardId == a.Id))
+                .Select(a => new
+                {
+                    Mab_CardId = a.Id,
+                    Mab_PlayerCardId = mabAssignedCardsDB
+                        .Where(b => b.Mab_CardId == a.Id)
+                        .Select(b => b.Id)
+                        .FirstOrDefault(),
 
-            return (content,
-                "Mab Player's UNUSED assigned cards fetched successfully!");
+                    Mab_CardName = a.Mab_CardName,
+                    Mab_CardLevel = a.Mab_CardLevel,
+                    Mab_CardPower = a.Mab_CardPower,
+                    Mab_CardUpperHand = a.Mab_CardUpperHand,
+                    Mab_CardType = a.Mab_CardType
+                })
+                .ToList();
+
+            var usedMabPlayerCardsIds = mabDuelsDB
+             .Where(a =>
+                 a.Mab_PlayerCardId != null &&
+                 a.Mab_NpcCardId != null &&
+                 a.Mab_HasPlayerWon != null)
+             .Select(a => a.Mab_PlayerCardId)
+             .ToList();
+
+            var usedMabCards = assignedMabCardsDB
+                .Where(a => usedMabPlayerCardsIds.Any(b => b == a.Mab_PlayerCardId))
+                .ToList();
+
+            var availableMabCards = assignedMabCardsDB
+                .Where(a => usedMabPlayerCardsIds.Any(b => b == a.Mab_PlayerCardId) == false)
+                .ToList();
+
+            var response_usedMabCards = usedMabCards
+                .Select(a => new UsersMabListUnusedCardsResponse
+                {
+                    Mab_PlayerCardId = a.Mab_PlayerCardId,
+                    Mab_CardName = a.Mab_CardName,
+                    Mab_CardLevel = a.Mab_CardLevel,
+                    Mab_CardPower = a.Mab_CardPower,
+                    Mab_CardUpperHand = a.Mab_CardUpperHand,
+                    Mab_CardType = a.Mab_CardType,
+
+                    Mab_IsCardAvailable = false,
+
+                    Mab_CardFullPower = mabDuelsDB
+                                        .Where(b => b.Mab_PlayerCardId == a.Mab_PlayerCardId)
+                                        .Select(b => b.Mab_PlayerCardFullPower)
+                                        .FirstOrDefault(),
+
+                    Mab_HasPlayerWon = mabDuelsDB
+                                        .Where(b => b.Mab_PlayerCardId == a.Mab_PlayerCardId)
+                                        .Select(b => b.Mab_HasPlayerWon)
+                                        .FirstOrDefault(),
+
+                    Mab_DuelPoints = mabDuelsDB
+                                        .Where(b => b.Mab_PlayerCardId == a.Mab_PlayerCardId)
+                                        .Select(b => b.Mab_DuelPoints)
+                                        .FirstOrDefault(),
+
+                    Mab_EarnedXp = mabDuelsDB
+                                        .Where(b => b.Mab_PlayerCardId == a.Mab_PlayerCardId)
+                                        .Select(b => b.Mab_EarnedXp)
+                                        .FirstOrDefault(),
+
+                    Mab_BonusXp = mabDuelsDB
+                                        .Where(b => b.Mab_PlayerCardId == a.Mab_PlayerCardId)
+                                        .Select(b => b.Mab_BonusXp)
+                                        .FirstOrDefault(),
+                });
+
+            response.AddRange(response_usedMabCards);
+
+            var response_availabeMabCards = availableMabCards
+                .Select(a => new UsersMabListUnusedCardsResponse
+                {
+                    Mab_PlayerCardId = a.Mab_PlayerCardId,
+                    Mab_CardName = a.Mab_CardName,
+                    Mab_CardLevel = a.Mab_CardLevel,
+                    Mab_CardPower = a.Mab_CardPower,
+                    Mab_CardUpperHand = a.Mab_CardUpperHand,
+                    Mab_CardType = a.Mab_CardType,
+
+                    Mab_IsCardAvailable = true
+                });
+
+            response.AddRange(response_availabeMabCards);
+
+            return (response,
+                "Mab Player Assigned Cards fetched successfully!");
         }
         private static (bool, string) ListMabPlayerRoundCardCopies_Validation(UsersMabListUnusedCardsRequest? request)
         {
