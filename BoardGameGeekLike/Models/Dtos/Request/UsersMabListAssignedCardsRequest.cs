@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class UsersMabListUnusedCardsRequest
+    public class UsersMabListAssignedCardsRequest
     {
     }
 }

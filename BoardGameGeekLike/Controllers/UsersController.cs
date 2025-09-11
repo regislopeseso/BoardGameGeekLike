@@ -343,7 +343,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        // 2� LIFE COUNTER QUICK START
+        // 2. LIFE COUNTER QUICK START
         [HttpPost]
         public async Task<IActionResult> QuickStartLifeCounter([FromBody] UsersQuickStartLifeCounterRequest? request)
         {
@@ -359,7 +359,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
-        // 3� LIFE COUNTER TEMPLATES    
+        // 3. LIFE COUNTER TEMPLATES    
         [HttpPost]
         public async Task<IActionResult> CreateLifeCounterTemplate([FromForm] UsersCreateLifeCounterTemplateRequest? request)
         {
@@ -468,7 +468,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
-        // 4� LIFE COUNTER MANAGERS
+        // 4. LIFE COUNTER MANAGERS
         [HttpPost]
         public async Task<IActionResult> StartLifeCounterManager([FromForm] UsersStartLifeCounterManagerRequest request)
         {
@@ -588,7 +588,7 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
-        // 5� LIFE COUNTER PLAYERS
+        // 5. LIFE COUNTER PLAYERS
         [HttpGet]
         public async Task<IActionResult> GetLifeCounterPlayersDetails([FromQuery] UsersGetLifeCounterPlayersDetailsRequest? request)
         {
@@ -1005,7 +1005,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> MabNpcAttacks(UsersMabNpcAttacksRequest? request)
         {
@@ -1021,11 +1020,25 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> MabListUnusedCards(UsersMabListUnusedCardsRequest? request)
+        public async Task<IActionResult> MabGetNpcCardFullPower([FromQuery] UsersMabGetNpcCardFullPowerRequest? request)
         {
-            var (content, message) = await this._usersService.MabListUnusedCards(request);
+            var (content, message) = await this._usersService.MabGetNpcCardFullPower(request);
 
-            var response = new Response<List<UsersMabListUnusedCardsResponse>?>
+            var response = new Response<UsersMabGetNpcCardFullPowerResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MabListAssignedCards(UsersMabListAssignedCardsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabListAssignedCards(request);
+
+            var response = new Response<List<UsersMabListAssignedCardsResponse>?>
             {
                 Content = content,
                 Message = message

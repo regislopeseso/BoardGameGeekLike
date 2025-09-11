@@ -1,4 +1,6 @@
-﻿namespace BoardGameGeekLike.Models.Dtos.Response
+﻿using BoardGameGeekLike.Utilities;
+
+namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersMabContinueBattleResponse
     {
@@ -15,6 +17,7 @@
 
         public UsersMabContinueBattleResponse_NpcCard? Mab_NpcCard { get; set; }
 
+        public int? Mab_DeckSize { get; set; } = Constants.DeckSize;
 
         public int? Mab_DuelsCount { get; set; } = null;
 
