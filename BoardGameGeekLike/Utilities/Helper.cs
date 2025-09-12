@@ -110,6 +110,11 @@ namespace BoardGameGeekLike.Utilities
 
             foreach (var duelResult in orderedMabDuelResults)
             {
+                if(duelResult == null)
+                {
+                    continue;
+                }
+                    
                 winningStreak =
                     duelResult == true ?
                     winningStreak + 1 : 0;
@@ -270,18 +275,23 @@ namespace BoardGameGeekLike.Utilities
         }
 
 
-        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, MabCardType? attackerCardType, int defenderCardPower, MabCardType? defenderCardType)
+        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, MabCardType? attackerCardType, int defenderCardPower, MabCardType? defenderCardType, bool? isPlayerAttacking)
         {
             var attackerCardFullPower = MabGetCardFullPower(attackerCardPower, attackerCardUpperHand, attackerCardType, defenderCardType);
 
-            var duelPoints = MabGetDuelPoints(attackerCardFullPower, defenderCardPower);
+            var duelPoints = MabGetDuelPoints(attackerCardFullPower, defenderCardPower, isPlayerAttacking);
 
             return (attackerCardFullPower, duelPoints);
 
         }
-        public static int MabGetDuelPoints(int attackerCardFullPower, int defenderCardPower)
+        public static int MabGetDuelPoints(int attackerCardFullPower, int defenderCardPower,  bool? isPlayerAttacking)
         {
-            return attackerCardFullPower - defenderCardPower;
+            var mabDuelPoints = attackerCardFullPower - defenderCardPower;
+
+            mabDuelPoints = isPlayerAttacking == true ?
+                mabDuelPoints : -mabDuelPoints;
+
+            return mabDuelPoints;
         }
         public static int MabGetCardFullPower(int cardPower, int cardUpperHand, MabCardType? attackerCardType, MabCardType? defenderCardType)
         {

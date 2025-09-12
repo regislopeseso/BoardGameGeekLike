@@ -1,9 +1,7 @@
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
-using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BoardGameGeekLike.Controllers
@@ -922,7 +920,7 @@ namespace BoardGameGeekLike.Controllers
         [HttpGet]
         public async Task<IActionResult> MabContinueBattle(UsersMabContinueBattleRequest? request)
         {
-            var (content, message) = await this._usersService.ContinueMabBattle(request);
+            var (content, message) = await this._usersService.MabContinueBattle(request);
 
             var response = new Response<UsersMabContinueBattleResponse?>
             {
@@ -1039,6 +1037,20 @@ namespace BoardGameGeekLike.Controllers
             var (content, message) = await this._usersService.MabListAssignedCards(request);
 
             var response = new Response<List<UsersMabListAssignedCardsResponse>?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MabListNpcPlayedCards(UsersMabListNpcPlayedCardsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabListNpcPlayedCards(request);
+
+            var response = new Response<List<UsersMabListNpcPlayedCardsResponse>?>
             {
                 Content = content,
                 Message = message

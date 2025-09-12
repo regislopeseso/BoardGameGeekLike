@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersMabListAssignedCardsResponse
-    {  
-        public int? Mab_DuelId { get; set; }
+    {
+        public int? Mab_DuelId { get; set; } = null;
 
         public int? Mab_PlayerCardId { get; set; }
 

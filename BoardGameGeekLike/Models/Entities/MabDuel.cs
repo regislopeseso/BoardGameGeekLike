@@ -25,11 +25,11 @@ namespace BoardGameGeekLike.Models.Entities
 
         public bool? Mab_HasPlayerWon { get; set; } = null;
         
-        public int? Mab_DuelPoints { get; set; } = 0;
+        public int? Mab_DuelPoints { get; set; } = null;
 
-        public int? Mab_EarnedXp { get; set; } = 0; 
+        public int? Mab_EarnedXp { get; set; } = null; 
 
-        public int? Mab_BonusXp { get; set; } = 0;
+        public int? Mab_BonusXp { get; set; } = null;
 
         [ForeignKey(nameof(this.Mab_Battle))]
         public int? Mab_BattleId { get; set; }

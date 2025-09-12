@@ -1,4 +1,6 @@
-﻿using BoardGameGeekLike.Utilities;
+﻿using BoardGameGeekLike.Models.Enums;
+using BoardGameGeekLike.Utilities;
+using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
@@ -8,14 +10,17 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_PlayerLevel { get; set; }
 
-        public UsersMabContinueBattleResponse_PlayerCard? Mab_PlayerCard { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public MabPlayerState? Mab_PlayerState { get; set; } 
+
+        public List<UsersMabContinueBattleResponse_PlayerCard>? Mab_PlayerCards { get; set; }
 
 
         public string? Mab_NpcName { get; set; }
 
         public int? Mab_NpcLevel { get; set; }
 
-        public UsersMabContinueBattleResponse_NpcCard? Mab_NpcCard { get; set; }
+        public List<UsersMabContinueBattleResponse_NpcCard>? Mab_NpcPlayedCards { get; set; }
 
         public int? Mab_DeckSize { get; set; } = Constants.DeckSize;
 
