@@ -1018,11 +1018,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> MabListAssignedCards(UsersMabListAssignedCardsRequest? request)
+        public async Task<IActionResult> MabListPlayerDuellingCards(UsersMabListPlayerDuellingCardsRequest? request)
         {
-            var (content, message) = await this._usersService.MabListAssignedCards(request);
+            var (content, message) = await this._usersService.MabListPlayerDuellingCards(request);
 
-            var response = new Response<List<UsersMabListAssignedCardsResponse>?>
+            var response = new Response<List<UsersMabListPlayerDuellingCardsResponse>?>
             {
                 Content = content,
                 Message = message

@@ -13,6 +13,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public MabPlayerState? Mab_PlayerState { get; set; } = MabPlayerState.Normal;
 
+        public bool? Mab_DoesPlayerGoFirst { get; set; }
 
         public string? Mab_NpcName { get; set; }    
         

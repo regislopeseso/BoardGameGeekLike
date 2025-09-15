@@ -22,6 +22,6 @@ namespace BoardGameGeekLike.Models.Entities
 
 
         [InverseProperty(nameof(MabAssignedCard.Mab_Deck))]
-        public List<MabAssignedCard>? Mab_PlayerCards { get; set; }
+        public List<MabAssignedCard>? Mab_AssignedCards { get; set; }
     }
 }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersMabListAssignedCardsResponse
+    public class UsersMabListPlayerDuellingCardsResponse
     {
         public int? Mab_DuelId { get; set; } = null;
 

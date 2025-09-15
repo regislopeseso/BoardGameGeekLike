@@ -19,7 +19,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey(nameof(this.Mab_Deck))]
         public int? Mab_DeckId { get; set; }
-        [InverseProperty(nameof(MabDeck.Mab_PlayerCards))]
+        [InverseProperty(nameof(MabDeck.Mab_AssignedCards))]
         public MabDeck? Mab_Deck { get; set; }
 
     }
