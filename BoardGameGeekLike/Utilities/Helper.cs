@@ -94,7 +94,7 @@ namespace BoardGameGeekLike.Utilities
         public static MabPlayerState MabGetPlayerState 
         (
             List<int?> orderedMabPlayerCardIds, 
-            List<bool?> orderedMabDuelResults, 
+            List<bool> orderedMabDuelResults, 
             bool? isMabBattleOvercome
         )
         {

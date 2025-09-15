@@ -21,12 +21,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public MabCardType? Mab_CardType { get; set; }
 
         public int? Mab_CardFullPower { get; set; } = null;
-
-
-
-        public bool? Mab_IsCardAvailable { get; set; }
-
-        public bool? Mab_HasPlayerWon { get; set; } = null;
+      
 
         public int? Mab_DuelPoints { get; set; } = null;
 
