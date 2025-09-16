@@ -411,20 +411,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> FilterCards(AdminsFilterCardsRequest request)
-        {
-            var (content, message) = await this._adminsService.FilterCards(request);
-
-            var response = new Response<List<AdminsFilterCardsResponse>>()
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
         // MAB NPCS
         [HttpPost]
         public async Task<IActionResult> AddMabNpc(AdminsAddMabNpcRequest request)

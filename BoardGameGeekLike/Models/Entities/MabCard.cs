@@ -12,6 +12,8 @@ namespace BoardGameGeekLike.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        public string? Mab_CardCode { get; set; }
+
         public string Mab_CardName { get; set; }
 
         public int Mab_CardPower { get; set; }

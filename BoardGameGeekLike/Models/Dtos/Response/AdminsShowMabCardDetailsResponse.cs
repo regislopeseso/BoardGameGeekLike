@@ -5,6 +5,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class AdminsShowMabCardDetailsResponse
     {
+        public string? CardCode { get; set; }
+
         public string? CardName { get; set; }
 
         public int? CardPower { get; set; }

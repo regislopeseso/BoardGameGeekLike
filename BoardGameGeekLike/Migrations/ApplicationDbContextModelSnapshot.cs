@@ -373,6 +373,9 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Mab_CardCode")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("Mab_CardLevel")
                         .HasColumnType("int");
 
@@ -942,7 +945,7 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabAssignedCard", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.MabDeck", "Mab_Deck")
-                        .WithMany("Mab_PlayerCards")
+                        .WithMany("Mab_AssignedCards")
                         .HasForeignKey("Mab_DeckId");
 
                     b.HasOne("BoardGameGeekLike.Models.Entities.MabPlayerCard", "Mab_PlayerCard")
@@ -1181,7 +1184,7 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabDeck", b =>
                 {
-                    b.Navigation("Mab_PlayerCards");
+                    b.Navigation("Mab_AssignedCards");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>

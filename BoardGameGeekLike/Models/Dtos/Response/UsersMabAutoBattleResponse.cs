@@ -9,8 +9,9 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
   public class UsersMabAutoBattleResponse
   {    
-    public bool? Mab_DoesPlayerGoFirst { get; set; }
+    public int? Mab_BattleId { get; set; }
 
+    public bool? Mab_DoesPlayerGoFirst { get; set; }
 
 
     public string? Mab_PlayerNickname { get; set; }

@@ -1335,6 +1335,7 @@ namespace BoardGameGeekLike.Services
 
             var exists = await this._daoDbContext
                 .MabCards
+                .AsNoTracking()
                 .AnyAsync(a =>
                     a.Mab_CardName.Trim().ToLower() == request.CardName.Trim().ToLower() && 
                     a.Mab_IsCardDeleted == false);
@@ -1344,8 +1345,20 @@ namespace BoardGameGeekLike.Services
                 return (null, $"Error: requested name is already taken, please choose another!");
             }
 
+            var mabCardsCount = await this._daoDbContext
+                .MabCards
+                .AsNoTracking()
+                .CountAsync();
+
+            var mabCardCode = mabCardsCount < 10 ?
+                            "MAB00" + mabCardsCount :
+                            (mabCardsCount >= 10 && mabCardsCount < 100) ?
+                            "MAB0" + mabCardsCount :
+                            "MAB" + mabCardsCount;
+
             var newCard = new MabCard
             {
+                Mab_CardCode = mabCardCode,
                 Mab_CardName = request.CardName,
                 Mab_CardPower = request.CardPower,
                 Mab_CardUpperHand = request.CardUpperHand,
@@ -1428,6 +1441,7 @@ namespace BoardGameGeekLike.Services
 
             return (new AdminsShowMabCardDetailsResponse
             {
+                CardCode = mabCardDB.Mab_CardCode,
                 CardName = mabCardDB.Mab_CardName,
                 CardPower = mabCardDB.Mab_CardPower,
                 CardUpperHand = mabCardDB.Mab_CardUpperHand,
@@ -1648,6 +1662,7 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new AdminsListMabCardsResponse
                 {
                     CardId = a.Id,
+                    CardCode = a.Mab_CardCode,
                     CardName = a.Mab_CardName,
                     CardPower = a.Mab_CardPower,
                     CardUpperHand = a.Mab_CardUpperHand,
@@ -1656,6 +1671,7 @@ namespace BoardGameGeekLike.Services
                     IsDeleted = a.Mab_IsCardDeleted,
                 })
                 .OrderBy(a => a.IsDeleted)
+                .ThenBy(a => a.CardCode)
                 .ThenBy(a => a.CardName)
                 .ThenBy(a => a.CardLevel)
                 .ThenBy(a => a.CardType)
@@ -1696,7 +1712,7 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new AdminsListMabCardIdsResponse
                 {
                     CardId = a.Id,
-                    CardName = a.Mab_CardName,                 
+                    CardName = a.Mab_CardName + a.Mab_CardCode,                 
                 })
                 .OrderBy(a => a.CardName)                
                 .ToListAsync();
@@ -1755,168 +1771,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-
-        // Provavelmente esse endpoint será desnecessário...
-        public async Task<(List<AdminsFilterCardsResponse>?, string)> FilterCards(AdminsFilterCardsRequest request)
-        {
-            var (filterIsValid, message) = FilterIsValid(request);
-
-            if (filterIsValid == false)
-            {
-                return (null, message);
-            }
-
-            var contentQueriable = this._daoDbContext
-                                       .MabCards
-                                       .AsNoTracking()
-                                       .Where(a => a.Mab_IsCardDeleted == false);
-
-            message = "All cards listed successfully";
-
-            #region Filtering by CardName           
-            if (string.IsNullOrWhiteSpace(request.CardName) == false)
-            {
-                contentQueriable = contentQueriable.Where(a => a.Mab_CardName.ToLower().Contains(request.CardName.ToLower()));
-
-                message = $"The card ->{request.CardName}<- has been successfully filtered";
-            }
-            #endregion
-
-            #region Filtering by CardId           
-            if (request.StartCardId.HasValue && request.EndCardId.HasValue == true)
-            {
-                contentQueriable = contentQueriable.Where(a => a.Id >= request.StartCardId && a.Id <= request.EndCardId);
-
-                message = $"The cards ranging from id = {request.StartCardId} to id = {request.EndCardId} have been successfully filtered";
-
-                if (request.StartCardId == request.EndCardId)
-                {
-                    message = $"The card of id = {request.StartCardId} has been successfully filtered";
-                }
-            }
-            #endregion
-
-            #region Filtering by CardPower
-            if (request.CardPower.HasValue == true)
-            {
-                contentQueriable = contentQueriable.Where(a => a.Mab_CardPower == request.CardPower);
-
-                message = $"The cards having power = {request.CardPower} have been successfully filtered";
-            }
-            #endregion
-
-            #region Filtering by CardUpperHand           
-            if (request.CardUpperHand.HasValue == true)
-            {
-                contentQueriable = contentQueriable.Where(a => a.Mab_CardUpperHand == request.CardUpperHand);
-
-                message = $"The cards having upper hand = {request.CardUpperHand} have been successfully filtered";
-            }
-            #endregion
-
-            #region Filtering By CardLevel
-            if (request.CardLevel.HasValue == true)
-            {
-                contentQueriable = contentQueriable.Where(a => a.Mab_CardLevel == request.CardLevel);
-
-                message = $"The cards of level = {request.CardLevel} have been successfully filtered";
-            }
-            #endregion
-
-            #region Filtering by CardType          
-            if (request.CardType.HasValue == true)
-            {
-                contentQueriable = contentQueriable.Where(a => a.Mab_CardType == request.CardType);
-
-                message = $"The cards of type = {request.CardType} have been successfully filtered";
-            }
-            #endregion
-
-            var content = await contentQueriable
-                                    .Select(a => new AdminsFilterCardsResponse
-                                    {
-                                        CardId = a.Id,
-                                        CardName = a.Mab_CardName,
-                                        CardPower = a.Mab_CardPower,
-                                        CardUpperHand = a.Mab_CardUpperHand,
-                                        CardLevel = a.Mab_CardLevel,
-                                        CardType = a.Mab_CardType,
-                                    })
-                                    .OrderBy(a => a.CardId)
-                                    .ThenBy(a => a.CardName)
-                                    .ToListAsync();
-
-            if (content == null || content.Count == 0)
-            {
-                return (null, "Error: nothing found");
-            }
-
-            return (content, message);
-        }
-        public (bool, string) FilterIsValid(AdminsFilterCardsRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.CardName) == true &&
-               request.StartCardId == null && request.EndCardId == null &&
-               request.CardPower == null &&
-               request.CardUpperHand == null &&
-               request.CardLevel == null &&
-               request.CardType == null)
-            {
-                return (false, "Error: no filter added querying the cards");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.CardName) == false && request.CardName.Trim().Length < 3)
-            {
-                return (false, "Error: invalid CardName. Filtering by name requires at least 3 characters");
-            }
-
-            if (request.StartCardId > request.EndCardId)
-            {
-                return (false, "Error: invalid CardIds. StartCardId cannot be greater than EndCardId");
-            }
-
-            if (request.StartCardId.HasValue == true && request.EndCardId.HasValue == false)
-            {
-                request.EndCardId = request.StartCardId + 99;
-            }
-
-            if (request.StartCardId.HasValue == false && request.EndCardId.HasValue == true)
-            {
-                request.StartCardId = request.EndCardId - 99;
-            }
-
-            if (request.EndCardId - request.StartCardId > 100)
-            {
-                return (false, "Error: invalid range. Only 100 cards can be loaded per query");
-            }
-
-            if (request.CardPower < Constants.MinCardPower || request.CardPower > Constants.MaxCardPower)
-            {
-                return (false, $"Error: invalid CardPower. It must be between {Constants.MinCardPower} and {Constants.MaxCardPower}");
-            }
-
-            if (request.CardUpperHand < Constants.MinCardUpperHand || request.CardUpperHand > Constants.MaxCardUpperHand)
-            {
-                return (false, $"Error: invalid CardUpperHand. It must be between {Constants.MinCardUpperHand} and {Constants.MaxCardUpperHand}");
-            }
-
-            if (request.CardLevel < Constants.MinCardLevel || request.CardLevel > Constants.MaxCardLevel)
-            {
-                return (false, $"Error: invalid CardLevel. It must be between {Constants.MinCardLevel} and {Constants.MaxCardLevel}");
-            }
-
-            if (request.CardType.HasValue == true && Enum.IsDefined(request.CardType.Value) == false)
-            {
-                var validTypes = string.Join(", ", Enum.GetValues(typeof(MabCardType))
-                                       .Cast<MabCardType>()
-                                       .Select(cardType => $"{cardType} ({(int)cardType})"));
-
-                return (false, $"Error: invalid CardType. It must be one of the following: {validTypes}");
-            }
-
-            return (true, string.Empty);
-        }
-
+       
         // MAB NPCS
 
         public async Task<(AdminsAddMabNpcResponse?, string)> AddMabNpc(AdminsAddMabNpcRequest request)

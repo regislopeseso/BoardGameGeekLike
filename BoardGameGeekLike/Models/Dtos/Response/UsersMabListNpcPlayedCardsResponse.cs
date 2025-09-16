@@ -7,6 +7,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     {
         public int? Mab_BattleId { get; set; }
 
+        public string? Mab_CardCode {  get; set; }
+
         public int? Mab_NpcCardId { get; set; }
 
         public string? Mab_CardName { get; set; }

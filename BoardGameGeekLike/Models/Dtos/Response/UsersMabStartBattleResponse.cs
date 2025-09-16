@@ -6,6 +6,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class UsersMabStartBattleResponse
     {
+        public int? Mab_BattleId { get; set; }
+
         public string? Mab_PlayerNickName { get; set; }
 
         public int? Mab_PlayerLevel { get; set; }

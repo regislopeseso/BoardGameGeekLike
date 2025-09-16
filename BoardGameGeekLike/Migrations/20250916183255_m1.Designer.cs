@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250828150518_m5")]
-    partial class m5
+    [Migration("20250916183255_m1")]
+    partial class m1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -271,13 +271,22 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("Mab_BattlePoints")
+                    b.Property<int?>("Mab_BonusXp")
                         .HasColumnType("int");
 
-                    b.Property<string>("Mab_BattleResults")
-                        .HasColumnType("longtext");
-
                     b.Property<int>("Mab_CampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("Mab_DoesPlayerGoesFirst")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("Mab_EarnedGold")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_EarnedXp")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_FinalPlayerState")
                         .HasColumnType("int");
 
                     b.Property<bool?>("Mab_HasPlayerWon")
@@ -339,6 +348,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("Mab_OpenedBoostersCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_PlayerExperience")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_PlayerLevel")
                         .HasColumnType("int");
 
@@ -363,6 +375,9 @@ namespace BoardGameGeekLike.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Mab_CardCode")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("Mab_CardLevel")
                         .HasColumnType("int");
@@ -423,19 +438,67 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool?>("IsFinished")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int?>("Mab_BattleId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_BonusXp")
                         .HasColumnType("int");
 
                     b.Property<int?>("Mab_DuelPoints")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Mab_HasPlayerWon")
+                    b.Property<int?>("Mab_EarnedXp")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("Mab_IsPlayerAttacking")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("Mab_NpcCardFullPower")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Mab_NpcCardId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_NpcCardLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Mab_NpcCardName")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("Mab_NpcCardPower")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_NpcCardType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_NpcCardUpperHand")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_PlayerCardFullPower")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_PlayerCardId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_PlayerCardLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Mab_PlayerCardName")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("Mab_PlayerCardPower")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_PlayerCardType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_PlayerCardUpperHand")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_PlayerState")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -885,7 +948,7 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabAssignedCard", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.MabDeck", "Mab_Deck")
-                        .WithMany("Mab_PlayerCards")
+                        .WithMany("Mab_AssignedCards")
                         .HasForeignKey("Mab_DeckId");
 
                     b.HasOne("BoardGameGeekLike.Models.Entities.MabPlayerCard", "Mab_PlayerCard")
@@ -1124,7 +1187,7 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabDeck", b =>
                 {
-                    b.Navigation("Mab_PlayerCards");
+                    b.Navigation("Mab_AssignedCards");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>

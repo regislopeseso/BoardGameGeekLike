@@ -412,13 +412,13 @@ namespace BoardGameGeekLike.Services
                 {
                     for (int upperHand = Constants.MinCardUpperHand; upperHand <= Constants.MaxCardUpperHand; upperHand++)
                     {
-                        var cardName = cardsCount < 10 ? 
-                            "(MAB00" + cardsCount + ") " : 
+                        var cardCode = cardsCount < 10 ? 
+                            "MAB00" + cardsCount: 
                             (cardsCount >= 10 && cardsCount < 100) ? 
-                            "(MAB0" + cardsCount + ") " : 
-                            "(MAB" + cardsCount + ") ";
+                            "MAB0" + cardsCount: 
+                            "MAB" + cardsCount;
 
-                         cardName += cardType.ToString()[0] == 'R' ?
+                        var cardName = cardType.ToString()[0] == 'R' ?
                             "Bow" : cardType.ToString()[0] == 'C' ?
                             "Spear" : cardType.ToString()[0] == 'I' ?
                             "Sword" : "Fist";
@@ -427,6 +427,7 @@ namespace BoardGameGeekLike.Services
 
                         var newCard = new MabCard
                         {
+                            Mab_CardCode = cardCode,
                             Mab_CardName = cardName,
                             Mab_CardPower = power,
                             Mab_CardUpperHand = upperHand,
