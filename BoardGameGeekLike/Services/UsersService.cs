@@ -6531,6 +6531,7 @@ namespace BoardGameGeekLike.Services
                 mabNpcCards_dto.Add(new UsersMabAutoBattleResponse_npcCard
                 {
                     Mab_CardName = mabCard_npc.Mab_CardName,
+                    Mab_CardCode = mabCard_npc.Mab_CardCode,
                     Mab_CardPower = mabCard_npc.Mab_CardPower,
                     Mab_CardUpperHand = mabCard_npc.Mab_CardUpperHand,
                     Mab_CardLevel = mabCard_npc.Mab_CardLevel,
