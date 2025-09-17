@@ -13,6 +13,8 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public string? Mab_CardName {  get; set; }
 
+        public string? Mab_CardCode { get; set; }
+
         public int? Mab_CardLevel { get; set; }
 
         public int? Mab_CardPower { get; set; }
