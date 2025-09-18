@@ -8,6 +8,12 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public string? Mab_PlayerNickName { get; set; }
 
+        public int? Mab_PlayerLevel { get; set; }
+
+        public int? Mab_CurrentPlayerXp { get; set; }
+
+        public int? Mab_NextPlayerLevelThreshold { get; set; }
+
         public MabCampaignDifficulty? Mab_CampaignDifficulty { get; set; }
 
         public int? Mab_Goldstash { get; set; }
@@ -19,8 +25,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public int? Mab_BattleDefeatsCount { get; set; }
 
         public int? Mab_OpenedBoostersCount { get; set; }
-
-        public int? Mab_PlayerLevel { get; set; }
 
         public int? Mab_CreatedDecksCount { get; set; }
 

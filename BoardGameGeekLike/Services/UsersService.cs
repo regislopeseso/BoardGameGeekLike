@@ -7842,6 +7842,12 @@ namespace BoardGameGeekLike.Services
 
                     Mab_PlayerNickName = a.Mab_PlayerNickname!,
 
+                    Mab_PlayerLevel = a.Mab_PlayerLevel!.Value,
+
+                    Mab_CurrentPlayerXp = a.Mab_PlayerExperience,
+
+                    Mab_NextPlayerLevelThreshold = Helper.MabGetPlayerNextLevelThreshold(a.Mab_PlayerLevel!.Value),
+
                     Mab_CampaignDifficulty = a.Mab_Difficulty!.Value,
 
                     Mab_Goldstash = a.Mab_GoldStash!.Value,
@@ -7853,8 +7859,6 @@ namespace BoardGameGeekLike.Services
                     Mab_BattleDefeatsCount = a.Mab_BattleDefeatsCount!.Value,
 
                     Mab_OpenedBoostersCount = a.Mab_OpenedBoostersCount!.Value,
-
-                    Mab_PlayerLevel = a.Mab_PlayerLevel!.Value,
 
                     Mab_CreatedDecksCount = a.Mab_Decks!.Count,
 
@@ -7935,6 +7939,53 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(UsersMabGetDeckBoosterDealResponse?, string)> MabGetDeckBoosterDeal(UsersMabGetDeckBoosterDealRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabBuyDeckBooster failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabGetDeckBoosterDeal_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns                
+                .FirstOrDefaultAsync(campaign => 
+                    campaign.Mab_IsCampaignDeleted == false && campaign.UserId == userId);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: MabBuyDeckBooster failed! No Mab Campaign found!");
+            }
+
+            var mabDeckBoosterPrice = $"{Constants.BoosterPrice} pieces of gold";
+            var mabDeckBoosterContent = $"{Constants.BoosterSize} cards (from level 0 up to level 5)";
+
+
+            return (new UsersMabGetDeckBoosterDealResponse 
+            {
+                Mab_DeckBoosterPrice = mabDeckBoosterPrice,
+                Mab_DeckBoosterContent = mabDeckBoosterContent
+            }, "Mab Deck Booster acquired succesfully!");
+        }
+        private static (bool, string) MabGetDeckBoosterDeal_Validation(UsersMabGetDeckBoosterDealRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabBuyDeckBooster failed! Request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(List<UsersMabBuyDeckBoosterResponse>?, string)> MabBuyDeckBooster(UsersMabBuyDeckBoosterRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -7967,31 +8018,48 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: MabBuyDeckBooster failed! Not enough gold!");
             }
 
-            
+            (var booster, message) = await this.GetBoosterCards();
+
+            if(booster == null || booster.Count < Constants.BoosterSize)
+            {
+                return (null, message);
+            }
+
+            mabCampaignDB.Mab_PlayerCards!.AddRange(booster);
+
+            mabCampaignDB.Mab_GoldStash -= Constants.BoosterPrice;
+
+            mabCampaignDB.Mab_OpenedBoostersCount = mabCampaignDB.Mab_OpenedBoostersCount +1;
 
             await this._daoDbContext.SaveChangesAsync();
 
-            return (null, "Mab Player Nickname updated successfully!");
+
+            var response = booster.Select(card => new UsersMabBuyDeckBoosterResponse
+            {
+                Mab_CardName = card.Mab_Card!.Mab_CardName,
+                Mab_CardCode = card.Mab_Card.Mab_CardCode,
+                Mab_CardType = card.Mab_Card.Mab_CardType,
+                Mab_CardLevel = card.Mab_Card.Mab_CardLevel,
+                Mab_CardPower = card.Mab_Card.Mab_CardPower,
+                Mab_CardUpperHand = card.Mab_Card.Mab_CardUpperHand
+            })
+            .ToList();
+
+            return (response, "Mab Deck Booster acquired succesfully!");
         }
         private static (bool, string) MabBuyDeckBooster_Validation(UsersMabBuyDeckBoosterRequest? request)
         {
-            if (request == null)
+            if (request != null)
             {
-                return (false, "Error: request is null");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Mab_PlayerNewNickname) == true)
-            {
-                return (false, $"Error: NewMabPlayerNickname request failed: {request.Mab_PlayerNewNickname}");
-            }
+                return (false, "Error: MabBuyDeckBooster failed! Request is NOT null, however it MUST be null!");
+            }          
 
             return (true, string.Empty);
         }
-        private async Task<(List<MabCard>, string)> GetBoosterCards()
+        private async Task<(List<MabPlayerCard>?, string)> GetBoosterCards()
         {
             var mabCardsDB = await this._daoDbContext
-                .MabCards
-                .AsNoTracking()
+                .MabCards             
                 .ToListAsync();
 
             if (mabCardsDB == null || mabCardsDB.Count < 1)
@@ -8001,17 +8069,12 @@ namespace BoardGameGeekLike.Services
 
             var mabCard_BriefMomentOfPeace = mabCardsDB.FirstOrDefault(card => card.Mab_CardLevel == 0 && card.Mab_CardType == MabCardType.Neutral);
             var mabCardsLvlZero = mabCardsDB.Where(card => card.Mab_CardLevel == 0 && card.Mab_CardType != MabCardType.Neutral).ToList();
-            var mabCardsLvlOne = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlTwo = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlThree = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlFour = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlFive = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlSix = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlSeven = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlEight = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-            var mabCardsLvlNine = mabCardsDB.Where(card => card.Mab_CardLevel == 0).ToList();
-
-            var number = 0;
+            var mabCardsLvlOne = mabCardsDB.Where(card => card.Mab_CardLevel == 1).ToList();
+            var mabCardsLvlTwo = mabCardsDB.Where(card => card.Mab_CardLevel == 2).ToList();
+            var mabCardsLvlThree = mabCardsDB.Where(card => card.Mab_CardLevel == 3).ToList();
+            var mabCardsLvlFour = mabCardsDB.Where(card => card.Mab_CardLevel == 4).ToList();
+            var mabCardsLvlFive = mabCardsDB.Where(card => card.Mab_CardLevel == 5).ToList();
+                    
 
             var randomNumbers = new List<int>();
 
@@ -8021,7 +8084,7 @@ namespace BoardGameGeekLike.Services
             
             while(count < Constants.BoosterSize)
             {
-                randomNumbers.Add(random.Next(0, 100));
+                randomNumbers.Add(random.Next(1, 401));
                 count++;
             }
 
@@ -8029,79 +8092,53 @@ namespace BoardGameGeekLike.Services
             {
                 switch (randomNumber)
                 {
-                    case 1:
+                    case int n when (n >= 1 && n <= 2): // 0,05%, 2 em 400
                         booster.Add(new MabPlayerCard
                         {
                             Mab_Card = mabCard_BriefMomentOfPeace
                         });
                         break;                    
-                    case int n when (n >= 2 && n <= 36):
+                    case int n when (n >= 3 && n <= 280): // 69,5%, 278 em 400
                         booster.Add(new MabPlayerCard
                         {
                             Mab_Card = mabCardsLvlZero.OrderBy(card => random.Next()).FirstOrDefault()
                         });
-
                         break;
-                    case int n when (n >= 37 && n <= 50):
+                    case int n when (n >= 281 && n <= 320): // 10%, 40 em 400
                         booster.Add(new MabPlayerCard
                         {
                             Mab_Card = mabCardsLvlOne.OrderBy(card => random.Next()).FirstOrDefault()
                         });
                         break;
-                    case int n when (n >= 51 && n <= 62):
+                    case int n when (n >= 321 && n <= 352): // 8%, 32 em 400
                         booster.Add(new MabPlayerCard
                         {
                             Mab_Card = mabCardsLvlTwo.OrderBy(card => random.Next()).FirstOrDefault()
                         });
                         break;
-                    case int n when (n >= 63 && n <= 72):
+                    case int n when (n >= 353 && n <= 376): // 6%, 24 em 400
                         booster.Add(new MabPlayerCard
                         {
                             Mab_Card = mabCardsLvlThree.OrderBy(card => random.Next()).FirstOrDefault()
                         });
                         break;
-                    case int n when (n >= 73 && n <= 80):
+                    case int n when (n >= 377 && n <= 392): // 4%, 16 em 400
                         booster.Add(new MabPlayerCard
                         {
-                            Mab_Card = mabCardsLvlFour.OrderBy(card => random.Next()).FirstOrDefault();
+                            Mab_Card = mabCardsLvlFour.OrderBy(card => random.Next()).FirstOrDefault()
                         });
                         break;
-                    case int n when (n >= 81 && n <= 86):
+                    case int n when (n >= 393 && n <= 400): // 2%, 8 em 400
                         booster.Add(new MabPlayerCard
                         {
-                            Mab_Card = mabCardsLvlFive.OrderBy(card => random.Next()).FirstOrDefault();
+                            Mab_Card = mabCardsLvlFive.OrderBy(card => random.Next()).FirstOrDefault()
                         });
-                        break;
-                    case int n when (n >= 87 && n <= 91):
-                        booster.Add(new MabPlayerCard
-                        {
-                            Mab_Card = mabCardsLvlSix.OrderBy(card => random.Next()).FirstOrDefault();
-                        });
-                        break;
-                    case int n when (n >= 92 && n <= 95):
-                        booster.Add(new MabPlayerCard
-                        {
-                            Mab_Card = mabCardsLvlSeven.OrderBy(card => random.Next()).FirstOrDefault();
-                        });
-                        break;
-                    case int n when (n >= 96 && n <= 98):
-                        booster.Add(new MabPlayerCard
-                        {
-                            Mab_Card = mabCardsLvlEight.OrderBy(card => random.Next()).FirstOrDefault();
-                        });
-
-                        break;
-                    case int n when (n >= 99 && n <= 100):
-                        booster.Add(new MabPlayerCard
-                        {
-                            Mab_Card = mabCardsLvlNine.OrderBy(card => random.Next()).FirstOrDefault();
-                        });
-                        break;
+                        break;           
                 }
 
             }
 
-            return (null, string.Empty);
+            return (booster, string.Empty);
         }
 
 

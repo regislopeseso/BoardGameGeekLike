@@ -47,15 +47,15 @@
 
         public const int RetreatGoldPenalty = 1 * BoosterPrice;
 
-        public const int LevelOneExpThreshold = 25;
-        public const int LevelTwoExpThreshold = 50;
-        public const int LevelThreeExpThreshold = 75;
-        public const int LevelFourExpThreshold = 100;
-        public const int LevelFiveExpThreshold = 200;
-        public const int LevelSixExpThreshold = 300;
-        public const int LevelSevenExpThreshold = 450;
-        public const int LevelEightExpThreshold = 600;
-        public const int LevelNineExpThreshold = 800;
-        public const int LevelTenExpThreshold = 1000;
+        public const int LevelOneExpThreshold = 100;
+        public const int LevelTwoExpThreshold = 200;
+        public const int LevelThreeExpThreshold = 400;
+        public const int LevelFourExpThreshold = 500;
+        public const int LevelFiveExpThreshold = 1000;
+        public const int LevelSixExpThreshold = 2000;
+        public const int LevelSevenExpThreshold = 4000;
+        public const int LevelEightExpThreshold = 8000;
+        public const int LevelNineExpThreshold = 16000;
+        public const int LevelTenExpThreshold = 100000;
     }
 }

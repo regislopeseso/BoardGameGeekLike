@@ -1088,6 +1088,21 @@ namespace BoardGameGeekLike.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> MabGetDeckBoosterDeal(UsersMabGetDeckBoosterDealRequest? request)
+        {
+            var (content, message) = await this._usersService.MabGetDeckBoosterDeal(request);
+
+            var response = new Response<UsersMabGetDeckBoosterDealResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> MabBuyDeckBooster(UsersMabBuyDeckBoosterRequest? request)
         {

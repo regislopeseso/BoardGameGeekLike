@@ -91,6 +91,26 @@ namespace BoardGameGeekLike.Utilities
             }
         }
 
+        public static int MabGetPlayerNextLevelThreshold(int? playerLevel)
+        {
+            return (playerLevel) switch
+            {
+                0 => Constants.LevelOneExpThreshold,
+                1 => Constants.LevelTwoExpThreshold,
+                2 => Constants.LevelThreeExpThreshold,
+                3 => Constants.LevelFourExpThreshold,
+                4 => Constants.LevelFiveExpThreshold,
+                5 => Constants.LevelSixExpThreshold,
+                6 => Constants.LevelSevenExpThreshold,
+                7 => Constants.LevelEightExpThreshold,
+                8 => Constants.LevelNineExpThreshold,
+                9 => Constants.LevelTenExpThreshold,
+                _ => 999999,
+            };
+
+
+        }
+
         public static MabPlayerState MabGetPlayerState 
         (
             List<int?> orderedMabPlayerCardIds, 
