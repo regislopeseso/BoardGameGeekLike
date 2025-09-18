@@ -524,6 +524,21 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        // Mab Quests
+        [HttpPost]
+        public async Task<IActionResult> MabAddQuest([FromForm] AdminsMabAddQuestRequest request)
+        {
+            var (content, message) = await this._adminsService.MabAddQuest(request);
+
+            var response = new Response<AdminsMabAddQuestResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
 
         #endregion
     }

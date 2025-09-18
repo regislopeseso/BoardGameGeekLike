@@ -107,8 +107,6 @@ namespace BoardGameGeekLike.Utilities
                 9 => Constants.LevelTenExpThreshold,
                 _ => 999999,
             };
-
-
         }
 
         public static MabPlayerState MabGetPlayerState 

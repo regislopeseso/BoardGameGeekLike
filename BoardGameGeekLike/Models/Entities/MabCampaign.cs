@@ -41,6 +41,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         [ForeignKey(nameof(this.User))]
         public string? UserId { get; set; }
+        [InverseProperty(nameof(User.MabCampaigns))]
         public User? User { get; set; }
 
    
@@ -51,7 +52,12 @@ namespace BoardGameGeekLike.Models.Entities
         [InverseProperty(nameof(MabPlayerCard.Mab_Campaign))]
         public List<MabPlayerCard>? Mab_PlayerCards { get; set; }
 
+
         [InverseProperty(nameof(MabBattle.Mab_Campaign))]
         public List<MabBattle>? Mab_Battles { get; set; }
+
+
+        [InverseProperty(nameof(MabFulfilledQuest.Mab_Campaign))]
+        public List<MabFulfilledQuest>? Mab_FulfilledQuests { get; set; }
     }
 }

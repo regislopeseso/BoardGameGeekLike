@@ -5405,6 +5405,48 @@ namespace BoardGameGeekLike.Services
 
 
         #region PLAYABLE GAMES
+        public async Task<(UsersMabCheckForExistingCampaignResponse?, string)> MabCheckForExistingCampaign(UsersMabCheckForExistingCampaignRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabBuyDeckBooster failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabCheckForExistingCampaign_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabAnyExisitngCampaign = await this._daoDbContext
+                .MabCampaigns
+                .AnyAsync(campaign =>
+                    campaign.Mab_IsCampaignDeleted == false && campaign.UserId == userId);
+
+            if (mabAnyExisitngCampaign == null)
+            {
+                return (null, "Error: MabBuyDeckBooster failed! No Mab Campaign found!");
+            }           
+
+
+            return (new UsersMabCheckForExistingCampaignResponse
+            {
+                Mab_AnyExistingCampaign = mabAnyExisitngCampaign
+            }, "Successfully check for any existing campaign");
+        }
+        private static (bool, string) MabCheckForExistingCampaign_Validation(UsersMabCheckForExistingCampaignRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabBuyDeckBooster failed! Request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
 
         public async Task<(UsersMabStartCampaignResponse?, string)> MabStartCampaign(UsersMabStartCampaignRequest? request)
         {
@@ -5424,11 +5466,12 @@ namespace BoardGameGeekLike.Services
 
             var anyUnfinishedMabCampaign = await this._daoDbContext
                 .MabCampaigns
+                .AsNoTracking()
                 .AnyAsync(a => a.UserId == userId && a.Mab_IsCampaignDeleted == false);
             
             if(anyUnfinishedMabCampaign == true)
             {
-                return (null, "Error: there is already a campaign started by this user!");
+                return (null, "Error: MabStartCampaign failed! An ongoing mab CAMPAIGN has been found!");
             }
 
             var newMabCampaign = new MabCampaign
@@ -5438,7 +5481,7 @@ namespace BoardGameGeekLike.Services
                 Mab_Decks = new List<MabDeck>()
             };               
 
-            var mabCampaignDifficultyEvaluation = MabEvaluateCampaignDifficultyLevel(request.MabCampaignDifficulty!.Value);
+            var mabCampaignDifficultyEvaluation = MabEvaluateCampaignDifficultyLevel(request!.MabCampaignDifficulty!.Value);
 
             var startingMabGoldStash = mabCampaignDifficultyEvaluation[0];
 
@@ -5487,12 +5530,12 @@ namespace BoardGameGeekLike.Services
         {
             if (request == null)
             {
-                return (false, "Error: request is null");
+                return (false, "Error: MabStartCampaign failed! Request is null");
             }
 
             if (string.IsNullOrWhiteSpace(request.MabPlayerNickName) == true)
             {
-                return (false, "Error: MabPlayerNickName is null or empty");
+                return (false, "Error: MabStartCampaign failed! MabPlayerNickName is null or empty");
             }         
 
             return (true, string.Empty);
@@ -5586,8 +5629,98 @@ namespace BoardGameGeekLike.Services
 
             return new List<int> { startingGoldStash, maxCardLevel, startingCardsCount };
         }
-  
-      
+
+
+        public async Task<(UsersMabDeleteCampaignResponse?, string)> MabDeleteCampaign(UsersMabDeleteCampaignRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabDeleteCampaign_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var anyUnfinishedMabCampaign = await this._daoDbContext
+                .MabCampaigns
+                .AsNoTracking()
+                .AnyAsync(a => a.UserId == userId && a.Mab_IsCampaignDeleted == false);
+
+            if (anyUnfinishedMabCampaign == false)
+            {
+                return (null, "Error: MabDeleteCampaign failed! No ongoing mab CAMPAIGN found!");
+            }
+
+            var mabUnfinshedMabCampaign = await this._daoDbContext
+                .MabCampaigns
+                .Include(campaign => campaign.Mab_Battles!)
+                    .ThenInclude(battle => battle.Mab_Duels!)
+                .Include(campaign => campaign.Mab_PlayerCards!)
+                    .ThenInclude(playerCard => playerCard.Mab_AssignedCards!)
+                    .ThenInclude(assignedCard => assignedCard.Mab_Deck)
+                .FirstOrDefaultAsync(campaign => campaign.UserId == userId && campaign.Mab_IsCampaignDeleted == false);
+
+            var battlesDB = mabUnfinshedMabCampaign!.Mab_Battles;
+
+            var duelsDB = battlesDB!.SelectMany(battle => battle.Mab_Duels!).ToList();
+
+            var playerCardsDB = mabUnfinshedMabCampaign.Mab_PlayerCards;
+
+            var assignedCardsDB = playerCardsDB!.SelectMany(playerCard => playerCard.Mab_AssignedCards).ToList();
+
+            var decksDB = assignedCardsDB.Select(assignedCard => assignedCard.Mab_Deck).ToList();
+
+            if (duelsDB != null && duelsDB.Count > 0)
+            {
+                this._daoDbContext.MabDuels.RemoveRange(duelsDB!);
+            }
+
+            if (battlesDB != null && battlesDB.Count > 0)
+            {
+                this._daoDbContext.MabBattles.RemoveRange(battlesDB);
+            }
+
+
+            if (playerCardsDB != null && playerCardsDB.Count > 0)
+            {
+                this._daoDbContext.MabPlayerCards.RemoveRange(playerCardsDB);
+            }         
+
+            if (assignedCardsDB != null && assignedCardsDB.Count > 0)
+            {
+                this._daoDbContext.MabAssignedCards.RemoveRange(assignedCardsDB);
+            }
+
+            if (decksDB != null && decksDB.Count > 0)
+            {
+                this._daoDbContext.MabDecks.RemoveRange(decksDB);
+            }
+
+
+
+            mabUnfinshedMabCampaign.Mab_IsCampaignDeleted = true;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabDeleteCampaignResponse(), "New Mab Campaign deleted successfully!");
+        }
+        private static (bool, string) MabDeleteCampaign_Validation(UsersMabDeleteCampaignRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabDeleteCampaign failed! request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
         public async Task<(UsersMabShowDeckDetailsResponse?, string)> MabShowDeckDetails(UsersMabShowDeckDetailsRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -7989,14 +8122,12 @@ namespace BoardGameGeekLike.Services
         public async Task<(List<UsersMabBuyDeckBoosterResponse>?, string)> MabBuyDeckBooster(UsersMabBuyDeckBoosterRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
             if (string.IsNullOrEmpty(userId))
             {
                 return (null, "Error: MabBuyDeckBooster failed! User is not authenticated");
             }
 
             var (isValid, message) = MabBuyDeckBooster_Validation(request);
-
             if (isValid == false)
             {
                 return (null, message);
@@ -8019,7 +8150,6 @@ namespace BoardGameGeekLike.Services
             }
 
             (var booster, message) = await this.GetBoosterCards();
-
             if(booster == null || booster.Count < Constants.BoosterSize)
             {
                 return (null, message);
@@ -8032,7 +8162,6 @@ namespace BoardGameGeekLike.Services
             mabCampaignDB.Mab_OpenedBoostersCount = mabCampaignDB.Mab_OpenedBoostersCount +1;
 
             await this._daoDbContext.SaveChangesAsync();
-
 
             var response = booster.Select(card => new UsersMabBuyDeckBoosterResponse
             {
@@ -8140,9 +8269,6 @@ namespace BoardGameGeekLike.Services
 
             return (booster, string.Empty);
         }
-
-
-
         #endregion
     }
 }

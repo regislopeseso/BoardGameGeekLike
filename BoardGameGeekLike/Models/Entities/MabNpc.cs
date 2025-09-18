@@ -23,5 +23,9 @@ namespace BoardGameGeekLike.Models.Entities
 
         [InverseProperty(nameof(MabNpcCard.Mab_Npc))]
         public List<MabNpcCard> Mab_NpcCards { get; set; }
+
+
+        [InverseProperty(nameof(MabQuest.Mab_Npcs))]
+        public List<MabQuest> Mab_Quests { get; set; }
     }
 }

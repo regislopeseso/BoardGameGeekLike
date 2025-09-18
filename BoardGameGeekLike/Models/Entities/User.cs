@@ -31,9 +31,9 @@ namespace BoardGameGeekLike.Models.Entities
         [InverseProperty("User")]
         public List<Rating>? Ratings { get; set; }
 
-
-        [InverseProperty("User")]        
-        public MabCampaign? MabCampaign { get; set; }
+      
+        [InverseProperty(nameof(MabCampaign.User))]        
+        public List<MabCampaign>? MabCampaigns { get; set; }
        
 
         [InverseProperty("User")]

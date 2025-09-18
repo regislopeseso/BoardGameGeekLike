@@ -735,12 +735,40 @@ namespace BoardGameGeekLike.Controllers
 
         // MEDIEVAL AUTO BATTLER (MAB)
 
+        [HttpGet]
+        public async Task<IActionResult> MabCheckForExistingCampaign(UsersMabCheckForExistingCampaignRequest? request)
+        {
+            var (content, message) = await this._usersService.MabCheckForExistingCampaign(request);
+
+            var response = new Response<UsersMabCheckForExistingCampaignResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> MabStartCampaign([FromForm] UsersMabStartCampaignRequest? request)
         {
             var (content, message) = await this._usersService.MabStartCampaign(request);
 
             var response = new Response<UsersMabStartCampaignResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> MabDeleteCampaign(UsersMabDeleteCampaignRequest? request)
+        {
+            var (content, message) = await this._usersService.MabDeleteCampaign(request);
+
+            var response = new Response<UsersMabDeleteCampaignResponse>
             {
                 Content = content,
                 Message = message

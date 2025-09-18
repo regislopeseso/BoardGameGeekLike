@@ -2341,6 +2341,93 @@ namespace BoardGameGeekLike.Services
             return (newDeck, string.Empty);
         }
 
+        // Mab Quests
+        public async Task<(AdminsMabAddQuestResponse?, string)> MabAddQuest(AdminsMabAddQuestRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: User is not authenticated");
+            }
+
+            var (isValid, message) = MabAddQuest_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var doesMabQuestAlreadyExists = await _daoDbContext
+                .MabQuests
+                .AsNoTracking()
+                .AnyAsync(quest => 
+                    quest.Mab_QuestTitle == request.Mab_QuestTitle &&
+                    quest.Mab_IsDeleted == false);
+
+            if (doesMabQuestAlreadyExists == true)
+            {
+                return (null, $"Error: MabAddQuest failed! Request Mab_QuestTitle already in use!");
+            }    
+
+            var mabNpcsDB = await _daoDbContext
+                .MabNpcs
+                .Where(npc => request.Mab_NpcIds!.Any(npcId => npcId == npc.Id))
+                .ToListAsync();
+            
+
+            var newMabQuest = new MabQuest
+            {
+                Mab_QuestTitle = request.Mab_QuestTitle,
+                Mab_QuestDescription = request.Mab_QuestDescription,
+                Mab_QuestLevel = request.Mab_QuestLevel,
+                Mab_GoldBounty = request.Mab_GoldBounty,
+                Mab_XpReward =request.Mab_XpReward,
+                Mab_Npcs = mabNpcsDB
+            };
+
+            return (new AdminsMabAddQuestResponse() 
+            , "Mab Quest created successfully");
+        }
+        public (bool, string) MabAddQuest_Validation(AdminsMabAddQuestRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabAddQuest failed! Request is null!");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Mab_QuestTitle) == true)
+            {
+                return (false, "Error: MabAddQuest failed! Mab_QuestTitle is missing!");
+            }
+
+            if (string.IsNullOrEmpty(request.Mab_QuestDescription) == true)
+            {
+                return (false, "Error: MabAddQuest failed! Mab_QuestDescription is missing!");
+            }
+
+            if (request.Mab_QuestLevel.HasValue == false || request.Mab_QuestLevel < 1)
+            {
+                return (false, $"Error: MabAddQuest failed! Mab_QuestLevel is missing or invalid!");
+            }
+
+            if (request.Mab_GoldBounty.HasValue == false || request.Mab_GoldBounty < 1)
+            {
+                return (false, $"Error: MabAddQuest failed! Mab_GoldBounty is missing or invalid!");
+            }
+
+            if (request.Mab_XpReward.HasValue == false || request.Mab_XpReward < 1)
+            {
+                return (false, $"Error: MabAddQuest failed! Mab_XpReward is missing or invalid!");
+            }
+
+            if (request.Mab_NpcIds == null || request.Mab_NpcIds.Count < 1)
+            {
+                return (false, $"Error: MabAddQuest failed! Mab_NpcIds is empty or null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
 
         #endregion
 

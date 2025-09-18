@@ -31,6 +31,10 @@ namespace BoardGameGeekLike.Models
 
 
         public DbSet<MabCampaign> MabCampaigns { get; set; }
+
+        public DbSet<MabQuest> MabQuests { get; set; }
+
+        public DbSet<MabFulfilledQuest> MabFulfilledQuests { get; set; }
         
         public DbSet<MabCard> MabCards { get; set; }
 

@@ -359,8 +359,7 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("MabCampaigns");
                 });
@@ -505,6 +504,29 @@ namespace BoardGameGeekLike.Migrations
                     b.ToTable("MabDuels");
                 });
 
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabFulfilledQuest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Mab_CampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_QuestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Mab_CampaignId");
+
+                    b.HasIndex("Mab_QuestId");
+
+                    b.ToTable("MabFulfilledQuests");
+                });
+
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>
                 {
                     b.Property<int>("Id")
@@ -582,6 +604,37 @@ namespace BoardGameGeekLike.Migrations
                     b.HasIndex("Mab_CardId");
 
                     b.ToTable("MabPlayerCards");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabQuest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Mab_GoldBounty")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("Mab_IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Mab_QuestDescription")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("Mab_QuestLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Mab_QuestTitle")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("Mab_XpReward")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MabQuests");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.Mechanic", b =>
@@ -764,6 +817,21 @@ namespace BoardGameGeekLike.Migrations
                     b.HasIndex("MechanicsId");
 
                     b.ToTable("BoardGameMechanic");
+                });
+
+            modelBuilder.Entity("MabNpcMabQuest", b =>
+                {
+                    b.Property<int>("Mab_NpcsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Mab_QuestsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Mab_NpcsId", "Mab_QuestsId");
+
+                    b.HasIndex("Mab_QuestsId");
+
+                    b.ToTable("MabNpcMabQuest");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -979,8 +1047,8 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCampaign", b =>
                 {
                     b.HasOne("BoardGameGeekLike.Models.Entities.User", "User")
-                        .WithOne("MabCampaign")
-                        .HasForeignKey("BoardGameGeekLike.Models.Entities.MabCampaign", "UserId");
+                        .WithMany("MabCampaigns")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
@@ -1001,6 +1069,21 @@ namespace BoardGameGeekLike.Migrations
                         .HasForeignKey("Mab_BattleId");
 
                     b.Navigation("Mab_Battle");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabFulfilledQuest", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCampaign", "Mab_Campaign")
+                        .WithMany("Mab_FulfilledQuests")
+                        .HasForeignKey("Mab_CampaignId");
+
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabQuest", "Mab_Quest")
+                        .WithMany("Mab_FulfilledQuests")
+                        .HasForeignKey("Mab_QuestId");
+
+                    b.Navigation("Mab_Campaign");
+
+                    b.Navigation("Mab_Quest");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpcCard", b =>
@@ -1084,6 +1167,21 @@ namespace BoardGameGeekLike.Migrations
                     b.HasOne("BoardGameGeekLike.Models.Entities.Mechanic", null)
                         .WithMany()
                         .HasForeignKey("MechanicsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MabNpcMabQuest", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabNpc", null)
+                        .WithMany()
+                        .HasForeignKey("Mab_NpcsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabQuest", null)
+                        .WithMany()
+                        .HasForeignKey("Mab_QuestsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1172,6 +1270,8 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Navigation("Mab_Decks");
 
+                    b.Navigation("Mab_FulfilledQuests");
+
                     b.Navigation("Mab_PlayerCards");
                 });
 
@@ -1197,13 +1297,18 @@ namespace BoardGameGeekLike.Migrations
                     b.Navigation("Mab_AssignedCards");
                 });
 
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabQuest", b =>
+                {
+                    b.Navigation("Mab_FulfilledQuests");
+                });
+
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>
                 {
                     b.Navigation("LifeCounterManagers");
 
                     b.Navigation("LifeCounterTemplates");
 
-                    b.Navigation("MabCampaign");
+                    b.Navigation("MabCampaigns");
 
                     b.Navigation("Ratings");
 
