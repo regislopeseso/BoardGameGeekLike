@@ -2359,20 +2359,20 @@ namespace BoardGameGeekLike.Services
             var doesMabQuestAlreadyExists = await _daoDbContext
                 .MabQuests
                 .AsNoTracking()
-                .AnyAsync(quest => 
+                .AnyAsync(quest =>
                     quest.Mab_QuestTitle == request.Mab_QuestTitle &&
                     quest.Mab_IsDeleted == false);
 
             if (doesMabQuestAlreadyExists == true)
             {
                 return (null, $"Error: MabAddQuest failed! Request Mab_QuestTitle already in use!");
-            }    
+            }
 
             var mabNpcsDB = await _daoDbContext
                 .MabNpcs
                 .Where(npc => request.Mab_NpcIds!.Any(npcId => npcId == npc.Id))
                 .ToListAsync();
-            
+
 
             var newMabQuest = new MabQuest
             {
@@ -2380,11 +2380,15 @@ namespace BoardGameGeekLike.Services
                 Mab_QuestDescription = request.Mab_QuestDescription,
                 Mab_QuestLevel = request.Mab_QuestLevel,
                 Mab_GoldBounty = request.Mab_GoldBounty,
-                Mab_XpReward =request.Mab_XpReward,
+                Mab_XpReward = request.Mab_XpReward,
                 Mab_Npcs = mabNpcsDB
             };
 
-            return (new AdminsMabAddQuestResponse() 
+            await this._daoDbContext.MabQuests.AddAsync(newMabQuest);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new AdminsMabAddQuestResponse()
             , "Mab Quest created successfully");
         }
         public (bool, string) MabAddQuest_Validation(AdminsMabAddQuestRequest request)
@@ -2428,6 +2432,362 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(List<AdminsMabListQuestsResponse>?, string)> MabListQuests(AdminsMabListQuestsRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabListQuests failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabListQuests_Validation(request);
+
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            var mabQuestsDB = await this._daoDbContext
+                .MabQuests
+                .AsNoTracking()
+                .Select(quest => new AdminsMabListQuestsResponse
+                {
+                    Mab_QuestId = quest.Id,
+                    Mab_QuestTitle = quest.Mab_QuestTitle,
+                    Mab_QuestDescription = quest.Mab_QuestDescription,
+                    Mab_QuestLevel = quest.Mab_QuestLevel,
+                    Mab_GoldBounty = quest.Mab_GoldBounty,
+                    Mab_XpReward = quest.Mab_XpReward,
+                    Mab_Npcs = quest.Mab_Npcs.Select(npc => new AdminsMabListQuestsResponse_Npc
+                    {
+                        Mab_NpcId = npc.Id,
+                        Mab_NpcName = npc.Mab_NpcName,
+                        Mab_NpcLevel = npc.Mab_NpcLevel
+                    })
+                    .ToList(),
+                    Mab_IsDeleted = quest.Mab_IsDeleted
+                })
+                .OrderBy(quest => quest.Mab_QuestId)           
+                .ToListAsync();
+
+            if (mabQuestsDB == null || mabQuestsDB.Count == 0)
+            {
+                return (null, "Error: MabListQuests failed! No NPCS found!");
+            }
+
+            return (mabQuestsDB, "Mab Quests listed successfully");
+        }
+        public (bool, string) MabListQuests_Validation(AdminsMabListQuestsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabListQuests failed! Request is NOT null however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(List<AdminsMabListNpcIdsResponse>?, string)> MabListNpcIds(AdminsMabListNpcIdsRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabListNpcIds failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabListNpcIds_Validation(request);
+
+            if (!isValid)
+            {
+                return (null, message);
+            }
+
+            var mabNpcsDB = await this._daoDbContext
+                .MabNpcCards
+                .AsNoTracking()
+                .Select(npc => new AdminsMabListNpcIdsResponse
+                {
+                    Mab_NpcId = npc.Id,
+                    Mab_NpcName = npc.Mab_Npc.Mab_NpcName,
+                })
+                .OrderBy(npc => npc.Mab_NpcId)
+                .ToListAsync();
+
+            if (mabNpcsDB == null || mabNpcsDB.Count < 1)
+            {
+                return (null, "Error: MabListNpcIds failed! No NPCS found!");
+            }
+
+            return (mabNpcsDB, "Mab Quests listed successfully");
+        }
+        public (bool, string) MabListNpcIds_Validation(AdminsMabListNpcIdsRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabListQuests failed! Request is NOT null however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(AdminsMabShowQuestDetailsResponse?, string)> MabShowQuestDetails(AdminsMabShowQuestDetailsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabShowQuestDetails failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabShowQuestDetails_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabQuestDB = await this._daoDbContext
+                .MabQuests
+                .AsNoTracking()
+                .Where(quest => quest.Id == request!.Mab_QuestId)
+                .Select(quest => new AdminsMabShowQuestDetailsResponse
+                {
+                    Mab_QuestId = quest.Id,
+                    Mab_QuestTitle = quest.Mab_QuestTitle,
+                    Mab_QuestDescription = quest.Mab_QuestDescription,
+                    Mab_QuestLevel = quest.Mab_QuestLevel,
+                    Mab_GoldBounty = quest.Mab_GoldBounty,
+                    Mab_XpReward = quest.Mab_XpReward,
+                    Mab_Npcs = quest
+                        .Mab_Npcs!
+                        .Select(npc => new AdminsMabShowQuestDetailsResponse_Npc
+                        {
+                            Mab_NpcId = npc.Id,
+                            Mab_NpcName = npc.Mab_NpcName,
+                            Mab_NpcCards = "to be implemented.."
+                        })
+                        .ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (mabQuestDB == null)
+            {
+                return (null, "Error: MabShowQuestDetails failed! Mab Quest not found!");
+            }
+
+            return (mabQuestDB, "Mab Quest details fetched successfully!");
+        }
+        private static (bool, string) MabShowQuestDetails_Validation(AdminsMabShowQuestDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabShowQuestDetails failed! Request is null");
+            }
+
+            if (request.Mab_QuestId == null || request.Mab_QuestId.HasValue == false || request.Mab_QuestId <= 0)
+            {
+                return (false, "Error: MabShowQuestDetails failed! Invalid or missing Mab_QuestId");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(AdminsMabEditQuestResponse?, string)> MabEditQuest(AdminsMabEditQuestRequest request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabEditQuest failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabEditQuest_Validation(request);
+
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabQuestDB = await _daoDbContext
+                .MabQuests
+                .Include(quest => quest.Mab_Npcs!)
+                    .ThenInclude(npc => npc.Mab_NpcCards)
+                .FirstOrDefaultAsync(quest => quest.Id == request.Mab_QuestId);
+
+            if (mabQuestDB == null)
+            {
+                return (null, $"Error: MabEditQuest failed! Mab Quest not found!");
+            }
+
+            if (mabQuestDB.Mab_IsDeleted == true)
+            {
+                return (null, $"Error: MabEditQuest failed! Mab Quest is deleted!");
+            }
+
+            var availableNpcIds = _daoDbContext
+                .MabNpcs
+                .Where(npc => npc.Mab_IsNpcDeleted == false)
+                .Select(npc => npc.Id)
+                .ToList();
+
+            if (request.Mab_NpcIds!.All(id => availableNpcIds.Contains(id)) == false)
+            {
+                return (null, "Error: MabEditQuest failed! The NpcId or NpcIds provided lead to non-existing Npcs");
+            }
+
+            var npcIds = mabQuestDB
+                .Mab_Npcs
+                .Select(npc => npc.Id)
+                .ToList();
+
+            mabQuestDB.Mab_Npcs = null;
+
+            var newNpcsDB = await this._daoDbContext
+                .MabNpcs
+                .Where(npc => request.Mab_NpcIds.Any(id => id == npc.Id))
+                .ToListAsync();         
+
+            mabQuestDB.Mab_QuestTitle = request.Mab_QuestTitle!;
+            mabQuestDB.Mab_QuestDescription = request.Mab_QuestDescription!;
+            mabQuestDB.Mab_QuestLevel = request.Mab_QuestLevel;
+            mabQuestDB.Mab_GoldBounty = request.Mab_GoldBounty;
+            mabQuestDB.Mab_XpReward = request.Mab_XpReward;
+            mabQuestDB.Mab_Npcs = newNpcsDB;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new AdminsMabEditQuestResponse(), "Quest updated successfully");
+        }
+        private static (bool, string) MabEditQuest_Validation(AdminsMabEditQuestRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabEditQuest failed! No information provided");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Mab_QuestTitle) == true)
+            {
+                return (false, "Error: MabEditQuest failed! Invalid MabQuestTitle");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Mab_QuestDescription) == true)
+            {
+                return (false, "Error: MabEditQuest failed! Invalid MabQuestDescription");
+            }
+
+            if(request.Mab_QuestLevel == null || request.Mab_QuestLevel.HasValue == false || request.Mab_QuestLevel < 0)
+            {
+                return (false, "Error: MabEditQuest failed! Invalid MabQuestLevel");
+            }
+
+            if (request.Mab_GoldBounty == null || request.Mab_GoldBounty.HasValue == false || request.Mab_GoldBounty < 0)
+            {
+                return (false, "Error: MabEditQuest failed! Invalid Mab_GoldBounty");
+            }
+
+            if (request.Mab_XpReward == null || request.Mab_XpReward.HasValue == false || request.Mab_XpReward < 0)
+            {
+                return (false, "Error: MabEditQuest failed! Invalid Mab_XpReward");
+            }
+
+            if (request.Mab_NpcIds == null || request.Mab_NpcIds.Count < 1)
+            {
+                return (false, "Error: MabEditQuest failed! Invalid Mab_NpcIds");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(AdminsMabDeleteQuestResponse?, string)> MabDeleteQuest(AdminsMabDeleteQuestRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabDeleteQuest failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabDeleteQuest_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabQuestDB = await this._daoDbContext
+                .MabQuests
+                .FindAsync(request!.Mab_QuestId);
+
+            if (mabQuestDB == null)
+            {
+                return (null, "Error: MabDeleteQuest failed! Mab Quest was not found");
+            }
+
+            mabQuestDB.Mab_IsDeleted = true;
+
+            await this._daoDbContext.SaveChangesAsync();          
+
+            return (new AdminsMabDeleteQuestResponse(), "Mab Quest set as deleted successfully");
+        }
+        private static (bool, string) MabDeleteQuest_Validation(AdminsMabDeleteQuestRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabDeleteQuest failed! Request is null");
+            }
+
+            if (request.Mab_QuestId.HasValue == false || request.Mab_QuestId < 1)
+            {
+                return (false, "Error: MabDeleteQuest failed! Mab_QuestId is invalid or missing");
+            }
+            
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(AdminsMabRestoreQuestResponse?, string)> MabRestoreQuest(AdminsMabRestoreQuestRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabRestoreQuest failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabRestoreQuest_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabQuestDB = await this._daoDbContext
+                .MabQuests
+                .FindAsync(request!.Mab_QuestId);
+
+            if (mabQuestDB == null)
+            {
+                return (null, "Error: MabRestoreQuest failed!  npc not found");
+            }
+
+            mabQuestDB.Mab_IsDeleted = false;
+
+            await this._daoDbContext.SaveChangesAsync();          
+
+            return (new AdminsMabRestoreQuestResponse(), "Mab Quest restored successfully");
+        }
+        private static (bool, string) MabRestoreQuest_Validation(AdminsMabRestoreQuestRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabRestoreQuest failed! Request is null");
+            }
+
+            if (request.Mab_QuestId.HasValue == false || request.Mab_QuestId < 1)
+            {
+                return (false, "Error: MabRestoreQuest failed! Mab_QuestId invalid or is missing");
+            }
+
+            return (true, string.Empty);
+        }
 
         #endregion
 

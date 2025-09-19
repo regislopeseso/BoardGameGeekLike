@@ -525,8 +525,22 @@ namespace BoardGameGeekLike.Controllers
         }
 
         // Mab Quests
+        [HttpGet]
+        public async Task<IActionResult> MabListQuests(AdminsMabListQuestsRequest? request)
+        {
+            var (content, message) = await this._adminsService.MabListQuests(request);
+
+            var response = new Response<List<AdminsMabListQuestsResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
-        public async Task<IActionResult> MabAddQuest([FromForm] AdminsMabAddQuestRequest request)
+        public async Task<IActionResult> MabAddQuest(AdminsMabAddQuestRequest request)
         {
             var (content, message) = await this._adminsService.MabAddQuest(request);
 
@@ -539,6 +553,75 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> MabListNpcIds(AdminsMabListNpcIdsRequest? request)
+        {
+            var (content, message) = await this._adminsService.MabListNpcIds(request);
+
+            var response = new Response<List<AdminsMabListNpcIdsResponse>>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MabShowQuestDetails([FromQuery] AdminsMabShowQuestDetailsRequest request)
+        {
+            var (content, message) = await this._adminsService.MabShowQuestDetails(request);
+
+            var response = new Response<AdminsMabShowQuestDetailsResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> MabEditQuest([FromBody] AdminsMabEditQuestRequest request)
+        {
+            var (content, message) = await this._adminsService.MabEditQuest(request);
+
+            var response = new Response<AdminsMabEditQuestResponse>()
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> MabDeleteQuest([FromBody] AdminsMabDeleteQuestRequest? request)
+        {
+            var (content, message) = await this._adminsService.MabDeleteQuest(request);
+
+            var response = new Response<AdminsMabDeleteQuestResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabRestoreQuest([FromBody] AdminsMabRestoreQuestRequest? request)
+        {
+            var (content, message) = await this._adminsService.MabRestoreQuest(request);
+
+            var response = new Response<AdminsMabRestoreQuestResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         #endregion
     }
