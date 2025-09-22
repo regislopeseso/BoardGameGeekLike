@@ -14,7 +14,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -385,7 +388,7 @@ namespace BoardGameGeekLike.Services
 
         #region Medieval Auto Battler
 
-        public async Task<(DevsMabSeedResponse?, string)> MedievalAutoBattlerSeed(DevsMabSeedRequest? request)
+        public async Task<(DevsMabSeedResponse?, string)> MabSeed(DevsMabSeedRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -394,14 +397,18 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: User is not authenticated");
             }
 
-            var (cardsSeedingResult, msg1) = await this.SeedCards();
+            var (cardsSeedingResult, msg1) = this.SeedCards();
 
-            var (npcsSeedingResult, msg2) = await this.SeedNpcs();
+            var (npcsSeedingResult, msg2) =  this.SeedNpcs(cardsSeedingResult!);
 
-            return (null, "Seeding was successful. " + msg1 + ". " + msg2);
+            var (questsSeedingResult, msg3) = this.SeedQuests(npcsSeedingResult);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (null, "Seeding was successful. " + msg1 + ". " + msg2 + ". " + msg3);
         }
 
-        private async Task<(DevsMabSeedResponse?, string)> SeedCards()
+        private (List<MabCard>?, string) SeedCards()
         {
             var cardsSeed = new List<MabCard>();
             var cardsCount = 1;
@@ -443,24 +450,14 @@ namespace BoardGameGeekLike.Services
                 }
             }
 
-            this._daoDbContext.AddRange(cardsSeed);
+            this._daoDbContext.AddRange(cardsSeed);            
 
-            await this._daoDbContext.SaveChangesAsync();
-
-            return (null, $"{cardsSeed.Count} new cards haven been successfully seeded");
+            return (cardsSeed, $"{cardsSeed.Count} new cards haven been successfully seeded");
         }
 
-        private async Task<(DevsMabSeedResponse?, string)> SeedNpcs()
+        private (List<MabNpc>?, string) SeedNpcs(List<MabCard> cardsSeedingResult)
         {
-            var cardsDB = await _daoDbContext
-                                    .MabCards
-                                    .Where(a => a.Mab_IsCardDeleted == false)
-                                    .ToListAsync();
-
-            if (cardsDB == null || cardsDB.Count == 0)
-            {
-                return (null, "Error: cards not found");
-            }
+            var cardsDB = cardsSeedingResult;               
 
             //Se não existir pelo menos uma carta de cada level não é possível fazer o seed dos NPCs.
             var countCardsLvl = cardsDB.GroupBy(a => a.Mab_CardLevel).Count();
@@ -481,11 +478,9 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: seeding NPCs failed");
             }
 
-            _daoDbContext.AddRange(npcsSeed);
+            this._daoDbContext.MabNpcs.AddRange(npcsSeed);
 
-            await _daoDbContext.SaveChangesAsync();
-
-            return (null, "NPCs have been successfully seeded");
+            return (npcsSeed, "NPCs have been successfully seeded");
         }
 
         private static List<MabNpc> GenerateRandomNpcs(int level, List<MabCard> cardsDB)
@@ -809,24 +804,335 @@ namespace BoardGameGeekLike.Services
             }
         }
 
-        public async Task<(DevsMabDeleteSeedResponse?, string)> MedievalAutoBattlerDeleteSeed(DevsMabDeleteSeedRequest request)
+        private (DevsMabSeedResponse?, string) SeedQuests(List<MabNpc> npcsSeedingResult)
+        {
+            var npcsDB = npcsSeedingResult;
+
+            var questsTitles = GetQuestsTitles();
+
+            var questsDescriptions = GetQuestsDescription();
+
+            var questsNpcsLists = GetQuestsNpcs(npcsDB);
+
+            var mabQuests = new List<MabQuest>();
+
+            for ( var i = 0; i < questsTitles.Count; i++)
+            {
+                mabQuests.Add(new MabQuest
+                {
+                    Mab_QuestTitle = questsTitles[i],
+                    Mab_QuestDescription = questsDescriptions[i],
+                    Mab_QuestLevel = i,
+                    Mab_GoldBounty = (i + 1) * 10,
+                    Mab_XpReward = (i + 1) * 20,
+                    Mab_IsDummy = true,
+
+                    Mab_Npcs = questsNpcsLists[i],
+                    Mab_FulfilledQuests = new List<MabFulfilledQuest>(),
+                });
+            }
+                  
+            this._daoDbContext.AddRange(mabQuests);
+
+            return (new DevsMabSeedResponse(), "Seeding Quests was successful!");
+        }
+        private static List<string> GetQuestsTitles()
+        {
+            var titleOne = "First Quest";
+            var titleTwo = "Second Quest";
+            var titleThree = "Third Quest";
+            var titleFour = "Fourth Quest";
+            var titleFive = "Fifth Quest";
+            var titleSix = "Sixth Quest";
+            var titleSeven = "Seventh Quest";
+            var titleEight = "Eighth Quest";
+            var titleNine = "Ninth Quest";
+            var titleTen = "Tenth Quest";
+
+            var titles = new List<string>()
+            {
+                titleOne, titleTwo, titleThree, titleFour, titleFive,
+                titleSix, titleSeven, titleEight, titleNine, titleTen
+            };
+
+            return titles;
+        }
+        private static List<string> GetQuestsDescription()
+        {
+            var descriptionZero = "Learn to defend yourself"; // Duel avarage Fighters of level 0 and level 1
+            var descriptionOne = "Enroll in the Guild of Martial Arts"; // Duel avarage Fighters of level 2 and level 3
+            var descriptionTwo = "Enroll in the Guild of Swordsmanship"; // Duel avarage Swordsman from level 0 up to level 3
+            var descriptionThree = "Enroll in the Guild of Archers"; // Duel avarage Archers from level 0 up to level 3
+            var descriptionFour = "Enroll in the Guild of Knights"; // Duel avarage Knights from level 0 up to level 3
+
+            var descriptionFive = "Fight the Barbarian Bandits in the nearby Village"; // Duel avarage Fighters and Swordsman, and Archers of level 4 and level 5.
+
+            var descriptionSix = "War at the Barbarrian's Land!"; // Fight Knights, from level 6 and up to level 7
+            var descriptionSeven = "Attack the Barbarrian Town's Gate!"; // Duel Archers, from level 6 up to level 7
+            var descriptionEight = "Invade the Barbarrian's Citadal"; // Duels Fighters, Swordsman, Knights, and Archers from level 6 and level 7
+            var descriptionNine = "Break in the Barbarian's Castel"; // Duels Fighters, Swordsman, Knights, and Archers of level 8
+            var descriptionTen = "Defeat the Barbarian King!"; // Duel the most Fighters, Swordsman, Knights, and Archers of level 9 and the Barbarian King (npcLvl 10)
+
+            var descriptions = new List<string>()
+            {
+                descriptionZero, descriptionOne, descriptionTwo, descriptionThree, descriptionFour,
+                descriptionSix, descriptionSeven, descriptionEight, descriptionNine, descriptionTen
+            };
+
+            return descriptions;
+        }
+        private static List<List<MabNpc>> GetQuestsNpcs(List<MabNpc> Mab_Npcs)
+        {
+            var mabNpcs = Mab_Npcs;
+
+            // #0: Learn to defend yourself
+            // Fighters of level 0 and level 1
+            var npcsQuestZero = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel <= 1 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Neutral))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #1: Enroll in the Guild of Martial Arts
+            // Fighters of level 2 and level 3
+            var npcsQuestOne = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel > 1 &&
+                    mabNpc.Mab_NpcLevel <= 3 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Neutral))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #2: Enroll in the Guild of Swordsmanship
+            // Swordsman from level 0 up to level 3
+            var npcsQuestTwo = mabNpcs
+                .Where(mabNpc =>                
+                    mabNpc.Mab_NpcLevel <= 3 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Infantry))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #3: Enroll in the Guild of Archers
+            // Archers from level 0 up to level 3
+            var npcsQuestThree = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel <= 3 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Ranged))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #4: Enroll in the Guild of Knights
+            // Knights from level 0 up to level 3
+            var npcsQuestFour = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel <= 3 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Cavalry))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #5: War at the Barbarrian's Land!
+            // Fighters, Swordsman of level 4 and level 5
+            var npcsQuestFive = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel >= 4 &&
+                    mabNpc.Mab_NpcLevel <= 5 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Neutral || 
+                        card.Mab_Card.Mab_CardType == MabCardType.Infantry))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #6: Attack the Barbarrian Town's Gate!
+            // Fighters, Swordsman, Knights and Archers from level 5 up to level 6.
+            var npcsQuestSix = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel >= 5 &&
+                    mabNpc.Mab_NpcLevel <= 6 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card => 
+                        card.Mab_Card.Mab_CardType == MabCardType.Neutral || 
+                        card.Mab_Card.Mab_CardType == MabCardType.Infantry ||
+                        card.Mab_Card.Mab_CardType == MabCardType.Cavalry))                 
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+
+            // #7: Invade the Barbarrian's Citadel
+            // Archers, from level 5 up to level 7
+            var npcsQuestSeven = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel >= 5 &&
+                    mabNpc.Mab_NpcLevel <= 7 &&
+                    mabNpc.Mab_NpcCards
+                    .All(card =>
+                        card.Mab_Card.Mab_CardType == MabCardType.Ranged))
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+            // #8: Break in the Barbarian's Castel
+            // Fighters, Swordsman, Knights, and Archers from level 7 and level 8
+            var npcsQuestEight = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel >= 7 &&
+                    mabNpc.Mab_NpcLevel <= 8)
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();         
+
+            // #10: Defeat the Barbarian King!
+            // Swordsman level 10
+            var npcsQuestNine = mabNpcs.Where(a => a.Mab_NpcLevel == 10).ToList();
+
+            var mabNpcsLists = new List<List<MabNpc>>()
+            {
+                npcsQuestZero, 
+                npcsQuestOne, 
+                npcsQuestTwo, 
+                npcsQuestThree, 
+                npcsQuestFour, 
+                npcsQuestFive, 
+                npcsQuestSix, 
+                npcsQuestSeven, 
+                npcsQuestEight,
+                npcsQuestNine             
+            };
+
+            return mabNpcsLists;
+        }
+        
+        public async Task<(DevsMabDeleteSeedResponse?, string)> MabDeleteSeed(DevsMabDeleteSeedRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
             {
                 return (null, "Error: User is not authenticated");
-            }
+            }           
 
-            await this._daoDbContext
-                            .MabNpcs
-                            .Where(a => a.Mab_IsNpcDummy == true)
-                            .ExecuteDeleteAsync();
-
-            await this._daoDbContext
+            var cardIds = await this._daoDbContext
                 .MabCards
                 .Where(a => a.Mab_IsCardDummy == true)
-                .ExecuteDeleteAsync();
+                .Select(a => a.Id)
+                .ToListAsync();
+
+            List<int> playerCardIds = await this._daoDbContext
+                .MabPlayerCards
+                .Where(playerCard => cardIds.Any(cardId => cardId == playerCard.Mab_CardId))
+                .Select(playerCard => playerCard.Id)
+                .ToListAsync();
+
+            // Fetching Duels having cards which derive from DUMMY CARDS                   
+            var duelsDB = await this._daoDbContext
+                .MabDuels             
+                .ToListAsync();
+
+            // Fetching Duels having cards which derive from DUMMY CARDS                   
+            var battlesDB = await this._daoDbContext
+                .MabBattles
+                .ToListAsync();          
+
+            // Fetching ASSIGNED CARDS deriving from DUMMY CARDS
+            var assignedCardsDB = await this._daoDbContext
+                .MabAssignedCards
+                .Where(a => a.Mab_PlayerCard!.Mab_Card!.Mab_IsCardDummy == true)
+                .ToListAsync();
+
+            // Fetching PLAYER CARDS deriving from DUMMY CARDS
+            var playerCardsDB = await this._daoDbContext
+                .MabPlayerCards
+                .Where(playerCard => playerCardIds.Any(playerCardId => playerCardId == playerCard.Id))
+                .ToListAsync();
+
+            // Fetching DECKS having cards which derive from DUMMY CARDS            
+            var playerDecksDB = await this._daoDbContext
+               .MabDecks
+              .ToListAsync();              
+                      
+
+            // Deleting FULFILLED QUESTS related to DUMMY QUESTS
+            var fulfilledQuestsDB = await this._daoDbContext
+                .MabFulfilledQuests
+                .Where(a => a.Mab_Quest!.Mab_IsDummy == true)
+                .ToListAsync();
+
+            // Fetching DUMMY QUESTS
+            var questsDB = await this._daoDbContext
+                .MabQuests
+                .Where(a => a.Mab_IsDummy == true)
+                .ToListAsync();
+
+
+            // Fetching NPC CARDS related to DUMMY CARDS
+            var npcCardsDB = await this._daoDbContext
+                .MabNpcCards
+                .Where(card => card.Mab_Card.Mab_IsCardDummy == true)
+                .ToListAsync();
+
+            // Fetching DUMMY NPCs
+            var npcsDB = await this._daoDbContext
+                .MabNpcs
+                .Where(a => a.Mab_IsNpcDummy == true)
+                .ToListAsync();
+
+            // Fetching DUMMY CARDS
+            var cardsDB =  await this._daoDbContext
+                .MabCards
+                .Where(a => a.Mab_IsCardDummy == true)
+                .ToListAsync();
+
+            // Deleting...
+            this._daoDbContext
+                .MabDuels
+                .RemoveRange(duelsDB);
+
+            this._daoDbContext
+                .MabBattles
+                .RemoveRange(battlesDB);
+
+            this._daoDbContext
+                .MabAssignedCards
+                .RemoveRange(assignedCardsDB);
+
+            this._daoDbContext
+                .MabPlayerCards
+                .RemoveRange(playerCardsDB);
+
+            this._daoDbContext
+                  .MabDecks
+                  .RemoveRange(playerDecksDB);
+
+            this._daoDbContext
+              .MabFulfilledQuests
+              .RemoveRange(fulfilledQuestsDB);
+
+            this._daoDbContext
+                .MabQuests
+                .RemoveRange(questsDB);
+
+            this._daoDbContext
+                .MabNpcCards
+                .RemoveRange(npcCardsDB);
+
+            this._daoDbContext
+                .MabNpcs
+                .RemoveRange(npcsDB);
+
+            this._daoDbContext
+                .MabCards
+                .RemoveRange(cardsDB);
+
+            await this._daoDbContext.SaveChangesAsync();
 
             return (null, "Dummies deleted successfully");
         }

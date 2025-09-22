@@ -6018,7 +6018,7 @@ namespace BoardGameGeekLike.Services
                     {
                         b.Id,
                         b.Mab_Card!.Mab_CardName,
-                        b.Mab_Card.Mab_CardLevel,
+                        b.Mab_Card.Mab_CardType,
                         b.Mab_Card.Mab_CardPower,
                         b.Mab_Card.Mab_CardUpperHand
                     }).FirstOrDefault(),
@@ -6032,7 +6032,7 @@ namespace BoardGameGeekLike.Services
                 .Select(a => new UsersMabListUnassignedPlayerCardsResponse
                 {
                     Mab_PlayerCardId = a.MabCard!.Id!,
-                    Mab_CardDescription = $"{a.MabCard.Mab_CardName}({a.Qty})-{a.MabCard.Mab_CardLevel}/{a.MabCard.Mab_CardPower}/{a.MabCard.Mab_CardUpperHand}"
+                    Mab_CardDescription = $"{a.MabCard.Mab_CardName} * {a.MabCard.Mab_CardType} * {a.MabCard.Mab_CardPower} | {a.MabCard.Mab_CardUpperHand} * Qty.: {a.Qty}"
                 })
                 .OrderBy(x => x.Mab_CardDescription)
                 .ToList();
