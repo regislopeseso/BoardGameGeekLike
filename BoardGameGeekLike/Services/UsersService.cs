@@ -6121,12 +6121,14 @@ namespace BoardGameGeekLike.Services
             var mabCampaignDB = await this._daoDbContext
                 .MabCampaigns
                 .AsNoTracking()
-                .Where(a => a.UserId == userId)
-                .Select(a => new
+                .Where(mabCampaign => 
+                    mabCampaign.UserId == userId &&
+                    mabCampaign.Mab_IsCampaignDeleted == false)
+                .Select(mabCampaign => new
                 {
-                    MabCampaignID = a.Id,
-                    MabDeckNames = a.Mab_Decks!.Select(a => a.Mab_DeckName!),
-                    MabDecksCount = a.Mab_Decks!.Count
+                    MabCampaignID = mabCampaign.Id,
+                    MabDeckNames = mabCampaign.Mab_Decks!.Select(a => a.Mab_DeckName!),
+                    MabDecksCount = mabCampaign.Mab_Decks!.Count
                 })
                 .FirstOrDefaultAsync();
 

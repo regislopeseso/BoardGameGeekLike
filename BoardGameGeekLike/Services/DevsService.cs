@@ -891,7 +891,7 @@ namespace BoardGameGeekLike.Services
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel <= 1 &&
                     mabNpc.Mab_NpcCards
-                    .All(card => 
+                    .Any(card => 
                         card.Mab_Card.Mab_CardType == MabCardType.Neutral))
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
