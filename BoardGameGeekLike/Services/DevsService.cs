@@ -468,6 +468,19 @@ namespace BoardGameGeekLike.Services
 
             var npcsSeed = new List<MabNpc>();
 
+            var neutralCards = cardsDB.Where(a => a.Mab_CardType == MabCardType.Neutral).ToList();
+            var martialArtsNpcs = MabGetGuildNpcs(neutralCards, MabCardType.Neutral);
+            npcsSeed.AddRange(martialArtsNpcs);
+
+            var swordsmanNpcs = MabGetGuildNpcs(cardsDB, MabCardType.Infantry);
+            npcsSeed.AddRange(swordsmanNpcs);
+
+            var archerNpcs = MabGetGuildNpcs(cardsDB, MabCardType.Ranged);
+            npcsSeed.AddRange(archerNpcs);
+
+            var cavalryNpcs = MabGetGuildNpcs(cardsDB, MabCardType.Cavalry);
+            npcsSeed.AddRange(cavalryNpcs);
+
             for (int level = Constants.MinCardLevel; level <= Constants.MaxCardLevel; level++)
             {
                 npcsSeed.AddRange(GenerateRandomNpcs(level, cardsDB));
@@ -476,14 +489,197 @@ namespace BoardGameGeekLike.Services
             if (npcsSeed == null || npcsSeed.Count == 0)
             {
                 return (null, "Error: seeding NPCs failed");
-            }
+            }          
 
             this._daoDbContext.MabNpcs.AddRange(npcsSeed);
 
             return (npcsSeed, "NPCs have been successfully seeded");
         }
+        private static List<MabNpc> MabGetGuildNpcs(List<MabCard> mabCardsDB, MabCardType guildType)
+        {
+            var guildNpcs = new List<MabNpc>();
+
+            var guild = "";
+
+            switch (guildType)
+            {
+                case MabCardType.Neutral:
+                    guild = "Martial Arts";
+                    break;
+                case MabCardType.Infantry:
+                    guild = "Swordsmanship";
+                    break;
+                case MabCardType.Ranged:
+                    guild = "Markmanship";
+                    break;
+                case MabCardType.Cavalry:
+                    guild = "Horsemanship in arms";
+                    break;
+                default:
+                    break;
+            }
+
+            var minPower = 0;
+            var maxPower = 3;
+
+            var fellowApprentice = new MabNpc
+            {
+                Mab_NpcName = $"Fellow Apprentice of {guild}",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_NpcLevel = 0,
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 1) },
+                }
+            };
+            guildNpcs.Add(fellowApprentice);
+
+            var firstTeacher = new MabNpc
+            {
+                Mab_NpcName = $"{guild} First Teacher",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",               
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                }
+            };
+            firstTeacher.Mab_NpcLevel = 
+                Helper.MabGetNpcLevel(firstTeacher.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(firstTeacher);
+
+            var secondtTeacher = new MabNpc
+            {
+                Mab_NpcName = $"{guild} Second Teacher",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                }
+            };
+            secondtTeacher.Mab_NpcLevel =
+                Helper.MabGetNpcLevel(secondtTeacher.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(secondtTeacher);
+
+            var thirdTeacher = new MabNpc
+            {
+                Mab_NpcName = $"{guild} Third Teacher",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                }
+            };
+            thirdTeacher.Mab_NpcLevel =
+                Helper.MabGetNpcLevel(thirdTeacher.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(thirdTeacher);
+
+            var fourthTeacher = new MabNpc
+            {
+                Mab_NpcName = $"{guild} Fourth Teacher",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                }
+            };
+            fourthTeacher.Mab_NpcLevel =
+                Helper.MabGetNpcLevel(fourthTeacher.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(fourthTeacher);
+
+            var fifthTeacher = new MabNpc
+            {
+                Mab_NpcName = $"{guild} Fifth Teacher",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 2 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 2) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 2 && card!.Mab_CardUpperHand! == 1) },
+                }
+            };
+            fifthTeacher.Mab_NpcLevel =
+                Helper.MabGetNpcLevel(fifthTeacher.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(fifthTeacher);
+
+            var sixthTeacher = new MabNpc
+            {
+                Mab_NpcName = $"{guild} Sixth Teacher",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 2) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 2 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 2 && card!.Mab_CardUpperHand! == 2) },
+                }
+            };
+            sixthTeacher.Mab_NpcLevel =
+                Helper.MabGetNpcLevel(sixthTeacher.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(sixthTeacher);
+
+            var master = new MabNpc
+            {
+                Mab_NpcName = $"Master of {guild}",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 1 && card!.Mab_CardUpperHand! == 3) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 2 && card!.Mab_CardUpperHand! == 1) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 3 && card!.Mab_CardUpperHand! == 3) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == guildType && card!.Mab_CardPower! == 3 && card!.Mab_CardUpperHand! == 3) },
+                }
+            };
+            master.Mab_NpcLevel =
+                Helper.MabGetNpcLevel(master.Mab_NpcCards.Select(a => a.Mab_Card.Mab_CardLevel).ToList());
+            guildNpcs.Add(master);
+
+
+            return guildNpcs;
+        }
+    
 
         private static List<MabNpc> GenerateRandomNpcs(int level, List<MabCard> cardsDB)
+
         {
             var random = new Random();
 
@@ -803,7 +999,7 @@ namespace BoardGameGeekLike.Services
                 return npcs.OrderBy(a => random.Next()).Take(10).ToList(); ;
             }
         }
-
+        
         private (DevsMabSeedResponse?, string) SeedQuests(List<MabNpc> npcsSeedingResult)
         {
             var npcsDB = npcsSeedingResult;
@@ -847,19 +1043,18 @@ namespace BoardGameGeekLike.Services
             var titleSeven = "Seventh Quest";
             var titleEight = "Eighth Quest";
             var titleNine = "Ninth Quest";
-            var titleTen = "Tenth Quest";
+      
 
             var titles = new List<string>()
             {
                 titleOne, titleTwo, titleThree, titleFour, titleFive,
-                titleSix, titleSeven, titleEight, titleNine, titleTen
+                titleSix, titleSeven, titleEight, titleNine
             };
 
             return titles;
         }
         private static List<string> GetQuestsDescription()
-        {
-            var descriptionZero = "Learn to defend yourself"; // Duel avarage Fighters of level 0 and level 1
+        {           
             var descriptionOne = "Enroll in the Guild of Martial Arts"; // Duel avarage Fighters of level 2 and level 3
             var descriptionTwo = "Enroll in the Guild of Swordsmanship"; // Duel avarage Swordsman from level 0 up to level 3
             var descriptionThree = "Enroll in the Guild of Archers"; // Duel avarage Archers from level 0 up to level 3
@@ -875,7 +1070,7 @@ namespace BoardGameGeekLike.Services
 
             var descriptions = new List<string>()
             {
-                descriptionZero, descriptionOne, descriptionTwo, descriptionThree, descriptionFour,
+                descriptionOne, descriptionTwo, descriptionThree, descriptionFour,
                 descriptionSix, descriptionSeven, descriptionEight, descriptionNine, descriptionTen
             };
 
@@ -885,72 +1080,61 @@ namespace BoardGameGeekLike.Services
         {
             var mabNpcs = Mab_Npcs;
 
-            // #0: Learn to defend yourself
-            // Fighters of level 0 and level 1
-            var npcsQuestZero = mabNpcs
-                .Where(mabNpc =>
-                    mabNpc.Mab_NpcLevel <= 1 &&
-                    mabNpc.Mab_NpcCards
-                    .Any(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Neutral))
-                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
-                .ToList();
-
             // #1: Enroll in the Guild of Martial Arts
-            // Fighters of level 2 and level 3
+            // Fighters of level 0 uo to and level 3
             var npcsQuestOne = mabNpcs
                 .Where(mabNpc =>
-                    mabNpc.Mab_NpcLevel > 1 &&
+                    mabNpc.Mab_NpcLevel >= 0 &&
                     mabNpc.Mab_NpcLevel <= 3 &&
                     mabNpc.Mab_NpcCards
-                    .All(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Neutral))
+                    .Any(card => 
+                        card.Mab_Card.Mab_CardType != MabCardType.Neutral) == false)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
 
             // #2: Enroll in the Guild of Swordsmanship
-            // Swordsman from level 0 up to level 3
+            // Swordsman of level 0 up to level 3
             var npcsQuestTwo = mabNpcs
                 .Where(mabNpc =>                
                     mabNpc.Mab_NpcLevel <= 3 &&
                     mabNpc.Mab_NpcCards
-                    .All(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Infantry))
+                    .Any(card =>
+                        card.Mab_Card.Mab_CardType != MabCardType.Infantry) == false)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
 
             // #3: Enroll in the Guild of Archers
-            // Archers from level 0 up to level 3
+            // Archers of level 0 up to level 3
             var npcsQuestThree = mabNpcs
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel <= 3 &&
                     mabNpc.Mab_NpcCards
-                    .All(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Ranged))
+                    .Any(card =>
+                        card.Mab_Card.Mab_CardType != MabCardType.Ranged) == false)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
 
             // #4: Enroll in the Guild of Knights
-            // Knights from level 0 up to level 3
+            // Knights of level 0 up to level 3
             var npcsQuestFour = mabNpcs
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel <= 3 &&
                     mabNpc.Mab_NpcCards
-                    .All(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Cavalry))
+                    .Any(card =>
+                        card.Mab_Card.Mab_CardType != MabCardType.Cavalry) == false)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
 
             // #5: War at the Barbarrian's Land!
             // Fighters, Swordsman of level 4 and level 5
+            var randomWarringNpcsCount = new Random();
             var npcsQuestFive = mabNpcs
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel >= 4 &&
-                    mabNpc.Mab_NpcLevel <= 5 &&
-                    mabNpc.Mab_NpcCards
-                    .All(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Neutral || 
-                        card.Mab_Card.Mab_CardType == MabCardType.Infantry))
+                    mabNpc.Mab_NpcLevel <= 5)    
+                .OrderBy(a => randomWarringNpcsCount.Next()) // Randomizing the list of npcs
+                .Skip(randomWarringNpcsCount.Next(1,9))
+                .Take(10)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
 
@@ -990,13 +1174,12 @@ namespace BoardGameGeekLike.Services
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();         
 
-            // #10: Defeat the Barbarian King!
+            // #9: Defeat the Barbarian King!
             // Swordsman level 10
             var npcsQuestNine = mabNpcs.Where(a => a.Mab_NpcLevel == 10).ToList();
 
             var mabNpcsLists = new List<List<MabNpc>>()
-            {
-                npcsQuestZero, 
+            { 
                 npcsQuestOne, 
                 npcsQuestTwo, 
                 npcsQuestThree, 
