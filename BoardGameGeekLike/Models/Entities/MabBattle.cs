@@ -33,6 +33,11 @@ namespace BoardGameGeekLike.Models.Entities
         public MabCampaign Mab_Campaign { get; set; }
 
 
+        [ForeignKey(nameof(this.Mab_Quest))]
+        public int? Mab_QuestId { get; set; }
+        public MabQuest? Mab_Quest { get; set; }
+
+
         [ForeignKey(nameof(this.Mab_Npc))]
         public int Mab_NpcId { get; set; }
         public MabNpc Mab_Npc { get; set; }

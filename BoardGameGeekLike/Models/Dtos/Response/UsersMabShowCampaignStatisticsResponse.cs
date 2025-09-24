@@ -18,6 +18,10 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_Goldstash { get; set; }
 
+        public int? Mab_QuestsCounts { get; set; }
+
+        public int? Mab_FulfilledQuestsCount { get; set; }
+
         public int? Mab_BattlesCount { get; set; }
 
         public int? Mab_BattleVictoriesCount { get; set; }

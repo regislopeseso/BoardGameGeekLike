@@ -149,7 +149,8 @@ namespace BoardGameGeekLike.Migrations
                     Mab_QuestLevel = table.Column<int>(type: "int", nullable: true),
                     Mab_GoldBounty = table.Column<int>(type: "int", nullable: true),
                     Mab_XpReward = table.Column<int>(type: "int", nullable: true),
-                    Mab_IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: true)
+                    Mab_IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    Mab_IsDummy = table.Column<bool>(type: "tinyint(1)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -503,6 +504,7 @@ namespace BoardGameGeekLike.Migrations
                     Mab_HasPlayerWon = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     Mab_IsBattleFinished = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Mab_CampaignId = table.Column<int>(type: "int", nullable: false),
+                    Mab_QuestId = table.Column<int>(type: "int", nullable: false),
                     Mab_NpcId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -518,6 +520,12 @@ namespace BoardGameGeekLike.Migrations
                         name: "FK_MabBattles_MabNpcs_Mab_NpcId",
                         column: x => x.Mab_NpcId,
                         principalTable: "MabNpcs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MabBattles_MabQuests_Mab_QuestId",
+                        column: x => x.Mab_QuestId,
+                        principalTable: "MabQuests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -546,24 +554,30 @@ namespace BoardGameGeekLike.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "MabFulfilledQuests",
+                name: "MabDefeatedNpcs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Mab_QuestId = table.Column<int>(type: "int", nullable: true),
-                    Mab_CampaignId = table.Column<int>(type: "int", nullable: true)
+                    Mab_CampaignId = table.Column<int>(type: "int", nullable: true),
+                    Mab_NpcId = table.Column<int>(type: "int", nullable: true),
+                    Mab_QuestId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MabFulfilledQuests", x => x.Id);
+                    table.PrimaryKey("PK_MabDefeatedNpcs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MabFulfilledQuests_MabCampaigns_Mab_CampaignId",
+                        name: "FK_MabDefeatedNpcs_MabCampaigns_Mab_CampaignId",
                         column: x => x.Mab_CampaignId,
                         principalTable: "MabCampaigns",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_MabFulfilledQuests_MabQuests_Mab_QuestId",
+                        name: "FK_MabDefeatedNpcs_MabNpcs_Mab_NpcId",
+                        column: x => x.Mab_NpcId,
+                        principalTable: "MabNpcs",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_MabDefeatedNpcs_MabQuests_Mab_QuestId",
                         column: x => x.Mab_QuestId,
                         principalTable: "MabQuests",
                         principalColumn: "Id");
@@ -862,6 +876,11 @@ namespace BoardGameGeekLike.Migrations
                 column: "Mab_NpcId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MabBattles_Mab_QuestId",
+                table: "MabBattles",
+                column: "Mab_QuestId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_MabCampaigns_UserId",
                 table: "MabCampaigns",
                 column: "UserId");
@@ -872,19 +891,24 @@ namespace BoardGameGeekLike.Migrations
                 column: "Mab_CampaignId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MabDuels_Mab_BattleId",
-                table: "MabDuels",
-                column: "Mab_BattleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MabFulfilledQuests_Mab_CampaignId",
-                table: "MabFulfilledQuests",
+                name: "IX_MabDefeatedNpcs_Mab_CampaignId",
+                table: "MabDefeatedNpcs",
                 column: "Mab_CampaignId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MabFulfilledQuests_Mab_QuestId",
-                table: "MabFulfilledQuests",
+                name: "IX_MabDefeatedNpcs_Mab_NpcId",
+                table: "MabDefeatedNpcs",
+                column: "Mab_NpcId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MabDefeatedNpcs_Mab_QuestId",
+                table: "MabDefeatedNpcs",
                 column: "Mab_QuestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MabDuels_Mab_BattleId",
+                table: "MabDuels",
+                column: "Mab_BattleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MabNpcCards_Mab_CardId",
@@ -960,10 +984,10 @@ namespace BoardGameGeekLike.Migrations
                 name: "MabAssignedCards");
 
             migrationBuilder.DropTable(
-                name: "MabDuels");
+                name: "MabDefeatedNpcs");
 
             migrationBuilder.DropTable(
-                name: "MabFulfilledQuests");
+                name: "MabDuels");
 
             migrationBuilder.DropTable(
                 name: "MabNpcCards");
@@ -996,9 +1020,6 @@ namespace BoardGameGeekLike.Migrations
                 name: "MabBattles");
 
             migrationBuilder.DropTable(
-                name: "MabQuests");
-
-            migrationBuilder.DropTable(
                 name: "boardgames");
 
             migrationBuilder.DropTable(
@@ -1012,6 +1033,9 @@ namespace BoardGameGeekLike.Migrations
 
             migrationBuilder.DropTable(
                 name: "MabNpcs");
+
+            migrationBuilder.DropTable(
+                name: "MabQuests");
 
             migrationBuilder.DropTable(
                 name: "categories");

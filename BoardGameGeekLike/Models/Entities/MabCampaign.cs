@@ -22,7 +22,11 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Mab_GoldStash { get; set; }
 
-        public double? Mab_GoldValue { get; set; } = 1.0;
+        public int? Mab_IronOre { get; set; } 
+
+        public int? Mab_Horse {  get; set; }
+
+        public int? Mab_WoodLog { get; set; }   
 
         public int? Mab_BattlesCount { get; set; } = 0;
 
@@ -55,9 +59,6 @@ namespace BoardGameGeekLike.Models.Entities
 
         [InverseProperty(nameof(MabBattle.Mab_Campaign))]
         public List<MabBattle>? Mab_Battles { get; set; }
-
-
-        [InverseProperty(nameof(MabFulfilledQuest.Mab_Campaign))]
-        public List<MabFulfilledQuest>? Mab_FulfilledQuests { get; set; }
+            
     }
 }

@@ -1048,8 +1048,7 @@ namespace BoardGameGeekLike.Services
                     Mab_XpReward = (i + 1) * 20,
                     Mab_IsDummy = true,
 
-                    Mab_Npcs = questsNpcsLists[i],
-                    Mab_FulfilledQuests = new List<MabFulfilledQuest>(),
+                    Mab_Npcs = questsNpcsLists[i],                    
                 });
             }
                   
@@ -1265,15 +1264,8 @@ namespace BoardGameGeekLike.Services
             // Fetching DECKS having cards which derive from DUMMY CARDS            
             var playerDecksDB = await this._daoDbContext
                .MabDecks
-              .ToListAsync();              
-                      
-
-            // Deleting FULFILLED QUESTS related to DUMMY QUESTS
-            var fulfilledQuestsDB = await this._daoDbContext
-                .MabFulfilledQuests
-                .Where(a => a.Mab_Quest!.Mab_IsDummy == true)
-                .ToListAsync();
-
+              .ToListAsync();           
+                        
             // Fetching DUMMY QUESTS
             var questsDB = await this._daoDbContext
                 .MabQuests
@@ -1318,11 +1310,7 @@ namespace BoardGameGeekLike.Services
 
             this._daoDbContext
                   .MabDecks
-                  .RemoveRange(playerDecksDB);
-
-            this._daoDbContext
-              .MabFulfilledQuests
-              .RemoveRange(fulfilledQuestsDB);
+                  .RemoveRange(playerDecksDB);           
 
             this._daoDbContext
                 .MabQuests

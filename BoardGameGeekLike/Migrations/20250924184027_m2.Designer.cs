@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250922144751_m2")]
+    [Migration("20250924184027_m2")]
     partial class m2
     {
         /// <inheritdoc />
@@ -301,11 +301,16 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("Mab_NpcId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Mab_QuestId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Mab_CampaignId");
 
                     b.HasIndex("Mab_NpcId");
+
+                    b.HasIndex("Mab_QuestId");
 
                     b.ToTable("MabBattles");
                 });
@@ -505,29 +510,6 @@ namespace BoardGameGeekLike.Migrations
                     b.HasIndex("Mab_BattleId");
 
                     b.ToTable("MabDuels");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabFulfilledQuest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("Mab_CampaignId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Mab_QuestId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Mab_CampaignId");
-
-                    b.HasIndex("Mab_QuestId");
-
-                    b.ToTable("MabFulfilledQuests");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>
@@ -1045,9 +1027,17 @@ namespace BoardGameGeekLike.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabQuest", "Mab_Quest")
+                        .WithMany("Mab_Battles")
+                        .HasForeignKey("Mab_QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Mab_Campaign");
 
                     b.Navigation("Mab_Npc");
+
+                    b.Navigation("Mab_Quest");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabCampaign", b =>
@@ -1075,21 +1065,6 @@ namespace BoardGameGeekLike.Migrations
                         .HasForeignKey("Mab_BattleId");
 
                     b.Navigation("Mab_Battle");
-                });
-
-            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabFulfilledQuest", b =>
-                {
-                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCampaign", "Mab_Campaign")
-                        .WithMany("Mab_FulfilledQuests")
-                        .HasForeignKey("Mab_CampaignId");
-
-                    b.HasOne("BoardGameGeekLike.Models.Entities.MabQuest", "Mab_Quest")
-                        .WithMany("Mab_FulfilledQuests")
-                        .HasForeignKey("Mab_QuestId");
-
-                    b.Navigation("Mab_Campaign");
-
-                    b.Navigation("Mab_Quest");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpcCard", b =>
@@ -1276,8 +1251,6 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Navigation("Mab_Decks");
 
-                    b.Navigation("Mab_FulfilledQuests");
-
                     b.Navigation("Mab_PlayerCards");
                 });
 
@@ -1305,7 +1278,7 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabQuest", b =>
                 {
-                    b.Navigation("Mab_FulfilledQuests");
+                    b.Navigation("Mab_Battles");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>

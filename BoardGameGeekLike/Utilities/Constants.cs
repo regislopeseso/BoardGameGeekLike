@@ -23,6 +23,9 @@
 
 
 
+        public const int QuestsBaseGoldBounty = 5;
+        public const int QuestsBaseXpReward = 5;
+
         public const int MaxPlayerLevel = 9;
         public const int MinPlayerLevel = 0;
 
@@ -40,7 +43,7 @@
 
         public const int DeckSize = 5;
 
-        public const int BoosterPrice = 5;
+        public const int BoosterPrice = 10;
         public const int BoosterSize = 3;
 
         public const int NpcLvl_MaxUpperDifference = 2;

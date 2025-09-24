@@ -4,6 +4,7 @@ using BoardGameGeekLike.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250924165127_m1")]
+    partial class m1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -298,7 +301,7 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int>("Mab_NpcId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Mab_QuestId")
+                    b.Property<int>("Mab_QuestId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -341,11 +344,8 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("Mab_GoldStash")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Mab_Horse")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Mab_IronOre")
-                        .HasColumnType("int");
+                    b.Property<double?>("Mab_GoldValue")
+                        .HasColumnType("double");
 
                     b.Property<bool?>("Mab_IsCampaignDeleted")
                         .HasColumnType("tinyint(1)");
@@ -361,9 +361,6 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<string>("Mab_PlayerNickname")
                         .HasColumnType("longtext");
-
-                    b.Property<int?>("Mab_WoodLog")
-                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .HasColumnType("varchar(255)");
@@ -435,6 +432,34 @@ namespace BoardGameGeekLike.Migrations
                     b.HasIndex("Mab_CampaignId");
 
                     b.ToTable("MabDecks");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabDefeatedNpc", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Mab_CampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_NpcId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_QuestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Mab_CampaignId");
+
+                    b.HasIndex("Mab_NpcId");
+
+                    b.HasIndex("Mab_QuestId");
+
+                    b.ToTable("MabDefeatedNpcs");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabDuel", b =>
@@ -1032,7 +1057,9 @@ namespace BoardGameGeekLike.Migrations
 
                     b.HasOne("BoardGameGeekLike.Models.Entities.MabQuest", "Mab_Quest")
                         .WithMany("Mab_Battles")
-                        .HasForeignKey("Mab_QuestId");
+                        .HasForeignKey("Mab_QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Mab_Campaign");
 
@@ -1057,6 +1084,27 @@ namespace BoardGameGeekLike.Migrations
                         .HasForeignKey("Mab_CampaignId");
 
                     b.Navigation("Mab_Campaign");
+                });
+
+            modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabDefeatedNpc", b =>
+                {
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabCampaign", "Mab_Campaign")
+                        .WithMany("Mab_DefeatedNpcs")
+                        .HasForeignKey("Mab_CampaignId");
+
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabNpc", "Mab_Npc")
+                        .WithMany("Mab_DefeatedNpcs")
+                        .HasForeignKey("Mab_NpcId");
+
+                    b.HasOne("BoardGameGeekLike.Models.Entities.MabQuest", "Mab_Quest")
+                        .WithMany("Mab_DefeatedNpcs")
+                        .HasForeignKey("Mab_QuestId");
+
+                    b.Navigation("Mab_Campaign");
+
+                    b.Navigation("Mab_Npc");
+
+                    b.Navigation("Mab_Quest");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabDuel", b =>
@@ -1252,6 +1300,8 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Navigation("Mab_Decks");
 
+                    b.Navigation("Mab_DefeatedNpcs");
+
                     b.Navigation("Mab_PlayerCards");
                 });
 
@@ -1269,6 +1319,8 @@ namespace BoardGameGeekLike.Migrations
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabNpc", b =>
                 {
+                    b.Navigation("Mab_DefeatedNpcs");
+
                     b.Navigation("Mab_NpcCards");
                 });
 
@@ -1280,6 +1332,8 @@ namespace BoardGameGeekLike.Migrations
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.MabQuest", b =>
                 {
                     b.Navigation("Mab_Battles");
+
+                    b.Navigation("Mab_DefeatedNpcs");
                 });
 
             modelBuilder.Entity("BoardGameGeekLike.Models.Entities.User", b =>

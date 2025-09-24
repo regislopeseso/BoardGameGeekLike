@@ -293,8 +293,14 @@ namespace BoardGameGeekLike.Utilities
         }
 
 
-        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, MabCardType? attackerCardType, int defenderCardPower, MabCardType? defenderCardType, bool? isPlayerAttacking)
+        public static (int, int) MabResolveDuel(int attackerCardPower, int attackerCardUpperHand, MabCardType? attackerCardType, int defenderCardPower, int defenderCardUpperHand, MabCardType? defenderCardType, bool? isPlayerAttacking)
         {
+            if((attackerCardType == MabCardType.Neutral && attackerCardPower == 0 && attackerCardUpperHand == 0) || (
+                defenderCardType == MabCardType.Neutral && defenderCardPower == 0 && defenderCardUpperHand == 0))
+            {
+                return (0, 0);
+            }
+
             var attackerCardFullPower = MabGetCardFullPower(attackerCardPower, attackerCardUpperHand, attackerCardType, defenderCardType);
 
             var duelPoints = MabGetDuelPoints(attackerCardFullPower, defenderCardPower, isPlayerAttacking);
@@ -315,7 +321,7 @@ namespace BoardGameGeekLike.Utilities
         {
             return (attackerCardType, defenderCardType) switch
             {
-                (MabCardType.Neutral, MabCardType.Neutral) => cardPower,
+                (MabCardType.Neutral, MabCardType.Neutral) => cardPower + cardUpperHand,
                 (MabCardType.Neutral, MabCardType.Ranged) => cardPower,
                 (MabCardType.Neutral, MabCardType.Cavalry) => cardPower,
                 (MabCardType.Neutral, MabCardType.Infantry) => cardPower,

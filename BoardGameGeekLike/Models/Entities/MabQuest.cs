@@ -23,13 +23,14 @@ namespace BoardGameGeekLike.Models.Entities
         public bool? Mab_IsDeleted { get; set; } = false;
 
         public bool? Mab_IsDummy { get; set; } = false;
-        
-        
+    
+
         [InverseProperty(nameof(MabNpc.Mab_Quests))]
         public List<MabNpc>? Mab_Npcs { get; set; }
 
 
-        [InverseProperty(nameof(MabFulfilledQuest.Mab_Quest))]
-        public List<MabFulfilledQuest>? Mab_FulfilledQuests { get; set; }
+        [InverseProperty(nameof(MabBattle.Mab_Quest))]
+        public List<MabBattle>? Mab_Battles { get; set; }
+        
     }
 }

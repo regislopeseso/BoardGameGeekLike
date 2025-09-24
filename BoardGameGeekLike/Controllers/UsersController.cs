@@ -931,6 +931,34 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> MabShowQuestDetails([FromQuery] UsersMabShowQuestDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabShowQuestDetails(request);
+
+            var response = new Response<UsersMabShowQuestDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MabListQuests(UsersMabListQuestsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabListQuests(request);
+
+            var response = new Response<List<UsersMabListQuestsResponse>?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> MabStartBattle([FromForm] UsersMabStartBattleRequest? request)
         {
