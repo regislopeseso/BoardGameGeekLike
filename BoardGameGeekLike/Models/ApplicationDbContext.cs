@@ -30,11 +30,8 @@ namespace BoardGameGeekLike.Models
 
 
 
-        public DbSet<MabCampaign> MabCampaigns { get; set; }
-
-        public DbSet<MabQuest> MabQuests { get; set; }
-
-        public DbSet<MabFulfilledQuest> MabFulfilledQuests { get; set; }
+        public DbSet<MabCampaign> MabCampaigns { get; set; }   
+        
         
         public DbSet<MabCard> MabCards { get; set; }
 
@@ -42,6 +39,15 @@ namespace BoardGameGeekLike.Models
         public DbSet<MabNpc> MabNpcs { get; set; }
         
         public DbSet<MabNpcCard> MabNpcCards { get; set; }
+
+        
+        public DbSet<MabDefeatedNpc> MabDefeatedNpcs { get; set; }
+
+
+        public DbSet<MabQuest> MabQuests { get; set; }
+
+        public DbSet<MabFulfilledQuest> MabFulfilledQuests { get; set; }
+
 
 
         public DbSet<MabPlayerCard> MabPlayerCards { get; set; }

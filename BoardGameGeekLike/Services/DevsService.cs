@@ -454,7 +454,6 @@ namespace BoardGameGeekLike.Services
 
             return (cardsSeed, $"{cardsSeed.Count} new cards haven been successfully seeded");
         }
-
         private (List<MabNpc>?, string) SeedNpcs(List<MabCard> cardsSeedingResult)
         {
             var cardsDB = cardsSeedingResult;               
@@ -489,7 +488,11 @@ namespace BoardGameGeekLike.Services
             if (npcsSeed == null || npcsSeed.Count == 0)
             {
                 return (null, "Error: seeding NPCs failed");
-            }          
+            }
+
+            var barbarianKing = MabGetBarbarianKingNpc(cardsDB);
+
+            npcsSeed.Add(barbarianKing);
 
             this._daoDbContext.MabNpcs.AddRange(npcsSeed);
 
@@ -676,7 +679,29 @@ namespace BoardGameGeekLike.Services
 
             return guildNpcs;
         }
-    
+        private static MabNpc MabGetBarbarianKingNpc(List<MabCard> mabCardsDB)
+        {              
+
+            var barbarianKing = new MabNpc
+            {
+                Mab_NpcName = $"The Barbarian King",
+                Mab_NpcDescription = "( 0, 0, 0, 0, 0 )",
+                Mab_NpcLevel = 10,
+                Mab_IsNpcDeleted = false,
+                Mab_IsNpcDummy = true,
+                Mab_NpcCards = new List<MabNpcCard>()
+                {
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == MabCardType.Neutral && card!.Mab_CardPower! == 9 && card!.Mab_CardUpperHand! == 9) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == MabCardType.Neutral && card!.Mab_CardPower! == 0 && card!.Mab_CardUpperHand! == 0) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == MabCardType.Ranged && card!.Mab_CardPower! == 9 && card!.Mab_CardUpperHand! == 9) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == MabCardType.Infantry && card!.Mab_CardPower! == 9 && card!.Mab_CardUpperHand! == 9) },
+                    new MabNpcCard { Mab_Card = mabCardsDB.FirstOrDefault(card => card!.Mab_CardType! == MabCardType.Infantry && card!.Mab_CardPower! == 9 && card!.Mab_CardUpperHand! == 9) },
+                }
+            };       
+
+            return barbarianKing;
+        }
+
 
         private static List<MabNpc> GenerateRandomNpcs(int level, List<MabCard> cardsDB)
 
@@ -1078,13 +1103,14 @@ namespace BoardGameGeekLike.Services
         }
         private static List<List<MabNpc>> GetQuestsNpcs(List<MabNpc> Mab_Npcs)
         {
+            var random = new Random();
+
             var mabNpcs = Mab_Npcs;
 
             // #1: Enroll in the Guild of Martial Arts
             // Fighters of level 0 uo to and level 3
             var npcsQuestOne = mabNpcs
-                .Where(mabNpc =>
-                    mabNpc.Mab_NpcLevel >= 0 &&
+                .Where(mabNpc =>                    
                     mabNpc.Mab_NpcLevel <= 3 &&
                     mabNpc.Mab_NpcCards
                     .Any(card => 
@@ -1126,14 +1152,13 @@ namespace BoardGameGeekLike.Services
                 .ToList();
 
             // #5: War at the Barbarrian's Land!
-            // Fighters, Swordsman of level 4 and level 5
-            var randomWarringNpcsCount = new Random();
+            // Fighters, Swordsman, Knights and Archers of level 4 and level 5
             var npcsQuestFive = mabNpcs
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel >= 4 &&
-                    mabNpc.Mab_NpcLevel <= 5)    
-                .OrderBy(a => randomWarringNpcsCount.Next()) // Randomizing the list of npcs
-                .Skip(randomWarringNpcsCount.Next(1,9))
+                    mabNpc.Mab_NpcLevel <= 5)             
+                .OrderBy(a => random.Next()) // Randomizing the list of npcs
+                .Skip(random.Next(1,9))
                 .Take(10)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
@@ -1143,34 +1168,34 @@ namespace BoardGameGeekLike.Services
             var npcsQuestSix = mabNpcs
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel >= 5 &&
-                    mabNpc.Mab_NpcLevel <= 6 &&
-                    mabNpc.Mab_NpcCards
-                    .All(card => 
-                        card.Mab_Card.Mab_CardType == MabCardType.Neutral || 
-                        card.Mab_Card.Mab_CardType == MabCardType.Infantry ||
-                        card.Mab_Card.Mab_CardType == MabCardType.Cavalry))                 
+                    mabNpc.Mab_NpcLevel <= 6)
+                .OrderBy(a => random.Next()) // Randomizing the list of npcs
+                .Skip(random.Next(1, 9))
+                .Take(10)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();
 
 
             // #7: Invade the Barbarrian's Citadel
-            // Archers, from level 5 up to level 7
+            // Fighters, Swordsman, Knights and Archers of level 7 and 8
             var npcsQuestSeven = mabNpcs
-                .Where(mabNpc =>
-                    mabNpc.Mab_NpcLevel >= 5 &&
-                    mabNpc.Mab_NpcLevel <= 7 &&
-                    mabNpc.Mab_NpcCards
-                    .All(card =>
-                        card.Mab_Card.Mab_CardType == MabCardType.Ranged))
-                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
-                .ToList();
-
-            // #8: Break in the Barbarian's Castel
-            // Fighters, Swordsman, Knights, and Archers from level 7 and level 8
-            var npcsQuestEight = mabNpcs
                 .Where(mabNpc =>
                     mabNpc.Mab_NpcLevel >= 7 &&
                     mabNpc.Mab_NpcLevel <= 8)
+                .OrderBy(a => random.Next()) // Randomizing the list of npcs
+                .Skip(random.Next(1, 9))
+                .Take(10)
+                .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
+                .ToList();
+
+
+
+            // #8: Break in the Barbarian's Castel
+            // Fighters, Swordsman, Knights, and Archers from level 8 and level 9
+            var npcsQuestEight = mabNpcs
+                .Where(mabNpc =>
+                    mabNpc.Mab_NpcLevel >= 8 &&
+                    mabNpc.Mab_NpcLevel <= 9)
                 .OrderBy(mabNpc => mabNpc.Mab_NpcLevel)
                 .ToList();         
 
