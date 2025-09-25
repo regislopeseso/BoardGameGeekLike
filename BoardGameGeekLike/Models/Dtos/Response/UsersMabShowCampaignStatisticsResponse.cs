@@ -1,4 +1,5 @@
 ﻿using BoardGameGeekLike.Models.Enums;
+using System.Text.Json.Serialization;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
@@ -14,6 +15,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_NextPlayerLevelThreshold { get; set; }
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public MabCampaignDifficulty? Mab_CampaignDifficulty { get; set; }
 
         public int? Mab_Goldstash { get; set; }
@@ -30,7 +32,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_OpenedBoostersCount { get; set; }
 
-        public int? Mab_CreatedDecksCount { get; set; }
+        public int? Mab_CreatedDecksCount { get; set; } 
 
         public bool? Mab_AllMabCardsCollectedTrophy { get; set; }
 

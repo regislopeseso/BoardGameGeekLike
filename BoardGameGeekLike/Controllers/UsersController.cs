@@ -749,6 +749,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public IActionResult MabGetCampaignDificultyInfo([FromQuery] UsersMabGetCampaignDificultyInfoRequest? request)
+        {
+            var (content, message) =  this._usersService.MabGetCampaignDificultyInfo(request);
+
+            var response = new Response<UsersMabGetCampaignDificultyInfoResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> MabStartCampaign([FromForm] UsersMabStartCampaignRequest? request)
         {

@@ -5447,6 +5447,56 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        public (UsersMabGetCampaignDificultyInfoResponse?, string) MabGetCampaignDificultyInfo(UsersMabGetCampaignDificultyInfoRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabGetCampaignDificultyInfo failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabGetCampaignDificultyInfo_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDifficultyEvaluation = MabEvaluateCampaignDifficultyLevel(request!.Mab_CampaignDifficulty!.Value);
+
+            var startingGoldStash = mabCampaignDifficultyEvaluation[0];
+
+            var startingCardsMaxLevel = mabCampaignDifficultyEvaluation[1];
+
+            var startingCardsCount = mabCampaignDifficultyEvaluation[2];
+
+            var questsBaseGoldBounty = mabCampaignDifficultyEvaluation[3];
+
+            var questsBaseXpReward = mabCampaignDifficultyEvaluation[4];
+
+            return (new UsersMabGetCampaignDificultyInfoResponse
+            {
+                Mab_StartingGoldStash = startingGoldStash,
+                Mab_StartingCardsMaxLevel = startingCardsMaxLevel,
+                Mab_StartingCardsCount = startingCardsCount,
+                Mab_QuestsBaseGoldBounty = questsBaseGoldBounty,
+                Mab_QuestsBaseXpReward = questsBaseGoldBounty,
+            }, "Mab Campaign Info fetched successfully!");
+        }
+        private static (bool, string) MabGetCampaignDificultyInfo_Validation(UsersMabGetCampaignDificultyInfoRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabGetCampaignDificultyInfo_Validation failed! Request is null");
+            }
+
+            if (request.Mab_CampaignDifficulty == null || request.Mab_CampaignDifficulty.HasValue == false)
+            {
+                return (false, "Error: MabGetCampaignDificultyInfo_Validation failed! Mab_CampaignDifficulty is null invalid");
+            }
+
+            return (true, string.Empty);
+        }
+
 
         public async Task<(UsersMabStartCampaignResponse?, string)> MabStartCampaign(UsersMabStartCampaignRequest? request)
         {
@@ -5601,43 +5651,43 @@ namespace BoardGameGeekLike.Services
         {
             int startingGoldStash;
 
-            int maxCardLevel;
+            int startingCardMaxLevel;
 
             int startingCardsCount;
 
-            int questBaseGoldBounty;
+            int questsBaseGoldBounty;
 
-            int questBaseXpReward;
+            int questsBaseXpReward;
 
             switch (mabCampaignDifficulty)
             {
                 case MabCampaignDifficulty.Easy:
                     startingGoldStash = Constants.BoosterPrice;
-                    maxCardLevel = Constants.MinCardLevel + 2;
+                    startingCardMaxLevel = Constants.MinCardLevel + 2;
                     startingCardsCount = Constants.DeckSize * 3;
-                    questBaseGoldBounty = Constants.BoosterPrice * 3;
-                    questBaseXpReward = Constants.QuestsBaseXpReward * 3;
+                    questsBaseGoldBounty = Constants.BoosterPrice * 3;
+                    questsBaseXpReward = Constants.QuestsBaseXpReward * 3;
                     break;
                 case MabCampaignDifficulty.Medium:
                     startingGoldStash = Constants.BoosterPrice / 2;
-                    maxCardLevel = Constants.MinCardLevel + 1;
+                    startingCardMaxLevel = Constants.MinCardLevel + 1;
                     startingCardsCount = Constants.DeckSize * 2;
-                    questBaseGoldBounty = Constants.BoosterPrice * 2;
-                    questBaseXpReward = Constants.QuestsBaseXpReward * 2;
+                    questsBaseGoldBounty = Constants.BoosterPrice * 2;
+                    questsBaseXpReward = Constants.QuestsBaseXpReward * 2;
                     break;
                 case MabCampaignDifficulty.Hard:
                     startingGoldStash = 0;
-                    maxCardLevel = Constants.MinCardLevel;
+                    startingCardMaxLevel = Constants.MinCardLevel;
                     startingCardsCount = Constants.DeckSize;
-                    questBaseGoldBounty = Constants.BoosterPrice;
-                    questBaseXpReward = Constants.QuestsBaseXpReward;
+                    questsBaseGoldBounty = Constants.BoosterPrice;
+                    questsBaseXpReward = Constants.QuestsBaseXpReward;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mabCampaignDifficulty));                 
             }   
      
 
-            return new List<int> { startingGoldStash, maxCardLevel, startingCardsCount, questBaseGoldBounty, questBaseXpReward};
+            return new List<int> { startingGoldStash, startingCardMaxLevel, startingCardsCount, questsBaseGoldBounty, questsBaseXpReward};
         }
 
 
@@ -7291,7 +7341,7 @@ namespace BoardGameGeekLike.Services
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                return (null, "Error: User is not authenticated");
+                return (null, "Error: MabNpcAttacks failed! User is not authenticated");
             }
 
             var (isValid, message) = MabNpcAttcks_Validation(request);
@@ -7300,13 +7350,14 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
+            MabNpcCard? npcChosenCard = null;        
+
             var mabBattleDB = await this._daoDbContext
                 .MabBattles
-                .Include(battle => battle.Mab_Duels!
-                    .Where(duel => duel.IsFinished == false))
+                .Include(battle => battle.Mab_Duels!)               
                 .Include(battle => battle.Mab_Npc)
                     .ThenInclude(npc => npc.Mab_NpcCards)
-                        .ThenInclude(npcCard => npcCard.Mab_Card)
+                        .ThenInclude(npcCard => npcCard.Mab_Card)                           
                 .OrderByDescending(battle => battle.Id)
                 .FirstOrDefaultAsync(battle => 
                     battle.Mab_IsBattleFinished == false && 
@@ -7314,72 +7365,83 @@ namespace BoardGameGeekLike.Services
             
             if (mabBattleDB == null)
             {
-                return (null, "Error: no mab battle found for this campaign!");
+                return (null, "Error: MabNpcAttacks failed! No mab battle found for this campaign!");
             }
 
-            var mabDuelDB = mabBattleDB.Mab_Duels.FirstOrDefault(a => a.Mab_NpcCardId == null);
+            var mabDuelDB = mabBattleDB.Mab_Duels!.FirstOrDefault(a => a.Mab_NpcCardId == null);
             if (mabDuelDB == null)
             {
-                return (null, "Error: no mab duel found during npc's turn!");
+                return (null, "Error: MabNpcAttacks failed! No mab duel found during npc's turn!");
             }
             if (mabDuelDB.Mab_PlayerCardId == null &&
                 mabDuelDB.Mab_NpcCardId == null &&
                 mabDuelDB.Mab_IsPlayerAttacking == true)
             {
-                return (null, "Error: This is not the Npc's turn!");
+                return (null, "Error: MabNpcAttacks failed! This is not the Npc's turn!");
             }
+            var playerCardPower = mabDuelDB.Mab_PlayerCardPower;
+            var playerCardUpperHand = mabDuelDB.Mab_PlayerCardUpperHand;
+            var playerCardType = mabDuelDB.Mab_PlayerCardType;
 
             var mabNpcDB = mabBattleDB.Mab_Npc;
             if (mabNpcDB == null)
             {
-                return (null, "Error: no mab NPC found for this battle!");
+                return (null, "Error: MabNpcAttacks failed! No mab NPC found for this battle!");
             }
 
             var mabNpcCardsDB = mabNpcDB.Mab_NpcCards;
             if (mabNpcCardsDB == null || mabNpcCardsDB.Count < Constants.DeckSize)
             {
-                return (null, "Error: NPC cards missing or insufficient!");
+                return (null, "Error: MabNpcAttacks failed! NPC cards missing or insufficient!");
             }
 
-            // already used entries
+            // Npc UNAVAILABLE cards
             var usedNpcDeckEntryIds = mabBattleDB
                 .Mab_Duels!
                 .Where(a => a.Mab_NpcCardId != null)
                 .Select(a => a.Mab_NpcCardId!.Value)
                 .ToList();
 
-            // available entries (copies not yet used)
+            // Npc AVAILABLE cards
             var availableNpcDeckEntries = mabNpcCardsDB
-                .Where(a => usedNpcDeckEntryIds.Contains(a.Id) == false)
-                .ToList();         
+                .Where(npc => usedNpcDeckEntryIds.Contains(npc.Id) == false)
+                .ToList();
 
-            var randomNpcEntry = availableNpcDeckEntries.OrderBy(_ => random.Next()).First();
-            var npcDeckEntryId = randomNpcEntry.Id;
+            // NPC ATTACKING CASE
+            if (mabDuelDB.Mab_PlayerCardId == null)
+            {
+                npcChosenCard = GetNpcAttackingCard(availableNpcDeckEntries);
+            }
+            // NPC DEFENDING CASE
+            else 
+            {
+                npcChosenCard = GetNpcDefendingCard(availableNpcDeckEntries, playerCardPower, playerCardUpperHand, playerCardType);
+            }         
             
-            mabDuelDB.Mab_NpcCardId = npcDeckEntryId;
-            mabDuelDB.Mab_NpcCardName = randomNpcEntry.Mab_Card.Mab_CardName;
-            mabDuelDB.Mab_NpcCardType = randomNpcEntry.Mab_Card.Mab_CardType;
-            mabDuelDB.Mab_NpcCardLevel = randomNpcEntry.Mab_Card.Mab_CardLevel;
-            mabDuelDB.Mab_NpcCardPower = randomNpcEntry.Mab_Card.Mab_CardPower;
-            mabDuelDB.Mab_NpcCardUpperHand = randomNpcEntry.Mab_Card.Mab_CardUpperHand;            
+            mabDuelDB.Mab_NpcCardId = npcChosenCard.Id;
+            mabDuelDB.Mab_NpcCardName = npcChosenCard.Mab_Card.Mab_CardName;
+            mabDuelDB.Mab_NpcCardType = npcChosenCard.Mab_Card.Mab_CardType;
+            mabDuelDB.Mab_NpcCardLevel = npcChosenCard.Mab_Card.Mab_CardLevel;
+            mabDuelDB.Mab_NpcCardPower = npcChosenCard.Mab_Card.Mab_CardPower;
+            mabDuelDB.Mab_NpcCardUpperHand = npcChosenCard.Mab_Card.Mab_CardUpperHand;            
 
             await this._daoDbContext.SaveChangesAsync();
 
             return (new UsersMabNpcAttacksResponse
             {
-                Mab_CardId = randomNpcEntry.Mab_Card.Id,
-                Mab_NpcCardId = randomNpcEntry.Id,
+                Mab_CardId = npcChosenCard.Mab_Card.Id,
+                Mab_NpcCardId = npcChosenCard.Id,
                 //apagar os 2 acima...
                 
-                Mab_CardName = randomNpcEntry.Mab_Card.Mab_CardName,
-                Mab_CardCode = randomNpcEntry.Mab_Card.Mab_CardCode,
-                Mab_CardLevel = randomNpcEntry.Mab_Card.Mab_CardLevel,
-                Mab_CardPower = randomNpcEntry.Mab_Card.Mab_CardPower,
-                Mab_CardUpperHand = randomNpcEntry.Mab_Card.Mab_CardUpperHand,
-                Mab_CardType = randomNpcEntry.Mab_Card.Mab_CardType
+                Mab_CardName = npcChosenCard.Mab_Card.Mab_CardName,
+                Mab_CardCode = npcChosenCard.Mab_Card.Mab_CardCode,
+                Mab_CardLevel = npcChosenCard.Mab_Card.Mab_CardLevel,
+                Mab_CardPower = npcChosenCard.Mab_Card.Mab_CardPower,
+                Mab_CardUpperHand = npcChosenCard.Mab_Card.Mab_CardUpperHand,
+                Mab_CardType = npcChosenCard.Mab_Card.Mab_CardType
             }, "Mab Npc has finished his turn successfully!");
         }
-        public static (bool, string) MabNpcAttcks_Validation(UsersMabNpcAttacksRequest? request)
+        private static (bool, string) MabNpcAttcks_Validation(UsersMabNpcAttacksRequest? request)
         {
             if (request != null)
             {
@@ -7389,7 +7451,129 @@ namespace BoardGameGeekLike.Services
            
             return (true, string.Empty);
         }
+        private static MabNpcCard? GetNpcAttackingCard(List<MabNpcCard>? npcAvailableCards)
+        {       
+            var npcUselessCard = npcAvailableCards
+                .FirstOrDefault(npcCard =>
+                    npcCard.Mab_Card.Mab_CardType != MabCardType.Neutral &&
+                    npcCard.Mab_Card.Mab_CardPower == 0 &&
+                    npcCard.Mab_Card.Mab_CardUpperHand == 0);
 
+            var npcWeakestCard_Neutral = npcAvailableCards
+                .Where(npcCard =>
+                        npcCard.Mab_Card.Mab_CardType == MabCardType.Neutral &&
+                        (npcCard.Mab_Card.Mab_CardPower != 0 || npcCard.Mab_Card.Mab_CardUpperHand != 0))
+                .OrderBy(npcCard => npcCard.Mab_Card.Mab_CardPower)
+                .ThenBy(npcCard => npcCard.Mab_Card.Mab_CardUpperHand)
+                .FirstOrDefault();
+       
+            var weakestNpcCard = npcAvailableCards
+                .Where(npcCard =>
+                    npcCard.Mab_Card.Mab_CardType != MabCardType.Neutral &&
+                    (npcCard.Mab_Card.Mab_CardPower > 0 || npcCard.Mab_Card.Mab_CardUpperHand > 0))
+                .OrderBy(npcCard => npcCard.Mab_Card.Mab_CardPower)
+                .ThenBy(npcCard => npcCard.Mab_Card.Mab_CardUpperHand)
+                .FirstOrDefault();
+
+            var npcTruceCard = npcAvailableCards
+                .Where(npcCard =>
+                        npcCard.Mab_Card.Mab_CardType == MabCardType.Neutral &&
+                        npcCard.Mab_Card.Mab_CardPower == 0 &&
+                        npcCard.Mab_Card.Mab_CardUpperHand == 0)
+                .OrderBy(npcCard => npcCard.Mab_Card.Mab_CardPower)
+                .ThenBy(npcCard => npcCard.Mab_Card.Mab_CardUpperHand)
+                .FirstOrDefault();
+
+            if(npcUselessCard != null)
+            {
+                return npcUselessCard;
+            }   
+            else if (npcWeakestCard_Neutral != null && npcWeakestCard_Neutral.Mab_Card.Mab_CardPower <= weakestNpcCard.Mab_Card.Mab_CardPower)
+            {
+                return npcWeakestCard_Neutral;
+            }
+            else if (weakestNpcCard != null)
+            {
+                return weakestNpcCard;
+            }
+            else
+            {
+                return npcTruceCard;
+            }
+        }
+        private static MabNpcCard? GetNpcDefendingCard(List<MabNpcCard>? npcAvailableCards, int? playerCardPower, int? playerCardUpperHand, MabCardType? playerCardType)
+        {
+            var possibleResults = new List<int?>();            
+
+            for (int i = 0; i < npcAvailableCards.Count; i++)
+            {
+                var defendingCard = npcAvailableCards[i].Mab_Card;
+
+                var (_, duelPoints) = Helper.MabResolveDuel(
+                    playerCardPower!.Value,
+                    playerCardUpperHand!.Value,
+                    playerCardType,
+                    defendingCard.Mab_CardPower,
+                    defendingCard.Mab_CardUpperHand,
+                    defendingCard.Mab_CardType,
+                    true);
+
+                possibleResults.Add(duelPoints);
+            }
+
+            var index = possibleResults
+                .IndexOf(possibleResults
+                    .Where(duelPoints => duelPoints > 0)
+                .Min());
+
+            if (index >= 0)
+            {
+                return npcAvailableCards[index];
+            }
+            else
+            {
+                var npcUselessCard = npcAvailableCards
+                .FirstOrDefault(npcCard =>
+                    npcCard.Mab_Card.Mab_CardType != MabCardType.Neutral &&
+                    npcCard.Mab_Card.Mab_CardPower == 0 &&
+                    npcCard.Mab_Card.Mab_CardUpperHand == 0);    
+
+                var npcTruceCard = npcAvailableCards
+                    .Where(npcCard =>
+                        npcCard.Mab_Card.Mab_CardType == MabCardType.Neutral &&
+                        npcCard.Mab_Card.Mab_CardPower == 0 &&
+                        npcCard.Mab_Card.Mab_CardUpperHand == 0)
+                    .OrderBy(npcCard => npcCard.Mab_Card.Mab_CardPower)
+                    .ThenBy(npcCard => npcCard.Mab_Card.Mab_CardUpperHand)
+                    .FirstOrDefault();
+
+                var weakestNpcCard = npcAvailableCards
+                    .Where(npcCard =>
+                        npcCard.Mab_Card.Mab_CardPower != 0 || npcCard.Mab_Card.Mab_CardUpperHand != 0)
+                    .OrderBy(npcCard => npcCard.Mab_Card.Mab_CardPower)
+                    .ThenBy(npcCard => npcCard.Mab_Card.Mab_CardUpperHand)
+                    .FirstOrDefault();
+
+                if (npcTruceCard != null)
+                {
+                    return npcTruceCard;
+                }
+                else if (npcUselessCard != null)
+                {
+                    return npcUselessCard;
+                }
+                else if(weakestNpcCard != null)
+                {
+                    return weakestNpcCard;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+        
+        }
 
         public async Task<(UsersMabGetNpcCardFullPowerResponse?, string)> MabGetNpcCardFullPower(UsersMabGetNpcCardFullPowerRequest? request = null)
         {
@@ -8220,8 +8404,6 @@ namespace BoardGameGeekLike.Services
 
                 Mab_NextPlayerLevelThreshold = Helper.MabGetPlayerNextLevelThreshold(mabCampaignDB.Mab_PlayerLevel!.Value),
 
-                Mab_CampaignDifficulty = mabCampaignDB.Mab_Difficulty!.Value,
-
                 Mab_Goldstash = mabCampaignDB.Mab_GoldStash!.Value,
 
                 Mab_QuestsCounts = mabQuestsCount,
@@ -8238,6 +8420,8 @@ namespace BoardGameGeekLike.Services
 
                 Mab_CreatedDecksCount = mabCampaignDB.Mab_Decks!.Count,
 
+                Mab_CampaignDifficulty = mabCampaignDB.Mab_Difficulty!.Value,
+      
                 Mab_AllMabCardsCollectedTrophy = mabCampaignDB.Mab_AllCardsCollectedTrophy!.Value,
 
                 Mab_AllMabNpcsDefeatedTrophy = mabCampaignDB.Mab_AllNpcsDefeatedTrophy!.Value
