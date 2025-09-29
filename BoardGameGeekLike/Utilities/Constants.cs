@@ -43,8 +43,8 @@
 
         public const int DeckSize = 5;
 
-        public const int BoosterPrice = 10;
-        public const int BoosterSize = 3;
+        public const int BoosterPrice = 10; // coins
+        public const int BoosterSize = 3; // number of cards
 
         public const int NpcLvl_MaxUpperDifference = 2;
 

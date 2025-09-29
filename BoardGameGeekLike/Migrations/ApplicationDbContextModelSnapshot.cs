@@ -320,6 +320,9 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("Mab_AdamantiumStash")
+                        .HasColumnType("int");
+
                     b.Property<bool?>("Mab_AllCardsCollectedTrophy")
                         .HasColumnType("tinyint(1)");
 
@@ -335,16 +338,25 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("Mab_BattlesCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_BrassStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_CoinsStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_CopperStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_DiamondStash")
+                        .HasColumnType("int");
+
                     b.Property<byte?>("Mab_Difficulty")
                         .HasColumnType("tinyint unsigned");
 
                     b.Property<int?>("Mab_GoldStash")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Mab_Horse")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Mab_IronOre")
+                    b.Property<int?>("Mab_IronStash")
                         .HasColumnType("int");
 
                     b.Property<bool?>("Mab_IsCampaignDeleted")
@@ -362,7 +374,13 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<string>("Mab_PlayerNickname")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("Mab_WoodLog")
+                    b.Property<int?>("Mab_SilverStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_SteelStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_TitaniumStash")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")

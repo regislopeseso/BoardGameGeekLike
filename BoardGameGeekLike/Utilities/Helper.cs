@@ -344,7 +344,7 @@ namespace BoardGameGeekLike.Utilities
             };
         }     
 
-        public static int MabGetEarnedGold(int duelPoints)
+        public static int MabGetEarnedCoins(int duelPoints)
         {
             if (duelPoints > 0 && duelPoints < 10)
             {

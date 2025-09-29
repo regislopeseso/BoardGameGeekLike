@@ -18,7 +18,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public MabCampaignDifficulty? Mab_CampaignDifficulty { get; set; }
 
-        public int? Mab_Goldstash { get; set; }
+        public int? Mab_CoinsStash { get; set; }
 
         public int? Mab_QuestsCounts { get; set; }
 

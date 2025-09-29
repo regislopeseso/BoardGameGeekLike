@@ -20,13 +20,7 @@ namespace BoardGameGeekLike.Models.Entities
 
         public MabCampaignDifficulty? Mab_Difficulty{ get; set; }
 
-        public int? Mab_GoldStash { get; set; }
-
-        public int? Mab_IronOre { get; set; } 
-
-        public int? Mab_Horse {  get; set; }
-
-        public int? Mab_WoodLog { get; set; }   
+        public int? Mab_CoinsStash { get; set; } = 0;
 
         public int? Mab_BattlesCount { get; set; } = 0;
 
@@ -36,11 +30,34 @@ namespace BoardGameGeekLike.Models.Entities
 
         public int? Mab_OpenedBoostersCount { get; set; } = 0;
 
+
+        public int? Mab_BrassStash { get; set; } = 0;
+
+        public int? Mab_CopperStash { get; set; } = 0;
+
+        public int? Mab_IronStash { get; set; } = 0;
+
+        public int? Mab_SteelStash { get; set; } = 0;
+
+        public int? Mab_TitaniumStash { get; set; } = 0;
+
+        public int? Mab_SilverStash { get; set; } = 0;
+
+        public int? Mab_GoldStash { get; set; } = 0;
+
+        public int? Mab_DiamondStash { get; set; } = 0;
+
+        public int? Mab_AdamantiumStash { get; set; } = 0;
+
         public bool? Mab_AllCardsCollectedTrophy { get; set; } = false;
 
         public bool? Mab_AllNpcsDefeatedTrophy { get; set; } = false;
 
+
+
         public bool? Mab_IsCampaignDeleted { get; set; } = false;
+
+
 
 
         [ForeignKey(nameof(this.User))]

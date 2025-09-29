@@ -5463,7 +5463,7 @@ namespace BoardGameGeekLike.Services
 
             var mabCampaignDifficultyEvaluation = MabEvaluateCampaignDifficultyLevel(request!.Mab_CampaignDifficulty!.Value);
 
-            var startingGoldStash = mabCampaignDifficultyEvaluation[0];
+            var startingCoinsStash = mabCampaignDifficultyEvaluation[0];
 
             var startingCardsMaxLevel = mabCampaignDifficultyEvaluation[1];
 
@@ -5475,7 +5475,7 @@ namespace BoardGameGeekLike.Services
 
             return (new UsersMabGetCampaignDificultyInfoResponse
             {
-                Mab_StartingGoldStash = startingGoldStash,
+                Mab_StartingCoinsStash = startingCoinsStash,
                 Mab_StartingCardsMaxLevel = startingCardsMaxLevel,
                 Mab_StartingCardsCount = startingCardsCount,
                 Mab_QuestsBaseGoldBounty = questsBaseGoldBounty,
@@ -5530,7 +5530,7 @@ namespace BoardGameGeekLike.Services
 
             var mabCampaignDifficultyEvaluation = MabEvaluateCampaignDifficultyLevel(request!.MabCampaignDifficulty!.Value);
 
-            var startingMabGoldStash = mabCampaignDifficultyEvaluation[0];
+            var startingMabCoinsStash = mabCampaignDifficultyEvaluation[0];
 
             var maxMabCardLevel = mabCampaignDifficultyEvaluation[1];
 
@@ -5560,7 +5560,7 @@ namespace BoardGameGeekLike.Services
             newMabCampaign.Mab_PlayerNickname = request!.MabPlayerNickName;
             newMabCampaign.Mab_PlayerLevel = 0;
             newMabCampaign.Mab_Difficulty = request.MabCampaignDifficulty;
-            newMabCampaign.Mab_GoldStash = startingMabGoldStash;
+            newMabCampaign.Mab_CoinsStash = startingMabCoinsStash;
             newMabCampaign.Mab_PlayerCards = mabPlayerInitialCards;
             newMabCampaign.Mab_Decks.Add(newMabPlayerDeck);            
 
@@ -5649,7 +5649,7 @@ namespace BoardGameGeekLike.Services
         }
         private List<int> MabEvaluateCampaignDifficultyLevel(MabCampaignDifficulty mabCampaignDifficulty)
         {
-            int startingGoldStash;
+            int startingCoinsStash;
 
             int startingCardMaxLevel;
 
@@ -5662,21 +5662,21 @@ namespace BoardGameGeekLike.Services
             switch (mabCampaignDifficulty)
             {
                 case MabCampaignDifficulty.Easy:
-                    startingGoldStash = Constants.BoosterPrice;
+                    startingCoinsStash = Constants.BoosterPrice;
                     startingCardMaxLevel = Constants.MinCardLevel + 2;
                     startingCardsCount = Constants.DeckSize * 3;
                     questsBaseGoldBounty = Constants.BoosterPrice * 3;
                     questsBaseXpReward = Constants.QuestsBaseXpReward * 3;
                     break;
                 case MabCampaignDifficulty.Medium:
-                    startingGoldStash = Constants.BoosterPrice / 2;
+                    startingCoinsStash = Constants.BoosterPrice / 2;
                     startingCardMaxLevel = Constants.MinCardLevel + 1;
                     startingCardsCount = Constants.DeckSize * 2;
                     questsBaseGoldBounty = Constants.BoosterPrice * 2;
                     questsBaseXpReward = Constants.QuestsBaseXpReward * 2;
                     break;
                 case MabCampaignDifficulty.Hard:
-                    startingGoldStash = 0;
+                    startingCoinsStash = 0;
                     startingCardMaxLevel = Constants.MinCardLevel;
                     startingCardsCount = Constants.DeckSize;
                     questsBaseGoldBounty = Constants.BoosterPrice;
@@ -5687,7 +5687,7 @@ namespace BoardGameGeekLike.Services
             }   
      
 
-            return new List<int> { startingGoldStash, startingCardMaxLevel, startingCardsCount, questsBaseGoldBounty, questsBaseXpReward};
+            return new List<int> { startingCoinsStash, startingCardMaxLevel, startingCardsCount, questsBaseGoldBounty, questsBaseXpReward};
         }
 
 
@@ -6269,7 +6269,7 @@ namespace BoardGameGeekLike.Services
                     Mab_NpcCardFullPower = mabCard_npc_fullPower,
                 });
 
-                var earnedGold = Helper.MabGetEarnedGold(duelPoints);
+                var earnedGold = Helper.MabGetEarnedCoins(duelPoints);
 
                 var mabDuels = mabBattleDB.Mab_Duels;
 
@@ -6316,10 +6316,10 @@ namespace BoardGameGeekLike.Services
 
             mabBattleDB.Mab_IsBattleFinished = false;
 
-            mabCampaignDB.Mab_GoldStash =
-                mabCampaignDB.Mab_GoldStash == null || mabCampaignDB.Mab_GoldStash == 0 ?
+            mabCampaignDB.Mab_CoinsStash =
+                mabCampaignDB.Mab_CoinsStash == null || mabCampaignDB.Mab_CoinsStash == 0 ?
                 mabBattleDB.Mab_EarnedGold :
-                mabCampaignDB.Mab_GoldStash + mabBattleDB.Mab_EarnedGold;
+                mabCampaignDB.Mab_CoinsStash + mabBattleDB.Mab_EarnedGold;
 
             mabCampaignDB.Mab_PlayerExperience =
                 mabCampaignDB.Mab_PlayerExperience == null || mabCampaignDB.Mab_PlayerExperience == 0 ?
@@ -6427,7 +6427,7 @@ namespace BoardGameGeekLike.Services
             currentMabBattle.Mab_HasPlayerWon = hasPlayerWon;
             currentMabBattle.Mab_IsBattleFinished = true;
 
-            mabCampaignDB.Mab_GoldStash += earnedGold;
+            mabCampaignDB.Mab_CoinsStash += earnedGold;
             mabCampaignDB.Mab_PlayerExperience += earnedXp;
             mabCampaignDB.Mab_BattlesCount++;
 
@@ -6446,7 +6446,7 @@ namespace BoardGameGeekLike.Services
             {
                 Mab_HasPlayerWon = hasPlayerWon,
                 Mab_BattlePoints = earnedGold,
-                Mab_UpdatedGoldStash = mabCampaignDB.Mab_GoldStash,
+                Mab_UpdatedGoldStash = mabCampaignDB.Mab_CoinsStash,
                 Mab_BattleEarnedXp = earnedXp,
                 Mab_BattleBonusXp = bonusXp,
                 Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience,
@@ -7310,7 +7310,7 @@ namespace BoardGameGeekLike.Services
             currentMabBattle.Mab_HasPlayerWon = hasPlayerWon;
             currentMabBattle.Mab_IsBattleFinished = true;
 
-            mabCampaignDB.Mab_GoldStash += earnedGold;
+            mabCampaignDB.Mab_CoinsStash += earnedGold;
             mabCampaignDB.Mab_PlayerExperience += earnedXp;
             mabCampaignDB.Mab_BattlesCount++;
             mabCampaignDB.Mab_BattleDefeatsCount++;         
@@ -7319,7 +7319,7 @@ namespace BoardGameGeekLike.Services
 
             return (new UsersMabPlayerRetreatsResponse
             {
-                Mab_UpdatedGoldStash = mabCampaignDB.Mab_GoldStash,
+                Mab_UpdatedGoldStash = mabCampaignDB.Mab_CoinsStash,
 
                 Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience
             },
@@ -7994,33 +7994,38 @@ namespace BoardGameGeekLike.Services
             var groupedMabPlayerCardsDB = await _daoDbContext
                 .MabPlayerCards
                 .AsNoTracking()
-                .Where(a => a.Mab_AssignedCards!
-                    .Any(b => b.Mab_DeckId == request!.Mab_DeckId) == false)
-                .GroupBy(a => new
+                .Where(playerCard => playerCard.Mab_AssignedCards!
+                    .Any(assignedCard => assignedCard.Mab_DeckId == request!.Mab_DeckId) == false)
+                .GroupBy(playerCard => new
                 {
-                    a.Mab_CardId,
+                    playerCard.Mab_CardId,
                 })
-                .Select(a => new
+                .Select(playerCard => new
                 {
-                    MabCard = a.Select(b => new
+                    MabPlayerCard = playerCard.Select(playerCard => new
                     {
-                        b.Id,
-                        b.Mab_Card!.Mab_CardName,
-                        b.Mab_Card.Mab_CardType,
-                        b.Mab_Card.Mab_CardPower,
-                        b.Mab_Card.Mab_CardUpperHand
+                        playerCard.Id,
+
+                        playerCard.Mab_Card!.Mab_CardName,
+                        playerCard.Mab_Card.Mab_CardType,
+                        playerCard.Mab_Card.Mab_CardPower,
+                        playerCard.Mab_Card.Mab_CardUpperHand
                     }).FirstOrDefault(),
 
-                    Qty = a.Count()
+                    Qty = playerCard.Count()
                 })
                 .ToListAsync(); // materialize in memory
 
             // Step 2: Build final MabPlayerTurn_response with string formatting in memory
             var unassignedMabCardsList = groupedMabPlayerCardsDB
-                .Select(a => new UsersMabListUnassignedPlayerCardsResponse
+                .Select(grouped => new UsersMabListUnassignedPlayerCardsResponse
                 {
-                    Mab_PlayerCardId = a.MabCard!.Id!,
-                    Mab_CardDescription = $"{a.MabCard.Mab_CardName} * {a.MabCard.Mab_CardType} * {a.MabCard.Mab_CardPower} | {a.MabCard.Mab_CardUpperHand} * Qty.: {a.Qty}"
+                    Mab_PlayerCardId = grouped.MabPlayerCard.Id,
+                    Mab_CardDescription = 
+                        $"{grouped.MabPlayerCard.Mab_CardName} * " +
+                        $"{grouped.MabPlayerCard.Mab_CardType} * " +
+                        $"{grouped.MabPlayerCard.Mab_CardPower} | {grouped.MabPlayerCard.Mab_CardUpperHand} * " +
+                        $"Qty.: {grouped.Qty}"
                 })
                 .OrderBy(x => x.Mab_CardDescription)
                 .ToList();
@@ -8305,6 +8310,197 @@ namespace BoardGameGeekLike.Services
         }
 
 
+        public async Task<(UsersMabListForgeryResourcesResponse?, string)> MabListForgeryResources(UsersMabListForgeryResourcesRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabListForgeryResources failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabListForgeryResources_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabForgeryResourses = await this._daoDbContext
+                .MabCampaigns
+                .Where(campaign =>
+                    campaign.Mab_IsCampaignDeleted == false &&
+                    campaign.UserId == userId)
+                .Select(campaign => new UsersMabListForgeryResourcesResponse
+                {
+                    Mab_Coins = campaign.Mab_CoinsStash,
+                    Mab_Xp = campaign.Mab_PlayerExperience,
+
+                    Mab_Brass = campaign.Mab_BrassStash,
+                    Mab_Copper = campaign.Mab_CopperStash,
+                    Mab_Iron = campaign.Mab_IronStash,
+
+                    Mab_Steel = campaign.Mab_SteelStash,
+                    Mab_Titanium = campaign.Mab_TitaniumStash,
+                    Mab_Silver = campaign.Mab_SilverStash,
+
+                    Mab_Gold = campaign.Mab_GoldStash,
+                    Mab_Diamond = campaign.Mab_DiamondStash,
+                    Mab_Adamantium = campaign.Mab_AdamantiumStash
+                })
+                .FirstOrDefaultAsync();
+
+            if (mabForgeryResourses == null)
+            {
+                return (null, "Error: MabListForgeryResources failed! Mab Player Card not found!");
+            }
+
+            return (mabForgeryResourses, "Player's resources listed successfully");
+        }
+        private static (bool, string) MabListForgeryResources_Validation(UsersMabListForgeryResourcesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabListForgeryResources failed! Request is NOT null, howerver it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabShowPlayerCardDetailsResponse?, string)> MabShowPlayerCardDetails(UsersMabShowPlayerCardDetailsRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabShowPlayerCardDetails failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabShowPlayerCardDetails_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCardDB = await this._daoDbContext
+                .MabPlayerCards
+                .Include(playerCards => playerCards.Mab_Campaign)
+                .Include(playerCards => playerCards.Mab_Card)                  
+                .Where(playerCard =>                    
+                    playerCard.Mab_Campaign!.Mab_IsCampaignDeleted == false &&
+                    playerCard.Mab_Campaign.UserId == userId &&
+                    playerCard.Id! == request!.Mab_PlayerCardId &&
+                    playerCard.Mab_Card!.Mab_IsCardDeleted! == false)
+                .Select(playerCard => new UsersMabShowPlayerCardDetailsResponse
+                {
+                   Mab_CardName = playerCard.Mab_Card!.Mab_CardName,
+                   Mab_CardType = playerCard.Mab_Card.Mab_CardType,
+                   Mab_CardCode = playerCard.Mab_Card.Mab_CardCode,
+                   Mab_CardPower = playerCard.Mab_Card.Mab_CardPower,
+                   Mab_CardUpperHand = playerCard.Mab_Card.Mab_CardUpperHand
+                })
+                .FirstOrDefaultAsync();
+
+            if (mabCardDB == null)
+            {
+                return (null, "Error: MabShowPlayerCardDetails failed! Mab Player Card not found!");
+            }
+
+            return (mabCardDB, "Player's mab card details fetched successfully");
+        }
+        private static (bool, string) MabShowPlayerCardDetails_Validation(UsersMabShowPlayerCardDetailsRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabShowPlayerCardDetails_Validation failed! Request is null!");
+            }
+
+            if (request.Mab_PlayerCardId.HasValue == false || request.Mab_PlayerCardId < 1)
+            {
+                return (false, "Error: MabShowPlayerCardDetails_Validation failed! Requested Mab_PlayerCardId is missing or invalid!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabForgeCardResponse?, string)> MabForgeCard(UsersMabForgeCardRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabForgeCard failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabForgeCard_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabPlayerCardDB = await this._daoDbContext
+                .MabPlayerCards
+                .Include(playerCards => playerCards.Mab_Campaign)
+                .Include(playerCards => playerCards.Mab_Card)
+                .FirstOrDefaultAsync(playerCard =>
+                    playerCard.Mab_Campaign!.Mab_IsCampaignDeleted == false &&
+                    playerCard.Mab_Campaign.UserId == userId &&
+                    playerCard.Id! == request!.Mab_PlayerCardId &&
+                    playerCard.Mab_Card!.Mab_IsCardDeleted! == false);             
+
+
+            if (mabPlayerCardDB == null)
+            {
+                return (null, "Error: MabForgeCard failed! Mab Player Card not found!");
+            }
+
+            var cardPower = mabPlayerCardDB.Mab_Card.Mab_CardUpperHand + 1;
+
+            var cardUpperHand = mabPlayerCardDB.Mab_Card.Mab_CardUpperHand;
+
+            var cardType = mabPlayerCardDB.Mab_Card.Mab_CardType;
+
+            var newMabCardDB = await this._daoDbContext
+                .MabCards
+                .FirstOrDefaultAsync(card =>
+                    card.Mab_IsCardDeleted == false &&
+                    card.Mab_CardPower == cardPower &&
+                    card.Mab_CardUpperHand == cardUpperHand &&
+                    card.Mab_CardType! == cardType);
+
+            if(newMabCardDB == null)
+            {
+
+            }
+
+            return (
+                new UsersMabForgeCardResponse 
+                {               
+                    Mab_CardName = newMabCardDB.Mab_CardName,
+                    Mab_CardPower = newMabCardDB.Mab_CardPower,
+                    Mab_CardUpperHand = newMabCardDB.Mab_CardUpperHand,
+                    Mab_CardType = newMabCardDB.Mab_CardType,
+                    Mab_CardCode = newMabCardDB.Mab_CardCode
+
+                }, "Player's mab card details fetched successfully");
+        }
+        private static (bool, string) MabForgeCard_Validation(UsersMabForgeCardRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabForgeCard_Validation failed! Request is null!");
+            }
+
+            if (request.Mab_PlayerCardId.HasValue == false || request.Mab_PlayerCardId < 1)
+            {
+                return (false, "Error: MabForgeCard_Validation failed! Requested Mab_PlayerCardId is missing or invalid!");
+            }
+
+            return (true, string.Empty);
+        }
+       
+
+
+
+
         public async Task<(UsersMabShowCampaignStatisticsResponse?, string)> MabShowCampaignStatistics(UsersMabShowCampaignStatisticsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -8404,7 +8600,7 @@ namespace BoardGameGeekLike.Services
 
                 Mab_NextPlayerLevelThreshold = Helper.MabGetPlayerNextLevelThreshold(mabCampaignDB.Mab_PlayerLevel!.Value),
 
-                Mab_Goldstash = mabCampaignDB.Mab_GoldStash!.Value,
+                Mab_CoinsStash = mabCampaignDB.Mab_CoinsStash,
 
                 Mab_QuestsCounts = mabQuestsCount,
 
@@ -8570,7 +8766,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: MabBuyDeckBooster failed! No Mab Campaign found!");
             }
 
-            if(mabCampaignDB.Mab_GoldStash == null || mabCampaignDB.Mab_GoldStash < Constants.BoosterPrice)
+            if(mabCampaignDB.Mab_CoinsStash == null || mabCampaignDB.Mab_CoinsStash < Constants.BoosterPrice)
             {
                 return (null, "Error: MabBuyDeckBooster failed! Not enough gold!");
             }
@@ -8583,7 +8779,7 @@ namespace BoardGameGeekLike.Services
 
             mabCampaignDB.Mab_PlayerCards!.AddRange(booster);
 
-            mabCampaignDB.Mab_GoldStash -= Constants.BoosterPrice;
+            mabCampaignDB.Mab_CoinsStash -= Constants.BoosterPrice;
 
             mabCampaignDB.Mab_OpenedBoostersCount = mabCampaignDB.Mab_OpenedBoostersCount +1;
 

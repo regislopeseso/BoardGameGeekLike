@@ -946,20 +946,6 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> MabShowQuestDetails([FromQuery] UsersMabShowQuestDetailsRequest? request)
-        {
-            var (content, message) = await this._usersService.MabShowQuestDetails(request);
-
-            var response = new Response<UsersMabShowQuestDetailsResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> MabListQuests(UsersMabListQuestsRequest? request)
         {
             var (content, message) = await this._usersService.MabListQuests(request);
@@ -1149,6 +1135,49 @@ namespace BoardGameGeekLike.Controllers
             var (content, message) = await this._usersService.MabAutoBattle(request);
 
             var response = new Response<UsersMabAutoBattleResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MabShowQuestDetails([FromQuery] UsersMabShowQuestDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabShowQuestDetails(request);
+
+            var response = new Response<UsersMabShowQuestDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> MabListForgeryResources(UsersMabListForgeryResourcesRequest? request)
+        {
+            var (content, message) = await this._usersService.MabListForgeryResources(request);
+
+            var response = new Response<UsersMabListForgeryResourcesResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MabShowPlayerCardDetails([FromQuery] UsersMabShowPlayerCardDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabShowPlayerCardDetails(request);
+
+            var response = new Response<UsersMabShowPlayerCardDetailsResponse?>
             {
                 Content = content,
                 Message = message

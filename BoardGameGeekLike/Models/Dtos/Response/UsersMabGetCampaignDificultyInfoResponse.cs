@@ -2,7 +2,7 @@
 {
     public class UsersMabGetCampaignDificultyInfoResponse
     {
-        public int? Mab_StartingGoldStash { get; set; }
+        public int? Mab_StartingCoinsStash { get; set; }
 
         public int? Mab_StartingCardsMaxLevel { get; set; }
 
