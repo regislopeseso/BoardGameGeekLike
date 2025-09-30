@@ -403,7 +403,201 @@ namespace BoardGameGeekLike.Utilities
 
             return isPlayerAttacking;
         }
-    
-    }        
+
+
+        public static (List<int?>?, string) MabEvaluateForgingCosts(int? ownedCoins, int? cardPower, int? ownedMaterial)
+        {
+            if (ownedCoins < 1)
+            {
+                return (null, "MabEvaluateForgingCosts failed! No coins available");
+            }
+
+            List<int?>? results = new();
+
+            var improvedPower = cardPower + 1;         
+         
+            var coinsCost = cardPower switch
+            {
+                0 => 1,
+                1 => 2,
+                2 => 4,
+                3 => 8,
+                4 => 16,
+                5 => 32,
+                6 => 64,
+                7 => 128,
+                8 => 256,
+                9 => 512,
+                _ => 999,
+            };
+
+            if (ownedCoins < coinsCost)
+            {
+                return (null, "MabEvaluateForgingCosts failed! Not enough coins available");
+            }
+
+            var materialCost = cardPower switch
+            {
+                0 => 1,
+                1 => 2,
+                2 => 5,
+                3 => 10,
+                4 => 15,
+                5 => 30,
+                6 => 60,
+                7 => 100,
+                8 => 150,
+                9 => 200,
+                _ => 999,
+            };
+
+            if (ownedMaterial < materialCost)
+            {
+                return (null, "MabEvaluateForgingCosts failed! Not enough raw material!");
+            }
+
+            results.Add(improvedPower);
+
+            results.Add(materialCost);
+
+            results.Add(materialCost);           
+
+            return (results, string.Empty);
+        }
+
+        public static (List<int?>?, string) MabEvaluateSharpeningCosts(int? ownedCoins, int? xp,  int? cardUpperHand)
+        {
+            if (ownedCoins < 1)
+            {
+                return (null, "MabEvaluateSharpeningCosts failed! No coins available");
+            }
+
+            var improvedUpperHand = cardUpperHand + 1;
+
+            List<int?>? results = new();
+
+            var coinsCost = cardUpperHand switch
+            {
+                0 => 1,
+                1 => 2,
+                2 => 4,
+                3 => 8,
+                4 => 16,
+                5 => 32,
+                6 => 64,
+                7 => 128,
+                8 => 256,
+                9 => 512,
+                _ => 999,
+            };
+
+            var xpCost = cardUpperHand switch
+            {
+                0 => 2,
+                1 => 10,
+                2 => 25,
+                3 => 50,
+                4 => 75,
+                5 => 125,
+                6 => 150,
+                7 => 175,
+                8 => 200,
+                9 => 250,
+                _ => 999,
+            };
+
+            
+            if (ownedCoins < coinsCost)
+            {
+                return (null, "MabEvaluateSharpeningCosts failed! Not enough coins available");
+            }
+
+            if (xp < xpCost)
+            {
+                return (null, "MabEvaluateSharpeningCosts failed! Not enough XP!");
+            }
+
+            results.Add(improvedUpperHand);
+
+            results.Add(coinsCost);
+
+            results.Add(xpCost);
+
+            return (results, string.Empty);       
+        }
+
+        public static (List<int?>?, string) MabEvaluateMeltingCost(int? ownedCoins, int? cardPower, int? cardUpperHand)
+        {
+            if (ownedCoins < 1)
+            {
+                return (null, "MabEvaluateMeltingCost failed! No coins available");
+            }    
+
+            List<int?>? results = new();
+
+            var coinsCost = (cardPower + cardUpperHand) switch
+            {
+                0 => 1,
+                1 => 2,
+                2 => 3,
+                3 => 4,
+                4 => 5,
+                5 => 6,
+                6 => 7,
+                7 => 8,
+                8 => 9,
+                9 => 10,
+                10 => 11,
+                11 => 12,
+                12 => 13,
+                13 => 14,
+                14 => 15,
+                15 => 16,
+                16 => 17,
+                17 => 18,
+                18 => 19,
+                _ => 0,
+            };
+
+            var extractedRawMaterial = cardPower switch
+            {
+                0 => 1,
+                1 => 2,
+                2 => 4,
+                3 => 6,
+                4 => 8,
+                5 => 10,
+                6 => 12,
+                7 => 14,
+                8 => 16,
+                9 => 18,
+                _ => 0,
+            };
+
+            var gainedXp = cardUpperHand switch
+            {
+                0 => 2,
+                1 => 10,
+                2 => 25,
+                3 => 50,
+                4 => 75,
+                5 => 125,
+                6 => 150,
+                7 => 175,
+                8 => 200,
+                9 => 250,
+                _ => 999,
+            };
+   
+            results.Add(extractedRawMaterial);
+
+            results.Add(gainedXp);
+
+            results.Add(coinsCost);
+
+            return (results, string.Empty);
+        }
+
+    }
 }
 

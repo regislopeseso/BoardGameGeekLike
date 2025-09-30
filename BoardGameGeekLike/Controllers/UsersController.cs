@@ -1157,7 +1157,6 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
         [HttpGet]
         public async Task<IActionResult> MabListForgeryResources(UsersMabListForgeryResourcesRequest? request)
         {
@@ -1186,6 +1185,47 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> MabForgeCard([FromForm] UsersMabForgeCardRequest? request)
+        {
+            var (content, message) = await this._usersService.MabForgeCard(request);
+
+            var response = new Response<UsersMabForgeCardResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabSharpenCard([FromForm] UsersMabSharpenCardRequest? request)
+        {
+            var (content, message) = await this._usersService.MabSharpenCard(request);
+
+            var response = new Response<UsersMabSharpenCardResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabMeltCard([FromForm] UsersMabMeltCardRequest? request)
+        {
+            var (content, message) = await this._usersService.MabMeltCard(request);
+
+            var response = new Response<UsersMabMeltCardResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpGet]
         public async Task<IActionResult> MabGetDeckBoosterDeal(UsersMabGetDeckBoosterDealRequest? request)
@@ -1200,7 +1240,6 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> MabBuyDeckBooster(UsersMabBuyDeckBoosterRequest? request)

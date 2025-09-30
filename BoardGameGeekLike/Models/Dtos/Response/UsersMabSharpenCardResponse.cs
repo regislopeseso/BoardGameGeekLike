@@ -2,7 +2,7 @@
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersMabForgeCardResponse
+    public class UsersMabSharpenCardResponse
     {
         public int? Mab_PlayerCardId { get; set; }
 

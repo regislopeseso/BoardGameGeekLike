@@ -8436,51 +8436,162 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var mabPlayerCardDB = await this._daoDbContext
+            var mabPlayerCardsDB = await this._daoDbContext
                 .MabPlayerCards
                 .Include(playerCards => playerCards.Mab_Campaign)
                 .Include(playerCards => playerCards.Mab_Card)
-                .FirstOrDefaultAsync(playerCard =>
+                .Include(playerCards => playerCards.Mab_AssignedCards)
+                .Where(playerCard =>
                     playerCard.Mab_Campaign!.Mab_IsCampaignDeleted == false &&
-                    playerCard.Mab_Campaign.UserId == userId &&
-                    playerCard.Id! == request!.Mab_PlayerCardId &&
-                    playerCard.Mab_Card!.Mab_IsCardDeleted! == false);             
+                    playerCard.Mab_Campaign.UserId == userId &&                    
+                    playerCard.Mab_Card!.Mab_IsCardDeleted! == false)
+                .ToListAsync();             
 
+            if (mabPlayerCardsDB == null || mabPlayerCardsDB.Count < 1)
+            {
+                return (null, "Error: MabForgeCard failed! Mab Player Cards could not be found!");
+            }
+
+            var mabPlayerCardDB = mabPlayerCardsDB.FirstOrDefault(playerCard => playerCard.Id == request.Mab_PlayerCardId);
 
             if (mabPlayerCardDB == null)
             {
                 return (null, "Error: MabForgeCard failed! Mab Player Card not found!");
             }
 
-            var cardPower = mabPlayerCardDB.Mab_Card.Mab_CardUpperHand + 1;
+            var campaignDB = mabPlayerCardDB.Mab_Campaign;
+
+            if (campaignDB == null)
+            {
+                return (null, "Error: MabForgeCard failed! Mab Campaign not found!");
+            }
+
+            var assignedCards = mabPlayerCardDB.Mab_AssignedCards;
+
+            var cardPower = mabPlayerCardDB!.Mab_Card!.Mab_CardPower;
 
             var cardUpperHand = mabPlayerCardDB.Mab_Card.Mab_CardUpperHand;
 
             var cardType = mabPlayerCardDB.Mab_Card.Mab_CardType;
 
+            var ownedRawMaterial = cardPower switch
+            {
+                0 => campaignDB.Mab_BrassStash,
+                1 => campaignDB.Mab_CopperStash,
+                2 => campaignDB.Mab_IronStash,
+                3 => campaignDB.Mab_SteelStash,
+                4 => campaignDB.Mab_TitaniumStash,
+                5 => campaignDB.Mab_SilverStash,
+                6 => campaignDB.Mab_GoldStash,
+                7 => campaignDB.Mab_DiamondStash,
+                8 => campaignDB.Mab_AdamantiumStash,
+                _ => null
+            };
+
+            if(ownedRawMaterial == null || ownedRawMaterial.HasValue == false)
+            {
+                return (new UsersMabForgeCardResponse
+                {
+                    Mab_CardName = mabPlayerCardDB.Mab_Card.Mab_CardName,
+                    Mab_CardPower = cardPower,
+                    Mab_CardUpperHand = cardUpperHand,
+                    Mab_CardType = cardType,
+                    Mab_CardCode = mabPlayerCardDB.Mab_Card.Mab_CardCode
+
+                }, "Error: MabForgeCard failed! Mab Player Card is already at max power, nothing changed!");
+            }
+         
+            List<int?>? evaluateForgingCosts = null;
+
+            (evaluateForgingCosts, message) = Helper.MabEvaluateForgingCosts(campaignDB.Mab_CoinsStash, cardPower, ownedRawMaterial);
+
+            if(evaluateForgingCosts == null || evaluateForgingCosts.Count < 1)
+            {
+                return (null, message);
+            }
+
+            var improvedPower = evaluateForgingCosts[0];
+
+            var coinsCost = evaluateForgingCosts[1];
+
+            var rawMaterialCost = evaluateForgingCosts[2];
+
             var newMabCardDB = await this._daoDbContext
                 .MabCards
                 .FirstOrDefaultAsync(card =>
                     card.Mab_IsCardDeleted == false &&
-                    card.Mab_CardPower == cardPower &&
+                    card.Mab_CardPower == improvedPower &&
                     card.Mab_CardUpperHand == cardUpperHand &&
                     card.Mab_CardType! == cardType);
 
             if(newMabCardDB == null)
             {
-
+                return (null, "Error: MabForgeCard failed! No upgrade for the requested Player Card could be found!");
             }
 
+            campaignDB.Mab_CoinsStash = campaignDB.Mab_CoinsStash - coinsCost;
+
+             switch (cardPower)
+             {
+                case 0:
+                    campaignDB.Mab_BrassStash -= rawMaterialCost;
+                    break;
+                case 1:
+                    campaignDB.Mab_CopperStash -= rawMaterialCost;
+                    break;
+                case 2:
+                    campaignDB.Mab_IronStash -= rawMaterialCost;
+                    break;
+                case 3:
+                    campaignDB.Mab_SteelStash -= rawMaterialCost;
+                    break;
+                case 4:
+                    campaignDB.Mab_TitaniumStash -= rawMaterialCost;
+                    break;
+                case 5:
+                    campaignDB.Mab_SilverStash -= rawMaterialCost;
+                    break;
+                case 6: 
+                    campaignDB.Mab_GoldStash -= rawMaterialCost;
+                    break;
+                case 7:
+                    campaignDB.Mab_DiamondStash -= rawMaterialCost;
+                    break;
+                case 8:
+                    campaignDB.Mab_AdamantiumStash -= rawMaterialCost;
+                    break;
+                default:                   
+                    break;
+            };
+
+            if(assignedCards != null && assignedCards.Count > 1)
+            {
+                this._daoDbContext.MabAssignedCards.RemoveRange(assignedCards);
+            }
+
+            this._daoDbContext.MabPlayerCards.Remove(mabPlayerCardDB);
+
+            var newPlayerCard = new MabPlayerCard
+            {
+                Mab_Card = newMabCardDB,
+                Mab_Campaign = campaignDB,
+            };
+
+            this._daoDbContext.MabPlayerCards.Add(newPlayerCard);
+
+            await this._daoDbContext.SaveChangesAsync();
+
             return (
-                new UsersMabForgeCardResponse 
-                {               
+                new UsersMabForgeCardResponse
+                {
+                    Mab_PlayerCardId = newPlayerCard.Id,
                     Mab_CardName = newMabCardDB.Mab_CardName,
                     Mab_CardPower = newMabCardDB.Mab_CardPower,
                     Mab_CardUpperHand = newMabCardDB.Mab_CardUpperHand,
                     Mab_CardType = newMabCardDB.Mab_CardType,
                     Mab_CardCode = newMabCardDB.Mab_CardCode
 
-                }, "Player's mab card details fetched successfully");
+                }, "Mab player card's power has been improved!");
         }
         private static (bool, string) MabForgeCard_Validation(UsersMabForgeCardRequest? request)
         {
@@ -8496,9 +8607,280 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
-       
 
 
+        public async Task<(UsersMabSharpenCardResponse?, string)> MabSharpenCard(UsersMabSharpenCardRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabSharpenCard failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabSharpenCard_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabPlayerCardDB = await this._daoDbContext
+                .MabPlayerCards
+                .Include(playerCards => playerCards.Mab_Campaign)
+                .Include(playerCards => playerCards.Mab_Card)
+                .Include(playerCards => playerCards.Mab_AssignedCards)
+                .FirstOrDefaultAsync(playerCard =>
+                    playerCard.Mab_Campaign!.Mab_IsCampaignDeleted == false &&
+                    playerCard.Mab_Campaign.UserId == userId &&
+                    playerCard.Id! == request!.Mab_PlayerCardId &&
+                    playerCard.Mab_Card!.Mab_IsCardDeleted! == false);
+
+            if (mabPlayerCardDB == null)
+            {
+                return (null, "Error: MabSharpenCard failed! Mab Player Card not found!");
+            }
+
+            var campaignDB = mabPlayerCardDB.Mab_Campaign;
+
+            if (campaignDB == null)
+            {
+                return (null, "Error: MabSharpenCard failed! Mab Campaign not found!");
+            }
+
+            var assignedCards = mabPlayerCardDB.Mab_AssignedCards;
+
+            var cardPower = mabPlayerCardDB!.Mab_Card!.Mab_CardPower;
+
+            var cardUpperHand = mabPlayerCardDB.Mab_Card.Mab_CardUpperHand;
+
+            var cardType = mabPlayerCardDB.Mab_Card.Mab_CardType;
+
+
+            var playerXp = campaignDB.Mab_PlayerExperience;
+
+            if (playerXp == null || playerXp.HasValue == false || playerXp < 1)
+            {
+                return (new UsersMabSharpenCardResponse
+                {
+                    Mab_CardName = mabPlayerCardDB.Mab_Card.Mab_CardName,
+                    Mab_CardPower = cardPower,
+                    Mab_CardUpperHand = cardUpperHand,
+                    Mab_CardType = cardType,
+                    Mab_CardCode = mabPlayerCardDB.Mab_Card.Mab_CardCode
+
+                }, "Error: MabSharpenCard failed! Mab Player Card is already at max power, nothing changed!");
+            }
+
+            List<int?>? evaluateSharpeningCosts = null;        
+
+            (evaluateSharpeningCosts, message) = Helper.MabEvaluateSharpeningCosts(campaignDB.Mab_CoinsStash, playerXp, cardUpperHand);
+
+            if (evaluateSharpeningCosts == null || evaluateSharpeningCosts.Count < 1)
+            {
+                return (null, message);
+            }
+
+            var improvedUpperHand = evaluateSharpeningCosts[0];
+
+            var coinsCost = evaluateSharpeningCosts[1];
+
+            var xpCost = evaluateSharpeningCosts[2];
+
+            var newMabCardDB = await this._daoDbContext
+                .MabCards
+                .FirstOrDefaultAsync(card =>
+                    card.Mab_IsCardDeleted == false &&
+                    card.Mab_CardPower == cardPower &&
+                    card.Mab_CardUpperHand == improvedUpperHand &&
+                    card.Mab_CardType! == cardType);
+
+            if (newMabCardDB == null)
+            {
+                return (null, "Error: MabSharpenCard failed! No upgrade for the requested Player Card could be found!");
+            }
+
+            campaignDB.Mab_CoinsStash = campaignDB.Mab_CoinsStash - coinsCost;
+
+            campaignDB.Mab_PlayerExperience = campaignDB.Mab_PlayerExperience - xpCost;
+
+
+            if (assignedCards != null && assignedCards.Count > 1)
+            {
+                this._daoDbContext.MabAssignedCards.RemoveRange(assignedCards);
+            }
+
+            this._daoDbContext.MabPlayerCards.Remove(mabPlayerCardDB);
+
+            var newPlayerCard = new MabPlayerCard
+            {
+                Mab_Card = newMabCardDB,
+                Mab_Campaign = campaignDB,
+            };
+
+            this._daoDbContext.MabPlayerCards.Add(newPlayerCard);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (
+                new UsersMabSharpenCardResponse
+                {
+                    Mab_PlayerCardId = newPlayerCard.Id,
+                    Mab_CardName = newMabCardDB.Mab_CardName,
+                    Mab_CardPower = newMabCardDB.Mab_CardPower,
+                    Mab_CardUpperHand = newMabCardDB.Mab_CardUpperHand,
+                    Mab_CardType = newMabCardDB.Mab_CardType,
+                    Mab_CardCode = newMabCardDB.Mab_CardCode
+
+                }, "Player card has been sharpened successfully!");
+        }
+        private static (bool, string) MabSharpenCard_Validation(UsersMabSharpenCardRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabForgeCard_Validation failed! Request is null!");
+            }
+
+            if (request.Mab_PlayerCardId.HasValue == false || request.Mab_PlayerCardId < 1)
+            {
+                return (false, "Error: MabForgeCard_Validation failed! Requested Mab_PlayerCardId is missing or invalid!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabMeltCardResponse?, string)> MabMeltCard(UsersMabMeltCardRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabMeltCard failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabMeltCard_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabPlayerCardDB = await this._daoDbContext
+                .MabPlayerCards
+                .Include(playerCards => playerCards.Mab_Campaign)
+                .Include(playerCards => playerCards.Mab_Card)
+                .Include(playerCards => playerCards.Mab_AssignedCards)
+                .FirstOrDefaultAsync(playerCard =>
+                    playerCard.Mab_Campaign!.Mab_IsCampaignDeleted == false &&
+                    playerCard.Mab_Campaign.UserId == userId &&
+                    playerCard.Id! == request!.Mab_PlayerCardId &&
+                    playerCard.Mab_Card!.Mab_IsCardDeleted! == false);
+
+            if (mabPlayerCardDB == null)
+            {
+                return (null, "Error: MabMeltCard failed! Mab Player Card not found!");
+            }
+
+            var campaignDB = mabPlayerCardDB.Mab_Campaign;
+
+            if (campaignDB == null)
+            {
+                return (null, "Error: MabMeltCard failed! Mab Campaign not found!");
+            }
+
+            var assignedCards = mabPlayerCardDB.Mab_AssignedCards;
+
+            var cardPower = mabPlayerCardDB!.Mab_Card!.Mab_CardPower;
+
+            var cardUpperHand = mabPlayerCardDB.Mab_Card.Mab_CardUpperHand;
+
+            var cardType = mabPlayerCardDB.Mab_Card.Mab_CardType;
+                    
+
+            List<int?>? evaluateMeltingCost = null;
+
+            (evaluateMeltingCost, message) = Helper.MabEvaluateMeltingCost(campaignDB.Mab_CoinsStash, cardPower, cardUpperHand);
+
+            if (evaluateMeltingCost == null || evaluateMeltingCost.Count < 1)
+            {
+                return (null, message);
+            }
+
+            var extractedRawMaterial = evaluateMeltingCost[0];
+
+            var gainedXp = evaluateMeltingCost[1];
+
+            var coinsCost = evaluateMeltingCost[2];
+
+
+            var materialType = "";
+
+            switch (cardPower)
+            {
+                case 0:
+                    campaignDB.Mab_BrassStash += extractedRawMaterial;
+                    materialType = "Brass";
+                    break;
+                case 1:
+                    campaignDB.Mab_CopperStash += extractedRawMaterial;
+                    break;
+                case 2:
+                    campaignDB.Mab_IronStash += extractedRawMaterial;
+                    break;
+                case 3:
+                    campaignDB.Mab_SteelStash += extractedRawMaterial;
+                    break;
+                case 4:
+                    campaignDB.Mab_TitaniumStash += extractedRawMaterial;
+                    break;
+                case 5:
+                    campaignDB.Mab_SilverStash += extractedRawMaterial;
+                    break;
+                case 6:
+                    campaignDB.Mab_GoldStash += extractedRawMaterial;
+                    break;
+                case 7:
+                    campaignDB.Mab_DiamondStash += extractedRawMaterial;
+                    break;
+                case 8:
+                    campaignDB.Mab_AdamantiumStash += extractedRawMaterial;
+                    break;
+                default:
+                    break;
+            };
+
+            campaignDB.Mab_PlayerExperience += gainedXp;
+
+            campaignDB.Mab_CoinsStash = campaignDB.Mab_CoinsStash - coinsCost;         
+
+            if (assignedCards != null && assignedCards.Count > 1)
+            {
+                this._daoDbContext.MabAssignedCards.RemoveRange(assignedCards);
+            }
+
+            this._daoDbContext.MabPlayerCards.Remove(mabPlayerCardDB);
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (
+                new UsersMabMeltCardResponse
+                {
+                    Mab_ExtractedRawMaterial = extractedRawMaterial,
+                    Mab_GainedXp = gainedXp
+
+                }, "Mab player card has been melted successfully!");
+        }
+        private static (bool, string) MabMeltCard_Validation(UsersMabMeltCardRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabForgeCard_Validation failed! Request is null!");
+            }
+
+            if (request.Mab_PlayerCardId.HasValue == false || request.Mab_PlayerCardId < 1)
+            {
+                return (false, "Error: MabForgeCard_Validation failed! Requested Mab_PlayerCardId is missing or invalid!");
+            }
+
+            return (true, string.Empty);
+        }
 
 
         public async Task<(UsersMabShowCampaignStatisticsResponse?, string)> MabShowCampaignStatistics(UsersMabShowCampaignStatisticsRequest? request)
