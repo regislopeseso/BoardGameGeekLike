@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersMabListForgeryResourcesResponse
+    public class UsersMabListResourcesResponse
     {
         public int? Mab_Coins { get; set; }
 

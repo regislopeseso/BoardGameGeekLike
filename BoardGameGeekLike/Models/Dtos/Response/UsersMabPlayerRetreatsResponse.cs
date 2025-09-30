@@ -8,7 +8,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     {
         public bool? Mab_HasPlayerWon { get; set; } = false;
 
-        public int? Mab_EarnedGold { get; set; } = Constants.RetreatGoldPenalty;
+        public int? Mab_EarnedGold { get; set; } = Constants.RetreatCoinsPenalty;
 
         public int? Mab_UpdatedGoldStash { get; set; }
 

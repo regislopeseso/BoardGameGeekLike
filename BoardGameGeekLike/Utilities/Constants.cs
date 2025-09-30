@@ -48,7 +48,7 @@
 
         public const int NpcLvl_MaxUpperDifference = 2;
 
-        public const int RetreatGoldPenalty = 1 * BoosterPrice;
+        public const int RetreatCoinsPenalty = 1 * BoosterPrice;
 
         public const int LevelOneExpThreshold = 100;
         public const int LevelTwoExpThreshold = 200;
@@ -60,5 +60,19 @@
         public const int LevelEightExpThreshold = 8000;
         public const int LevelNineExpThreshold = 16000;
         public const int LevelTenExpThreshold = 100000;
+
+
+        public const int BasePrice_Brass = 1;
+        public const int BasePrice_Copper = 2;
+        public const int BasePrice_Iron = 5;
+        public const int BasePrice_Steel = 10;
+        public const int BasePrice_Titanium = 50;
+        public const int BasePrice_Silver = 100;
+        public const int BasePrice_Gold = 200;
+        public const int BasePrice_Diamond = 350;
+        public const int BasePrice_Adamantium = 500;
+
+
+
     }
 }

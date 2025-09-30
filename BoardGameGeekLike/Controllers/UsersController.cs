@@ -1158,11 +1158,11 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> MabListForgeryResources(UsersMabListForgeryResourcesRequest? request)
+        public async Task<IActionResult> MabListResources(UsersMabListResourcesRequest? request)
         {
-            var (content, message) = await this._usersService.MabListForgeryResources(request);
+            var (content, message) = await this._usersService.MabListResources(request);
 
-            var response = new Response<UsersMabListForgeryResourcesResponse?>
+            var response = new Response<UsersMabListResourcesResponse?>
             {
                 Content = content,
                 Message = message

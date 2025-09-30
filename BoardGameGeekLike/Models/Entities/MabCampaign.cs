@@ -31,28 +31,49 @@ namespace BoardGameGeekLike.Models.Entities
         public int? Mab_OpenedBoostersCount { get; set; } = 0;
 
 
+        public int? Mab_ForgingsCount {  get; set; } = 0;
+
+        public int? Mab_SharpenCount { get; set; } = 0;
+
+        public int? Mab_MeltCount { get; set; } = 0;
+
+        public int? Mab_CountForgings { get; set; } = 0;
+
         public int? Mab_BrassStash { get; set; } = 0;
+        public int? Mab_BrassInflation { get; set; } = 0;
+
 
         public int? Mab_CopperStash { get; set; } = 0;
+        public int? Mab_CopperInflation { get; set; } = 0;
 
         public int? Mab_IronStash { get; set; } = 0;
+        public int? Mab_IronInflation { get; set; } = 0;
 
         public int? Mab_SteelStash { get; set; } = 0;
+        public int? Mab_SteelInflation { get; set; } = 0;
 
         public int? Mab_TitaniumStash { get; set; } = 0;
+        public int? Mab_TitaniumInflation { get; set; } = 0;
 
         public int? Mab_SilverStash { get; set; } = 0;
+        public int? Mab_SilverInflation { get; set; } = 0;
 
         public int? Mab_GoldStash { get; set; } = 0;
+        public int? Mab_GoldInflation { get; set; } = 0;
 
         public int? Mab_DiamondStash { get; set; } = 0;
+        public int? Mab_DiamondInflation { get; set; } = 0;
 
         public int? Mab_AdamantiumStash { get; set; } = 0;
+        public int? Mab_AdamantiumInflation { get; set; } = 0;
 
         public bool? Mab_AllCardsCollectedTrophy { get; set; } = false;
 
         public bool? Mab_AllNpcsDefeatedTrophy { get; set; } = false;
 
+        public bool? Mab_BlacksmithTrophy { get; set; } = false;
+
+        public bool? Mab_BourgeoisTrophy { get; set; } = false;
 
 
         public bool? Mab_IsCampaignDeleted { get; set; } = false;

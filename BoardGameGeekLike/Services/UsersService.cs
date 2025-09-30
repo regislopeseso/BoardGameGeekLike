@@ -7297,7 +7297,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: MabPlayerRetreats failed! Mab Duels not found!");
             }
 
-            var earnedGold = Constants.RetreatGoldPenalty;
+            var earnedGold = Constants.RetreatCoinsPenalty;
             var earnedXp = 0;
             var bonusXp = 0;
             var finalPlayerState = MabPlayerState.Panicking;
@@ -8310,7 +8310,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersMabListForgeryResourcesResponse?, string)> MabListForgeryResources(UsersMabListForgeryResourcesRequest? request = null)
+        public async Task<(UsersMabListResourcesResponse?, string)> MabListResources(UsersMabListResourcesRequest? request = null)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -8318,7 +8318,7 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: MabListForgeryResources failed! User is not authenticated");
             }
 
-            var (isValid, message) = MabListForgeryResources_Validation(request);
+            var (isValid, message) = MabListResources_Validation(request);
             if (isValid == false)
             {
                 return (null, message);
@@ -8329,7 +8329,7 @@ namespace BoardGameGeekLike.Services
                 .Where(campaign =>
                     campaign.Mab_IsCampaignDeleted == false &&
                     campaign.UserId == userId)
-                .Select(campaign => new UsersMabListForgeryResourcesResponse
+                .Select(campaign => new UsersMabListResourcesResponse
                 {
                     Mab_Coins = campaign.Mab_CoinsStash,
                     Mab_Xp = campaign.Mab_PlayerExperience,
@@ -8355,7 +8355,7 @@ namespace BoardGameGeekLike.Services
 
             return (mabForgeryResourses, "Player's resources listed successfully");
         }
-        private static (bool, string) MabListForgeryResources_Validation(UsersMabListForgeryResourcesRequest? request)
+        private static (bool, string) MabListResources_Validation(UsersMabListResourcesRequest? request)
         {
             if (request != null)
             {
@@ -8579,6 +8579,8 @@ namespace BoardGameGeekLike.Services
 
             this._daoDbContext.MabPlayerCards.Add(newPlayerCard);
 
+            campaignDB.Mab_ForgingsCount++;
+
             await this._daoDbContext.SaveChangesAsync();
 
             return (
@@ -8718,6 +8720,8 @@ namespace BoardGameGeekLike.Services
 
             this._daoDbContext.MabPlayerCards.Add(newPlayerCard);
 
+            campaignDB.Mab_SharpenCount++;
+
             await this._daoDbContext.SaveChangesAsync();
 
             return (
@@ -8810,37 +8814,45 @@ namespace BoardGameGeekLike.Services
             var coinsCost = evaluateMeltingCost[2];
 
 
-            var materialType = "";
+            MabRawMaterialType materialType;
 
             switch (cardPower)
             {
                 case 0:
                     campaignDB.Mab_BrassStash += extractedRawMaterial;
-                    materialType = "Brass";
+                    materialType = MabRawMaterialType.Brass;
                     break;
                 case 1:
                     campaignDB.Mab_CopperStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Copper;
                     break;
                 case 2:
                     campaignDB.Mab_IronStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Iron;
                     break;
                 case 3:
                     campaignDB.Mab_SteelStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Steel;
                     break;
                 case 4:
                     campaignDB.Mab_TitaniumStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Titanium;
                     break;
                 case 5:
                     campaignDB.Mab_SilverStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Silver;
                     break;
                 case 6:
                     campaignDB.Mab_GoldStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Gold;
                     break;
                 case 7:
                     campaignDB.Mab_DiamondStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Diamond;
                     break;
                 case 8:
                     campaignDB.Mab_AdamantiumStash += extractedRawMaterial;
+                    materialType = MabRawMaterialType.Adamantium;
                     break;
                 default:
                     break;
@@ -8856,6 +8868,8 @@ namespace BoardGameGeekLike.Services
             }
 
             this._daoDbContext.MabPlayerCards.Remove(mabPlayerCardDB);
+
+            campaignDB.Mab_MeltCount++;
 
             await this._daoDbContext.SaveChangesAsync();
 
@@ -8911,7 +8925,8 @@ namespace BoardGameGeekLike.Services
 
             var mabCampaignDB = await this._daoDbContext
                 .MabCampaigns
-                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(campaign => campaign.Mab_PlayerCards)                   
                 .Include(campaign => campaign.Mab_Decks)
                 .Include(campaign => campaign.Mab_Battles!)
                     .ThenInclude(battle => battle.Mab_Quest)
@@ -8930,6 +8945,35 @@ namespace BoardGameGeekLike.Services
                .GroupBy(quest => quest!.Id) // Group by quest ID
                .Select(group => group.First()) // Take one quest from each group
                .ToList();
+
+            var playerCards_CardsIds = mabCampaignDB.Mab_PlayerCards!.Select(playerCard => playerCard.Mab_CardId).ToList();
+
+            mabCampaignDB.Mab_AllCardsCollectedTrophy = await this._daoDbContext
+                .MabCards                          
+                .AnyAsync(card => 
+                    card.Mab_IsCardDeleted == false &&
+                    playerCards_CardsIds.Contains(card.Id) == false);
+
+            var defeatedNpcsIds = mabCampaignDB.Mab_Battles.Select(battle => battle.Mab_NpcId).ToList();
+
+            mabCampaignDB.Mab_AllNpcsDefeatedTrophy = await this._daoDbContext
+                .MabNpcs
+                .AnyAsync(npc =>
+                    npc.Mab_IsNpcDeleted == false &&
+                    defeatedNpcsIds.Contains(npc.Id) == false);
+
+            if(mabCampaignDB.Mab_BlacksmithTrophy == false)
+            {
+                mabCampaignDB.Mab_BlacksmithTrophy = 
+                    mabCampaignDB.Mab_CountForgings >= 50 && 
+                    mabCampaignDB.Mab_SharpenCount >= 50 && 
+                    mabCampaignDB.Mab_MeltCount >= 50;
+            }
+
+            if(mabCampaignDB.Mab_BourgeoisTrophy == false)
+            {
+                mabCampaignDB.Mab_BourgeoisTrophy = mabCampaignDB.Mab_CoinsStash >= 1000;
+            }
 
             // Count fulfilled quests (where all NPCs have been defeated)
             var fulfilledQuestsCount = 0;
@@ -8969,7 +9013,6 @@ namespace BoardGameGeekLike.Services
                 .AsNoTracking()
                 .CountAsync();
 
-
             var mabCampaignStatisticsDB = new UsersMabShowCampaignStatisticsResponse
             {
                 Mab_StartNewCampaign = false,
@@ -8999,10 +9042,14 @@ namespace BoardGameGeekLike.Services
                 Mab_CreatedDecksCount = mabCampaignDB.Mab_Decks!.Count,
 
                 Mab_CampaignDifficulty = mabCampaignDB.Mab_Difficulty!.Value,
-      
+
                 Mab_AllMabCardsCollectedTrophy = mabCampaignDB.Mab_AllCardsCollectedTrophy!.Value,
 
-                Mab_AllMabNpcsDefeatedTrophy = mabCampaignDB.Mab_AllNpcsDefeatedTrophy!.Value
+                Mab_AllMabNpcsDefeatedTrophy = mabCampaignDB.Mab_AllNpcsDefeatedTrophy!.Value,
+
+                Mab_BlacksmithTrophy = mabCampaignDB.Mab_BlacksmithTrophy,
+
+                Mab_BourgeoisTrophy = mabCampaignDB.Mab_BourgeoisTrophy,
             };
 
             if (mabCampaignStatisticsDB == null)
