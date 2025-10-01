@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BoardGameGeekLike.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250930173307_m2")]
+    [Migration("20251001190253_m2")]
     partial class m2
     {
         /// <inheritdoc />
@@ -323,6 +323,9 @@ namespace BoardGameGeekLike.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("Mab_AdamantiumInflation")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_AdamantiumStash")
                         .HasColumnType("int");
 
@@ -344,16 +347,28 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<bool?>("Mab_BlacksmithTrophy")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool?>("Mab_BourgeoisTrophy")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("Mab_BrassInflation")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_BrassStash")
                         .HasColumnType("int");
 
                     b.Property<int?>("Mab_CoinsStash")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_CopperInflation")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_CopperStash")
                         .HasColumnType("int");
 
                     b.Property<int?>("Mab_CountForgings")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_DiamondInflation")
                         .HasColumnType("int");
 
                     b.Property<int?>("Mab_DiamondStash")
@@ -365,7 +380,13 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("Mab_ForgingsCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_GoldInflation")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_GoldStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_IronInflation")
                         .HasColumnType("int");
 
                     b.Property<int?>("Mab_IronStash")
@@ -376,6 +397,9 @@ namespace BoardGameGeekLike.Migrations
 
                     b.Property<int?>("Mab_MeltCount")
                         .HasColumnType("int");
+
+                    b.Property<bool?>("Mab_MinerTrophy")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("Mab_OpenedBoostersCount")
                         .HasColumnType("int");
@@ -392,10 +416,19 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("Mab_SharpenCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_SilverInflation")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_SilverStash")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Mab_SteelInflation")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Mab_SteelStash")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Mab_TitaniumInflation")
                         .HasColumnType("int");
 
                     b.Property<int?>("Mab_TitaniumStash")

@@ -401,7 +401,7 @@ namespace BoardGameGeekLike.Services
 
             var (npcsSeedingResult, msg2) =  this.SeedNpcs(cardsSeedingResult!);
 
-            var (questsSeedingResult, msg3) = this.SeedQuests(npcsSeedingResult);
+            var (questsSeedingResult, msg3) = this.SeedQuests(npcsSeedingResult!);
 
             await this._daoDbContext.SaveChangesAsync();
 
@@ -425,12 +425,37 @@ namespace BoardGameGeekLike.Services
                             "MAB0" + cardsCount: 
                             "MAB" + cardsCount;
 
-                        var cardName = cardType.ToString()[0] == 'R' ?
-                            "Bow" : cardType.ToString()[0] == 'C' ?
-                            "Spear" : cardType.ToString()[0] == 'I' ?
-                            "Sword" : "Fist";
+                        var cardName = power switch
+                        {
+                            1 => $"{MabRawMaterialType.Brass} ",
+                            2 => $"{MabRawMaterialType.Copper} ",
+                            3 => $"{MabRawMaterialType.Iron} ",
+                            4 => $"{MabRawMaterialType.Steel} ",
+                            5 => $"{MabRawMaterialType.Titanium} ",
+                            6 => $"{MabRawMaterialType.Silver} ",
+                            7 => $"{MabRawMaterialType.Gold} ",
+                            8 => $"{MabRawMaterialType.Diamond} ",
+                            9 => $"{MabRawMaterialType.Adamantium} ",
+                            _ => ""
+                        };
+
+
+                        cardName += cardType.ToString()[0] == 'R' ?
+                            " Bow" : cardType.ToString()[0] == 'C' ?
+                            " Spear" : cardType.ToString()[0] == 'I' ?
+                            " Sword" : "Fist";
 
                         var cardLevel = Helper.MabGetCardLevel(power, upperHand);
+
+                        if(power == 0 && upperHand == 0 && cardType == MabCardType.Neutral)
+                        {
+                            cardName = "Truce";
+                        }
+
+                        if (power == 0 && upperHand == 0 && cardType == MabCardType.Infantry)
+                        {
+                            cardName = "Pickeaxe";
+                        }
 
                         var newCard = new MabCard
                         {

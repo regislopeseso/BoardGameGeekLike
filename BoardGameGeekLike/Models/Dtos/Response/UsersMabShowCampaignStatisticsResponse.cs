@@ -38,9 +38,11 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public bool? Mab_AllMabNpcsDefeatedTrophy { get; set; }
 
-        public bool? Mab_BlacksmithTrophy { get; set; }
-
         public bool? Mab_BourgeoisTrophy { get; set; }
+
+        public bool? Mab_MinerTrophy { get; set; }
+
+        public bool? Mab_BlacksmithTrophy { get; set; }
     }
 
 }

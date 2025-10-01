@@ -1158,6 +1158,34 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> MabShowMiningDetails(UsersMabShowMiningDetailsRequest? request)
+        {
+            var (content, message) = await this._usersService.MabShowMiningDetails(request);
+
+            var response = new Response<UsersMabShowMiningDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabExtractRawMaterial(UsersMabExtractRawMaterialRequest? request)
+        {
+            var (content, message) = await this._usersService.MabExtractRawMaterial(request);
+
+            var response = new Response<UsersMabExtractRawMaterialResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> MabListResources(UsersMabListResourcesRequest? request)
         {
             var (content, message) = await this._usersService.MabListResources(request);

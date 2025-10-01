@@ -5,13 +5,13 @@
 namespace BoardGameGeekLike.Migrations
 {
     /// <inheritdoc />
-    public partial class m3 : Migration
+    public partial class m2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
-                name: "Mab_BourgeoisTrophy",
+                name: "Mab_MinerTrophy",
                 table: "MabCampaigns",
                 type: "tinyint(1)",
                 nullable: true);
@@ -21,7 +21,7 @@ namespace BoardGameGeekLike.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Mab_BourgeoisTrophy",
+                name: "Mab_MinerTrophy",
                 table: "MabCampaigns");
         }
     }

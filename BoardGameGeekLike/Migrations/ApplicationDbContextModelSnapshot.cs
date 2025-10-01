@@ -395,6 +395,9 @@ namespace BoardGameGeekLike.Migrations
                     b.Property<int?>("Mab_MeltCount")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("Mab_MinerTrophy")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int?>("Mab_OpenedBoostersCount")
                         .HasColumnType("int");
 

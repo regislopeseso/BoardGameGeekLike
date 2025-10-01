@@ -71,13 +71,14 @@ namespace BoardGameGeekLike.Models.Entities
 
         public bool? Mab_AllNpcsDefeatedTrophy { get; set; } = false;
 
-        public bool? Mab_BlacksmithTrophy { get; set; } = false;
-
         public bool? Mab_BourgeoisTrophy { get; set; } = false;
+
+        public bool? Mab_MinerTrophy { get; set; } = false;
+
+        public bool? Mab_BlacksmithTrophy { get; set; } = false;
 
 
         public bool? Mab_IsCampaignDeleted { get; set; } = false;
-
 
 
 

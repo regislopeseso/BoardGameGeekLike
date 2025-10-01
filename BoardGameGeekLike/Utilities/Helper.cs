@@ -560,23 +560,22 @@ namespace BoardGameGeekLike.Utilities
             };
 
             var extractedRawMaterial = cardPower switch
-            {
-                0 => 1,
-                1 => 2,
-                2 => 4,
-                3 => 6,
-                4 => 8,
-                5 => 10,
-                6 => 12,
-                7 => 14,
-                8 => 16,
-                9 => 18,
+            {           
+                1 => 1,
+                2 => 2,
+                3 => 3,
+                4 => 4,
+                5 => 5,
+                6 => 6,
+                7 => 7,
+                8 => 8,
+                9 => 9,
                 _ => 0,
             };
 
             var gainedXp = cardUpperHand switch
             {
-                0 => 2,
+                0 => 5,
                 1 => 10,
                 2 => 25,
                 3 => 50,

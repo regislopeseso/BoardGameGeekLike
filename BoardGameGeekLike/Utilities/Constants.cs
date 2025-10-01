@@ -61,6 +61,7 @@
         public const int LevelNineExpThreshold = 16000;
         public const int LevelTenExpThreshold = 100000;
 
+        public const int BaseMiningPrice = 5;
 
         public const int BasePrice_Brass = 1;
         public const int BasePrice_Copper = 2;
