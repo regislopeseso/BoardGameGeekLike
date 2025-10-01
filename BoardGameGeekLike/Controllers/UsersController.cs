@@ -1170,6 +1170,48 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> MabListRawMaterialsPrices(UsersMabListRawMaterialsPricesRequest? request)
+        {
+            var (content, message) = await this._usersService.MabListRawMaterialsPrices(request);
+
+            var response = new Response<UsersMabListRawMaterialsPricesResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabSellRawMaterial([FromForm] UsersMabSellRawMaterialRequest? request)
+        {
+            var (content, message) = await this._usersService.MabSellRawMaterial(request);
+
+            var response = new Response<UsersMabSellRawMaterialResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MabBuyRawMaterial([FromForm] UsersMabBuyRawMaterialRequest? request)
+        {
+            var (content, message) = await this._usersService.MabBuyRawMaterial(request);
+
+            var response = new Response<UsersMabBuyRawMaterialResponse?>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
 
         [HttpGet]
         public async Task<IActionResult> MabShowPlayerCardDetails([FromQuery] UsersMabShowPlayerCardDetailsRequest? request)

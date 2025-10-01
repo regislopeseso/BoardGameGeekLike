@@ -4,6 +4,6 @@ namespace BoardGameGeekLike.Models.Dtos.Request
 {
     public class UsersMabSellRawMaterialRequest
     {
-        public MabRawMaterialType? MabRawMaterialType { get; set; }
+        public MabRawMaterialType? Mab_RawMaterialType { get; set; }
     }
 }

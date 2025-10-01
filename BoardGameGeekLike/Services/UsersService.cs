@@ -13,6 +13,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -8360,6 +8361,410 @@ namespace BoardGameGeekLike.Services
             if (request != null)
             {
                 return (false, "Error: MabListForgeryResources failed! Request is NOT null, howerver it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabListRawMaterialsPricesResponse?, string)> MabListRawMaterialsPrices(UsersMabListRawMaterialsPricesRequest? request = null)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabListRawMaterialsPrices_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns     
+                .AsNoTracking()
+                .FirstOrDefaultAsync(campaign =>
+                    campaign.Mab_IsCampaignDeleted == false &&
+                    campaign.UserId == userId);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Mab Player Card not found!");
+            }
+
+            return (new UsersMabListRawMaterialsPricesResponse
+            {
+                Mab_BrassPrice = Math.Abs(Constants.BasePrice_Brass + mabCampaignDB.Mab_BrassInflation!.Value),
+                Mab_CopperPrice = Math.Abs(Constants.BasePrice_Copper + mabCampaignDB.Mab_CopperInflation!.Value),
+                Mab_IronPrice = Math.Abs(Constants.BasePrice_Iron + mabCampaignDB.Mab_IronInflation!.Value),
+
+
+                Mab_SteelPrice = Math.Abs(Constants.BasePrice_Steel + mabCampaignDB.Mab_SteelInflation!.Value),
+                Mab_TitaniumPrice = Math.Abs(Constants.BasePrice_Titanium + mabCampaignDB.Mab_TitaniumInflation!.Value),
+                Mab_SilverPrice = Math.Abs(Constants.BasePrice_Silver + mabCampaignDB.Mab_SilverInflation!.Value),
+
+                Mab_GoldPrice = Math.Abs(Constants.BasePrice_Gold + mabCampaignDB.Mab_GoldInflation!.Value),
+                Mab_DiamondPrice = Math.Abs(Constants.BasePrice_Diamond + mabCampaignDB.Mab_DiamondInflation!.Value),
+                Mab_AdamantiumPrice = Math.Abs(Constants.BasePrice_Adamantium + mabCampaignDB.Mab_AdamantiumInflation!.Value)
+            }, "Player's resources listed successfully");
+        }
+        private static (bool, string) MabListRawMaterialsPrices_Validation(UsersMabListRawMaterialsPricesRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: MabListForgeryResources failed! Request is NOT null, howerver it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabSellRawMaterialResponse?, string)> MabSellRawMaterial(UsersMabSellRawMaterialRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabSellRawMaterial_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns               
+                .FirstOrDefaultAsync(campaign =>
+                    campaign.Mab_IsCampaignDeleted == false &&
+                    campaign.UserId == userId);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Mab Player Card not found!");
+            }
+
+            int? rawMaterialPrice = request!.Mab_RawMaterialType switch
+            {
+                MabRawMaterialType.Brass => Math.Abs(Constants.BasePrice_Brass + mabCampaignDB.Mab_BrassInflation!.Value),
+                MabRawMaterialType.Copper => Math.Abs(Constants.BasePrice_Copper + mabCampaignDB.Mab_CopperInflation!.Value),
+                MabRawMaterialType.Iron => Math.Abs(Constants.BasePrice_Iron + mabCampaignDB.Mab_IronInflation!.Value),
+                MabRawMaterialType.Steel => Math.Abs(Constants.BasePrice_Steel + mabCampaignDB.Mab_SteelInflation!.Value),
+                MabRawMaterialType.Titanium => Math.Abs(Constants.BasePrice_Titanium + mabCampaignDB.Mab_TitaniumInflation!.Value),
+                MabRawMaterialType.Silver => Math.Abs(Constants.BasePrice_Silver + mabCampaignDB.Mab_SilverInflation!.Value),
+                MabRawMaterialType.Gold => Math.Abs(Constants.BasePrice_Gold + mabCampaignDB.Mab_GoldInflation!.Value),
+                MabRawMaterialType.Diamond => Math.Abs(Constants.BasePrice_Diamond + mabCampaignDB.Mab_DiamondInflation!.Value),
+                MabRawMaterialType.Adamantium => Math.Abs(Constants.BasePrice_Adamantium + mabCampaignDB.Mab_AdamantiumInflation!.Value),
+                _ => null
+            };        
+
+            if (rawMaterialPrice == null)
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Operation failed!");
+            }
+
+            mabCampaignDB.Mab_CoinsStash += rawMaterialPrice;
+
+            if(request.Mab_RawMaterialType == MabRawMaterialType.Brass)
+            {
+                if(mabCampaignDB.Mab_BrassStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough BRASS to be sold!");
+                }
+
+                mabCampaignDB.Mab_BrassStash--;                
+            }
+            else if(request.Mab_RawMaterialType == MabRawMaterialType.Copper)
+            {
+                if (mabCampaignDB.Mab_CopperStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough COPPER to be sold!");
+                }
+
+                mabCampaignDB.Mab_CopperStash--;               
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Iron)
+            {
+                if (mabCampaignDB.Mab_IronStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough IRON to be sold!");
+                }
+
+                mabCampaignDB.Mab_IronStash--;                
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Steel)
+            {
+                if (mabCampaignDB.Mab_SteelStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough STEEL to be sold!");
+                }
+
+                mabCampaignDB.Mab_SteelStash--;                
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Titanium)
+            {
+                if (mabCampaignDB.Mab_SteelStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough TITANIUM to be sold!");
+                }
+
+                mabCampaignDB.Mab_TitaniumStash--;         
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Silver)
+            {
+                if (mabCampaignDB.Mab_SilverStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough SILVER to be sold!");
+                }
+
+                mabCampaignDB.Mab_SilverStash--;                
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Gold)
+            {
+                if (mabCampaignDB.Mab_GoldStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough GOLD to be sold!");
+                }
+
+                mabCampaignDB.Mab_GoldStash--;               
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Diamond)
+            {
+                if (mabCampaignDB.Mab_DiamondStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough DIAMOND to be sold!");
+                }
+
+                mabCampaignDB.Mab_DiamondStash--;                
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Adamantium)
+            {
+                if (mabCampaignDB.Mab_AdamantiumStash <= 0)
+                {
+                    return (null, "Error: MabListRawMaterialsPrices failed! Not enough ADAMANTIUM to be sold!");
+                }
+
+                mabCampaignDB.Mab_AdamantiumStash--;               
+            }
+            else
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Invalid requested material!");
+            }
+
+            mabCampaignDB.Mab_BrassInflation = mabCampaignDB.Mab_BrassInflation > 0 ? mabCampaignDB.Mab_BrassInflation - 1 : 0;
+            mabCampaignDB.Mab_CopperInflation = mabCampaignDB.Mab_CopperInflation > 0 ? mabCampaignDB.Mab_CopperInflation - 1 : 0;
+            mabCampaignDB.Mab_IronInflation = mabCampaignDB.Mab_IronInflation > 0 ? mabCampaignDB.Mab_IronInflation - 1 : 0;
+            mabCampaignDB.Mab_SteelInflation = mabCampaignDB.Mab_SteelInflation > 0 ? mabCampaignDB.Mab_SteelInflation - 1 : 0;
+            mabCampaignDB.Mab_TitaniumInflation = mabCampaignDB.Mab_TitaniumInflation > 0 ? mabCampaignDB.Mab_TitaniumInflation - 1 : 0;
+            mabCampaignDB.Mab_SilverInflation = mabCampaignDB.Mab_SilverInflation > 0 ? mabCampaignDB.Mab_SilverInflation - 1 : 0;
+            mabCampaignDB.Mab_GoldInflation = mabCampaignDB.Mab_GoldInflation > 0 ? mabCampaignDB.Mab_GoldInflation - 1 : 0;
+            mabCampaignDB.Mab_DiamondInflation = mabCampaignDB.Mab_DiamondInflation > 0 ? mabCampaignDB.Mab_DiamondInflation - 1 : 0;
+            mabCampaignDB.Mab_AdamantiumInflation = mabCampaignDB.Mab_AdamantiumInflation > 0 ? mabCampaignDB.Mab_AdamantiumInflation - 1 : 0;
+
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabSellRawMaterialResponse(), "Mab raw material successfully purchased");
+
+
+        }
+        private static (bool, string) MabSellRawMaterial_Validation(UsersMabSellRawMaterialRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabSellRawMaterial_Validation failed! Request is null!");
+            }
+
+
+            if (request.Mab_RawMaterialType == null || request.Mab_RawMaterialType.HasValue == false)
+            {
+                return (false, "Error: MabSellRawMaterial_Validation failed! request.Mab_RawMaterialType!");
+            }
+
+            if (Enum.IsDefined((MabRawMaterialType)request.Mab_RawMaterialType) == false)
+            {
+                var validTypes = string
+                    .Join(", ", Enum.GetValues(typeof(MabRawMaterialType))
+                    .Cast<MabRawMaterialType>()
+                    .Select(rawMaterialType => $"{rawMaterialType} ({(int)rawMaterialType})"));
+
+                return (false, $"Error: MabSellRawMaterial_Validation failed! Invalid RawMaterialType. It must be one of the following: {validTypes}");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersMabBuyRawMaterialResponse?, string)> MabBuyRawMaterial(UsersMabBuyRawMaterialRequest? request)
+        {
+            var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! User is not authenticated");
+            }
+
+            var (isValid, message) = MabBuyRawMaterial_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var mabCampaignDB = await this._daoDbContext
+                .MabCampaigns          
+                .FirstOrDefaultAsync(campaign =>
+                    campaign.Mab_IsCampaignDeleted == false &&
+                    campaign.UserId == userId);
+
+            if (mabCampaignDB == null)
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Mab Player Card not found!");
+            }
+
+            int? rawMaterialPrice = request.Mab_RawMaterialType switch
+            {
+                MabRawMaterialType.Brass => Constants.BasePrice_Brass + mabCampaignDB.Mab_BrassInflation,
+                MabRawMaterialType.Copper => Constants.BasePrice_Copper + mabCampaignDB.Mab_CopperInflation,
+                MabRawMaterialType.Iron => Constants.BasePrice_Iron + mabCampaignDB.Mab_IronInflation,
+                MabRawMaterialType.Steel => Constants.BasePrice_Steel + mabCampaignDB.Mab_SteelInflation,
+                MabRawMaterialType.Titanium => Constants.BasePrice_Titanium + mabCampaignDB.Mab_TitaniumInflation,
+                MabRawMaterialType.Silver => Constants.BasePrice_Silver + mabCampaignDB.Mab_SilverInflation,
+                MabRawMaterialType.Gold => Constants.BasePrice_Gold + mabCampaignDB.Mab_GoldInflation,
+                MabRawMaterialType.Diamond => Constants.BasePrice_Diamond + mabCampaignDB.Mab_DiamondInflation,
+                MabRawMaterialType.Adamantium => Constants.BasePrice_Adamantium + mabCampaignDB.Mab_AdamantiumInflation,
+                _ => null
+            };
+
+            if (rawMaterialPrice == null)
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Operation failed!");
+            }
+
+            if (mabCampaignDB.Mab_CoinsStash < rawMaterialPrice)
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Not enough coins!");
+            }
+
+            mabCampaignDB.Mab_CoinsStash -= rawMaterialPrice;
+
+            switch (request.Mab_RawMaterialType)
+            {
+                case MabRawMaterialType.Brass:
+                    mabCampaignDB.Mab_BrassStash++;                    
+                    break;
+                case MabRawMaterialType.Copper:
+                    mabCampaignDB.Mab_CopperStash++;                    
+                    break;
+                case MabRawMaterialType.Iron:
+                    mabCampaignDB.Mab_IronStash++;                    
+                    break;
+                case MabRawMaterialType.Steel:
+                    mabCampaignDB.Mab_SteelStash++;                   
+                    break;
+                case MabRawMaterialType.Titanium:
+                    mabCampaignDB.Mab_TitaniumStash++;                    
+                    break;
+                case MabRawMaterialType.Silver:
+                    mabCampaignDB.Mab_SilverStash++;                   
+                    break;
+                case MabRawMaterialType.Gold:
+                    mabCampaignDB.Mab_GoldStash++ ;                    
+                    break;
+                case MabRawMaterialType.Diamond:
+                    mabCampaignDB.Mab_DiamondStash++;                    
+                    break;
+                case MabRawMaterialType.Adamantium:
+                    mabCampaignDB.Mab_AdamantiumStash++;                    
+                    break;
+                default:
+                    break;
+            }
+
+
+            if (request.Mab_RawMaterialType == MabRawMaterialType.Brass)
+            {              
+                mabCampaignDB.Mab_BrassStash++;
+                mabCampaignDB.Mab_BrassInflation += 2;
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Copper)
+            {               
+                mabCampaignDB.Mab_CopperStash++;
+                mabCampaignDB.Mab_CopperInflation += 3;
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Iron)
+            {            
+                mabCampaignDB.Mab_IronStash++;
+                mabCampaignDB.Mab_IronInflation += 5;
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Steel)
+            {              
+                mabCampaignDB.Mab_SteelStash++;
+                mabCampaignDB.Mab_SteelInflation += 7;
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Titanium)
+            {              
+                mabCampaignDB.Mab_TitaniumStash++;
+                mabCampaignDB.Mab_TitaniumInflation += 9;
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Silver)
+            {             
+                mabCampaignDB.Mab_SilverStash++;
+                mabCampaignDB.Mab_SilverInflation += 11;    
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Gold)
+            {             
+                mabCampaignDB.Mab_GoldStash++;
+                mabCampaignDB.Mab_GoldInflation += 13;                     
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Diamond)
+            {      
+                mabCampaignDB.Mab_DiamondStash++;               
+                mabCampaignDB.Mab_DiamondInflation = mabCampaignDB.Mab_DiamondInflation + 15;
+               
+            }
+            else if (request.Mab_RawMaterialType == MabRawMaterialType.Adamantium)
+            {      
+                mabCampaignDB.Mab_AdamantiumStash++;
+                mabCampaignDB.Mab_AdamantiumInflation += 21;              
+            }
+            else
+            {
+                return (null, "Error: MabListRawMaterialsPrices failed! Invalid requested material!");
+            }
+
+            mabCampaignDB.Mab_BrassInflation = mabCampaignDB.Mab_BrassInflation > 0 ? mabCampaignDB.Mab_BrassInflation - 1 : 0;
+            mabCampaignDB.Mab_CopperInflation = mabCampaignDB.Mab_CopperInflation > 0 ? mabCampaignDB.Mab_CopperInflation - 1 : 0;
+            mabCampaignDB.Mab_IronInflation = mabCampaignDB.Mab_IronInflation > 0 ? mabCampaignDB.Mab_IronInflation - 1 : 0;
+            mabCampaignDB.Mab_SteelInflation = mabCampaignDB.Mab_SteelInflation > 0 ? mabCampaignDB.Mab_SteelInflation - 1 : 0;
+            mabCampaignDB.Mab_TitaniumInflation = mabCampaignDB.Mab_TitaniumInflation > 0 ? mabCampaignDB.Mab_TitaniumInflation - 1 : 0;
+            mabCampaignDB.Mab_SilverInflation = mabCampaignDB.Mab_SilverInflation > 0 ? mabCampaignDB.Mab_SilverInflation - 1 : 0;
+            mabCampaignDB.Mab_GoldInflation = mabCampaignDB.Mab_GoldInflation > 0 ? mabCampaignDB.Mab_GoldInflation - 1 : 0;
+            mabCampaignDB.Mab_DiamondInflation = mabCampaignDB.Mab_DiamondInflation > 0 ? mabCampaignDB.Mab_DiamondInflation - 1 : 0;
+            mabCampaignDB.Mab_AdamantiumInflation = mabCampaignDB.Mab_AdamantiumInflation > 0 ? mabCampaignDB.Mab_AdamantiumInflation - 1 : 0;
+            
+            await this._daoDbContext.SaveChangesAsync();
+
+            return (new UsersMabBuyRawMaterialResponse(), "Mab raw material successfully purchased");
+        }
+        private static (bool, string) MabBuyRawMaterial_Validation(UsersMabBuyRawMaterialRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: MabBuyRawMaterial_Validation failed! Request is null!");
+            }
+
+            if (request.Mab_RawMaterialType == null || request.Mab_RawMaterialType.HasValue == false)
+            {
+                return (false, "Error: MabSellRawMaterial_Validation failed! request.Mab_RawMaterialType!");
+            }
+
+            if (Enum.IsDefined((MabRawMaterialType)request.Mab_RawMaterialType) == false)
+            {
+                var validTypes = string
+                    .Join(", ", Enum.GetValues(typeof(MabRawMaterialType))
+                    .Cast<MabRawMaterialType>()
+                    .Select(rawMaterialType => $"{rawMaterialType} ({(int)rawMaterialType})"));
+
+                return (false, $"Error: MabBuyRawMaterial_Validation failed! Invalid RawMaterialType. It must be one of the following: {validTypes}");
             }
 
             return (true, string.Empty);
