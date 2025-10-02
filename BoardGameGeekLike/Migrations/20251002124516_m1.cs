@@ -371,8 +371,9 @@ namespace BoardGameGeekLike.Migrations
                     Mab_AdamantiumInflation = table.Column<int>(type: "int", nullable: true),
                     Mab_AllCardsCollectedTrophy = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     Mab_AllNpcsDefeatedTrophy = table.Column<bool>(type: "tinyint(1)", nullable: true),
-                    Mab_BlacksmithTrophy = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     Mab_BourgeoisTrophy = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    Mab_MinerTrophy = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    Mab_BlacksmithTrophy = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     Mab_IsCampaignDeleted = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
