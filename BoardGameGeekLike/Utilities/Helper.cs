@@ -344,19 +344,27 @@ namespace BoardGameGeekLike.Utilities
             };
         }     
 
-        public static int MabGetEarnedCoins(int duelPoints)
+        public static int? MabGetEarnedCoins(int? duelPoints)
         {
-            if (duelPoints > 0 && duelPoints < 10)
+            if (duelPoints >= 0 && duelPoints < 5)
             {
-                return 1;
+                return duelPoints * 4;
             }
-            else if (duelPoints > 10 && duelPoints < 15)
+            else if (duelPoints >= 5 && duelPoints < 10)
+            {
+                return duelPoints * 3;
+            }
+            else if (duelPoints >= 10 && duelPoints < 15)
+            {
+                return duelPoints * 2;
+            }
+            else if (duelPoints >= 15 && duelPoints < 20)
+            {
+                return duelPoints;
+            }
+            else if (duelPoints >= 20)
             {
                 return 2;
-            }
-            else if (duelPoints > 15)
-            {
-                return 3;
             }
             else
             {
@@ -372,16 +380,23 @@ namespace BoardGameGeekLike.Utilities
             }
 
             var lvlDif = npcLevel - playerLevel;
+            var xpPenalty = 0;
+
             if(lvlDif < 0)
             {
+                xpPenalty = Math.Abs(lvlDif * 10); //Min. 5, Max. 90
+
+
                 lvlDif = 0;
             }
 
             int basisXp = 1;
 
-            int earnedXp = basisXp + duelPoints;
+            int earnedXp = basisXp + duelPoints - xpPenalty;
 
-            int bonusXp = playerState + lvlDif;        
+            double bonusXpFormula = earnedXp * (1 / (playerState + lvlDif));
+
+            int bonusXp = (int)Math.Ceiling(bonusXpFormula);        
 
             return (earnedXp, bonusXp);            
         }

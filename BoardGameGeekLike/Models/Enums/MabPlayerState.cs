@@ -2,20 +2,20 @@
 {
     public enum MabPlayerState
     {
-        Normal = 0,
+        Normal = 1,
 
-        Flawless = 1,
+        Flawless = 2,
 
-        Matchless = 2,
+        Matchless = 3,
 
-        Impredictable = 3,
+        Impredictable = 4,
 
-        Unstoppable = 4,
+        Unstoppable = 5,
 
-        Triumphant = 5, 
+        Triumphant = 6, 
 
-        Glorious = 6,
+        Glorious = 7,
 
-        Panicking = 7,
+        Panicking = 8,
     }
 }

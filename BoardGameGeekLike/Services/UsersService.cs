@@ -6436,11 +6436,13 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: MabFinishBattle failed! Mab Duels not found or not yet finished!");
             }
 
-            var earnedGold = mabDuelsDB.Sum(a => a.Mab_DuelPoints);
+            var totalPoints = mabDuelsDB.Sum(a => a.Mab_DuelPoints);
             var earnedXp = mabDuelsDB.Sum(a => a.Mab_EarnedXp);
             var bonusXp = mabDuelsDB.Sum(a => a.Mab_BonusXp);
             var finalPlayerState = mabDuelsDB[Constants.DeckSize - 1].Mab_PlayerState;
             var hasPlayerWon = mabDuelsDB.Sum(a => a.Mab_DuelPoints) > 0;
+
+            var earnedGold = Helper.MabGetEarnedCoins(totalPoints);
 
             currentMabBattle.Mab_EarnedGold = earnedGold;
             currentMabBattle.Mab_EarnedXp = earnedXp;
@@ -6914,31 +6916,26 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }
-
-            var testTime = Stopwatch.StartNew();
-
-            testTime.Start();
-
+          
             var mabCampaignDB = await this._daoDbContext
                .MabCampaigns
                .AsSplitQuery()
-               .Include(a => a.Mab_Battles!.Where(b => b.Mab_IsBattleFinished == false))
-               .ThenInclude(b => b.Mab_Duels!)
-
-               .Include(a => a.Mab_PlayerCards!
-                .Where(b =>
-                    b.Mab_AssignedCards!.Any() &&
-                    b.Mab_AssignedCards!
-                        .Any(c => c.Mab_PlayerCardId == b.Id)))
-               .ThenInclude(a => a.Mab_Card)    
-               
-               .Include(a => a.Mab_Battles!)
-               .ThenInclude(b => b.Mab_Npc)
-               .ThenInclude(c => c.Mab_NpcCards)
-               .ThenInclude(d => d.Mab_Card)
-               .FirstOrDefaultAsync(a => 
-                    a.Mab_IsCampaignDeleted == false && 
-                    a.UserId == userId);         
+               .Include(campaign => campaign.Mab_Battles!
+                    .Where(battle => battle.Mab_IsBattleFinished == false))
+                    .ThenInclude(battle => battle.Mab_Duels!)
+               .Include(campaign => campaign.Mab_PlayerCards!
+                    .Where(playerCard =>
+                        playerCard.Mab_AssignedCards!.Any() &&
+                        playerCard.Mab_AssignedCards!
+                            .Any(assignedCard => assignedCard.Mab_PlayerCardId == assignedCard.Id)))
+                    .ThenInclude(campaign => campaign.Mab_Card)                   
+               .Include(campaign => campaign.Mab_Battles!)
+                    .ThenInclude(battle => battle.Mab_Npc)
+                        .ThenInclude(npc => npc.Mab_NpcCards)
+                            .ThenInclude(npcCard => npcCard.Mab_Card)
+               .FirstOrDefaultAsync(campaign =>
+                    campaign.Mab_IsCampaignDeleted == false &&
+                    campaign.UserId == userId);         
 
             if (mabCampaignDB == null)
             {
@@ -7489,6 +7486,7 @@ namespace BoardGameGeekLike.Services
                 .ThenBy(npcCard => npcCard.Mab_Card.Mab_CardUpperHand)
                 .FirstOrDefault();
        
+            //consertar erro aqui! 01.10.2025
             var weakestNpcCard = npcAvailableCards
                 .Where(npcCard =>
                     npcCard.Mab_Card.Mab_CardType != MabCardType.Neutral &&
@@ -7510,7 +7508,7 @@ namespace BoardGameGeekLike.Services
             {
                 return npcUselessCard;
             }   
-            else if (npcWeakestCard_Neutral != null && npcWeakestCard_Neutral.Mab_Card.Mab_CardPower <= weakestNpcCard.Mab_Card.Mab_CardPower)
+            else if (npcWeakestCard_Neutral != null && npcWeakestCard_Neutral?.Mab_Card.Mab_CardPower <= weakestNpcCard?.Mab_Card.Mab_CardPower)
             {
                 return npcWeakestCard_Neutral;
             }
@@ -7546,7 +7544,7 @@ namespace BoardGameGeekLike.Services
             var index = possibleResults
                 .IndexOf(possibleResults
                     .Where(duelPoints => duelPoints > 0)
-                .Min());
+                .Max());
 
             if (index >= 0)
             {
