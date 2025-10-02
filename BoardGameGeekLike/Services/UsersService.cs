@@ -6437,21 +6437,27 @@ namespace BoardGameGeekLike.Services
             }
 
             var totalPoints = mabDuelsDB.Sum(a => a.Mab_DuelPoints);
+
+            var currentPlayerXp = mabCampaignDB.Mab_PlayerExperience;
             var earnedXp = mabDuelsDB.Sum(a => a.Mab_EarnedXp);
             var bonusXp = mabDuelsDB.Sum(a => a.Mab_BonusXp);
+
             var finalPlayerState = mabDuelsDB[Constants.DeckSize - 1].Mab_PlayerState;
+
             var hasPlayerWon = mabDuelsDB.Sum(a => a.Mab_DuelPoints) > 0;
 
-            var earnedGold = Helper.MabGetEarnedCoins(totalPoints);
+            var currentCoinsStash = mabCampaignDB.Mab_CoinsStash;
+            var coinsResult = Helper.MabGetEarnedCoins(totalPoints);
 
-            currentMabBattle.Mab_EarnedGold = earnedGold;
+            currentMabBattle.Mab_EarnedGold = coinsResult;
             currentMabBattle.Mab_EarnedXp = earnedXp;
             currentMabBattle.Mab_BonusXp = bonusXp;
             currentMabBattle.Mab_FinalPlayerState = finalPlayerState;
             currentMabBattle.Mab_HasPlayerWon = hasPlayerWon;
             currentMabBattle.Mab_IsBattleFinished = true;
 
-            mabCampaignDB.Mab_CoinsStash += earnedGold;
+
+            mabCampaignDB.Mab_CoinsStash += coinsResult;
             mabCampaignDB.Mab_PlayerExperience += earnedXp;
             mabCampaignDB.Mab_BattlesCount++;
 
@@ -6469,11 +6475,18 @@ namespace BoardGameGeekLike.Services
             return (new UsersMabFinishBattleResponse
             {
                 Mab_HasPlayerWon = hasPlayerWon,
-                Mab_BattlePoints = earnedGold,
+
+                Mab_BattlePoints = totalPoints,
+
+                Mab_CurrentGoldStash = currentCoinsStash,
+                Mab_BattleCoinsResult = coinsResult,
                 Mab_UpdatedGoldStash = mabCampaignDB.Mab_CoinsStash,
+
+                Mab_CurrentPlayerXp = currentPlayerXp,
                 Mab_BattleEarnedXp = earnedXp,
                 Mab_BattleBonusXp = bonusXp,
                 Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience,
+
                 Mab_PlayerState = finalPlayerState
             },
             "MAB BATTLE finished successfully! Results were successfully computed for the campaign");
@@ -6927,7 +6940,7 @@ namespace BoardGameGeekLike.Services
                     .Where(playerCard =>
                         playerCard.Mab_AssignedCards!.Any() &&
                         playerCard.Mab_AssignedCards!
-                            .Any(assignedCard => assignedCard.Mab_PlayerCardId == assignedCard.Id)))
+                            .Any(assignedCard => assignedCard.Mab_PlayerCardId == playerCard.Id)))
                     .ThenInclude(campaign => campaign.Mab_Card)                   
                .Include(campaign => campaign.Mab_Battles!)
                     .ThenInclude(battle => battle.Mab_Npc)
@@ -7012,10 +7025,10 @@ namespace BoardGameGeekLike.Services
             mabCardsDB.AddRange(mabCards_);
             
             var mabPlayerDuellingCard = mabCardsDB
-                    .FirstOrDefault(a => 
-                        a.Mab_PlayerCards != null && 
-                        a.Mab_PlayerCards!
-                            .Any(b => b.Id == finishedMabDuelDB.Mab_PlayerCardId));            
+                    .FirstOrDefault(card =>
+                        card.Mab_PlayerCards != null &&
+                        card.Mab_PlayerCards!
+                            .Any(playerCard => playerCard.Id == finishedMabDuelDB.Mab_PlayerCardId));            
 
             var isPlayerAttacking = finishedMabDuelDB.Mab_IsPlayerAttacking;
 
@@ -7316,7 +7329,8 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: MabPlayerRetreats failed! Mab Duels not found!");
             }
 
-            var earnedGold = Constants.RetreatCoinsPenalty;
+            var earnedGold = -Constants.RetreatCoinsPenalty;
+            var battlePoints = 0;
             var earnedXp = 0;
             var bonusXp = 0;
             var finalPlayerState = MabPlayerState.Panicking;
@@ -7338,9 +7352,18 @@ namespace BoardGameGeekLike.Services
 
             return (new UsersMabPlayerRetreatsResponse
             {
+                Mab_HasPlayerWon = hasPlayerWon,
+
+                Mab_EarnedGold = earnedGold,
                 Mab_UpdatedGoldStash = mabCampaignDB.Mab_CoinsStash,
 
-                Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience
+                Mab_BattlePoints = battlePoints,
+
+                Mab_EarnedXp = earnedXp,
+                Mab_BonusXp = bonusXp,
+                Mab_UpdatedPlayerXp = mabCampaignDB.Mab_PlayerExperience,
+
+                Mab_PlayerState = finalPlayerState,
             },
             "MAB PLAYER retreated from the battle successfully! Results were successfully computed for the campaign");
         }

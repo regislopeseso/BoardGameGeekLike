@@ -12,7 +12,11 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? Mab_UpdatedGoldStash { get; set; }
 
-        public int? Mab_EarnedXp { get; set; } = 0;
+        public int? Mab_BattlePoints { get; set; }
+
+        public int? Mab_EarnedXp { get; set; }
+
+        public int? Mab_BonusXp { get; set; }
 
         public int? Mab_UpdatedPlayerXp { get; set; }
 

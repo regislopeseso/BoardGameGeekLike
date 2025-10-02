@@ -8,10 +8,14 @@ namespace BoardGameGeekLike.Models.Dtos.Response
         public bool? Mab_HasPlayerWon { get; set; } 
 
         public int? Mab_BattlePoints { get; set; } 
+
+        public int? Mab_CurrentGoldStash { get; set; }
+        public int? Mab_BattleCoinsResult { get; set; }
+        public int? Mab_UpdatedGoldStash { get; set; }
+
+        public int? Mab_CurrentPlayerXp { get; set; }
         public int? Mab_BattleEarnedXp { get; set; }
         public int? Mab_BattleBonusXp { get; set; }
-
-        public int? Mab_UpdatedGoldStash { get; set; }
         public int? Mab_UpdatedPlayerXp { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]

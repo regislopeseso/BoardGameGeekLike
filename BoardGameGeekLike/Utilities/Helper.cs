@@ -394,6 +394,8 @@ namespace BoardGameGeekLike.Utilities
 
             int earnedXp = basisXp + duelPoints - xpPenalty;
 
+            earnedXp = earnedXp < 0 ? 0 : earnedXp;
+
             double bonusXpFormula = earnedXp * (1 / (playerState + lvlDif));
 
             int bonusXp = (int)Math.Ceiling(bonusXpFormula);        
