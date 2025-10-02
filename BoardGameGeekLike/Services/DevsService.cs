@@ -452,9 +452,25 @@ namespace BoardGameGeekLike.Services
                             cardName = "Truce";
                         }
 
-                        if (power == 0 && upperHand == 0 && cardType == MabCardType.Infantry)
+                        if (cardType == MabCardType.Infantry && power == upperHand)
                         {
-                            cardName = "Pickeaxe";
+                            cardName = "";
+
+                            cardName = power switch
+                            {
+                                1 => $"{MabRawMaterialType.Brass} ",
+                                2 => $"{MabRawMaterialType.Copper} ",
+                                3 => $"{MabRawMaterialType.Iron} ",
+                                4 => $"{MabRawMaterialType.Steel} ",
+                                5 => $"{MabRawMaterialType.Titanium} ",
+                                6 => $"{MabRawMaterialType.Silver} ",
+                                7 => $"{MabRawMaterialType.Gold} ",
+                                8 => $"{MabRawMaterialType.Diamond} ",
+                                9 => $"{MabRawMaterialType.Adamantium} ",
+                                _ => ""
+                            };
+
+                            cardName += "Pickeaxe";
                         }
 
                         var newCard = new MabCard
