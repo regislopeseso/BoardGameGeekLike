@@ -67,15 +67,15 @@ namespace BoardGameGeekLike.Models.Entities
         public int? Mab_AdamantiumStash { get; set; } = 0;
         public int? Mab_AdamantiumInflation { get; set; } = 0;
 
-        public bool? Mab_AllCardsCollectedTrophy { get; set; } = false;
+        public bool? Mab_TheCollectorTrophy { get; set; } = false;
 
-        public bool? Mab_AllNpcsDefeatedTrophy { get; set; } = false;
+        public bool? Mab_TheBraveTrophy { get; set; } = false;
 
-        public bool? Mab_BourgeoisTrophy { get; set; } = false;
+        public bool? Mab_TheBourgeoisTrophy { get; set; } = false;
 
-        public bool? Mab_MinerTrophy { get; set; } = false;
+        public bool? Mab_TheMinerTrophy { get; set; } = false;
 
-        public bool? Mab_BlacksmithTrophy { get; set; } = false;
+        public bool? Mab_TheBlacksmithTrophy { get; set; } = false;
 
 
         public bool? Mab_IsCampaignDeleted { get; set; } = false;

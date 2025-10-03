@@ -9071,7 +9071,7 @@ namespace BoardGameGeekLike.Services
             mabCampaignDB.Mab_DiamondStash += extractedDiamond;
             mabCampaignDB.Mab_AdamantiumStash += extractedAdamantium;
 
-            mabCampaignDB.Mab_MinerTrophy = extractedAdamantium > 0;
+            mabCampaignDB.Mab_TheMinerTrophy = extractedAdamantium > 0;
 
             await this._daoDbContext.SaveChangesAsync();
 
@@ -9673,7 +9673,7 @@ namespace BoardGameGeekLike.Services
 
             var playerCards_CardsIds = mabCampaignDB.Mab_PlayerCards!.Select(playerCard => playerCard.Mab_CardId).ToList();
 
-            mabCampaignDB.Mab_AllCardsCollectedTrophy = await this._daoDbContext
+            mabCampaignDB.Mab_TheCollectorTrophy = await this._daoDbContext
                 .MabCards                          
                 .AnyAsync(card => 
                     card.Mab_IsCardDeleted == false &&
@@ -9681,23 +9681,23 @@ namespace BoardGameGeekLike.Services
 
             var defeatedNpcsIds = mabCampaignDB.Mab_Battles.Select(battle => battle.Mab_NpcId).ToList();
 
-            mabCampaignDB.Mab_AllNpcsDefeatedTrophy = await this._daoDbContext
+            mabCampaignDB.Mab_TheBraveTrophy = await this._daoDbContext
                 .MabNpcs
                 .AnyAsync(npc =>
                     npc.Mab_IsNpcDeleted == false &&
                     defeatedNpcsIds.Contains(npc.Id) == false);
 
-            if(mabCampaignDB.Mab_BlacksmithTrophy == false)
+            if(mabCampaignDB.Mab_TheBlacksmithTrophy == false)
             {
-                mabCampaignDB.Mab_BlacksmithTrophy = 
+                mabCampaignDB.Mab_TheBlacksmithTrophy = 
                     mabCampaignDB.Mab_CountForgings >= 50 && 
                     mabCampaignDB.Mab_SharpenCount >= 50 && 
                     mabCampaignDB.Mab_MeltCount >= 50;
             }
 
-            if(mabCampaignDB.Mab_BourgeoisTrophy == false)
+            if(mabCampaignDB.Mab_TheBourgeoisTrophy == false)
             {
-                mabCampaignDB.Mab_BourgeoisTrophy = mabCampaignDB.Mab_CoinsStash >= 1000;
+                mabCampaignDB.Mab_TheBourgeoisTrophy = mabCampaignDB.Mab_CoinsStash >= 1000;
             }
 
             // Count fulfilled quests (where all NPCs have been defeated)
@@ -9768,15 +9768,15 @@ namespace BoardGameGeekLike.Services
 
                 Mab_CampaignDifficulty = mabCampaignDB.Mab_Difficulty!.Value,
 
-                Mab_AllMabCardsCollectedTrophy = mabCampaignDB.Mab_AllCardsCollectedTrophy!.Value,
+                Mab_AllMabCardsCollectedTrophy = mabCampaignDB.Mab_TheCollectorTrophy!.Value,
 
-                Mab_AllMabNpcsDefeatedTrophy = mabCampaignDB.Mab_AllNpcsDefeatedTrophy!.Value,
+                Mab_AllMabNpcsDefeatedTrophy = mabCampaignDB.Mab_TheBraveTrophy!.Value,
 
-                Mab_BourgeoisTrophy = mabCampaignDB.Mab_BourgeoisTrophy,
+                Mab_BourgeoisTrophy = mabCampaignDB.Mab_TheBourgeoisTrophy,
 
-                Mab_MinerTrophy = mabCampaignDB.Mab_MinerTrophy,
+                Mab_MinerTrophy = mabCampaignDB.Mab_TheMinerTrophy,
 
-                Mab_BlacksmithTrophy = mabCampaignDB.Mab_BlacksmithTrophy,
+                Mab_BlacksmithTrophy = mabCampaignDB.Mab_TheBlacksmithTrophy,
             };
 
             if (mabCampaignStatisticsDB == null)

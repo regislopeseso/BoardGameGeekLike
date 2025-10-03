@@ -131,3 +131,38 @@ WorkerPlacement = 10, // Players assign tokens to take specific actions (e.g., A
     -Special Cards:
         Truce: Neutral 0|0 => when played cancel any opposing card, duel results will be: 0 points and 0 xp;
         Pickaxe: Infantry 0|0, 1|1, ..., 9|9 => this is the card used in the mine, the more powerfull the card is the greater are the chances of getting better raw materials;
+
+    -Raw Material Types:
+      -Each card power level is connected to a specific raw material
+      -Power 0: Plastic
+      -Power 1: Brass
+      -Power 2: Copper
+      -Power 3: Iron
+      -Power 4: Steel
+      -Power 5: Titanium
+      -Power 6: Silver
+      -Power 7: Gold
+      -Power 8: Diamond
+      -Power 9: Adamantium
+
+
+    -Trophies:
+      -The Brave
+        =>Requirement: Player must face all npcs in the game (winning is not mandatory);
+        =>Reward: NPCs will show their cards face up in all battles;
+
+      -The Collector:
+        =>Requirement: Player must own all cards of one at least one type (either neutral or ranged or infantry or cavalry);
+        =>Reward: Player gains 4 cards of power 5 and upper hand 5, 1 card of each type and 1 random card of power 9 and upper hand 0;
+
+      -The Bourgeois:
+        =>Requirement: Player must accomplish 500 transactions in the market;
+        =>Reward: All inflations increase and decrease only 1 unit per purchase and sale action;
+
+      -The Miner:
+        =>Requirement: Player must extract 1 raw material of each type (brass, copper, iron, steel, titanium, silver, gold, diamond, adamantium);
+        =>Reward: Player may use use multiple pickaxes at the same time in the mine;
+
+      -The Blacksmith:
+        =>Requirement: Player must consume one of each raw material at the forge;
+        =>Reward: Player may upgrade any card from any power to any power level paying the necessary raw material costs of the desired power level;
