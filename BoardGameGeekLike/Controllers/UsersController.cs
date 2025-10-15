@@ -115,7 +115,7 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> SignOut()
         {
