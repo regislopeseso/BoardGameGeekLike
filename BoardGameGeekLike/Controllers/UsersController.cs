@@ -8,7 +8,7 @@ namespace BoardGameGeekLike.Controllers
 {
     //[Authorize(Roles = "Developer, Administrator, User")]
 
-    [AllowAnonymous]
+    [Authorize]
     [ApiController]
     [Route("users/[action]")]
     public class UsersController : ControllerBase
@@ -58,7 +58,7 @@ namespace BoardGameGeekLike.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> SignUp([FromForm] UsersSignUpRequest? request)
+        public async Task<IActionResult> SignUp([FromBody] UsersSignUpRequest? request)
         {
             var (content, message) = await this._usersService.SignUp(request, "User");
 
@@ -73,7 +73,7 @@ namespace BoardGameGeekLike.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> SignIn([FromForm] UsersSignInRequest? request)
+        public async Task<IActionResult> SignIn([FromBody] UsersSignInRequest? request)
         {
             var (content, message) = await this._usersService.SignIn(request);
 
