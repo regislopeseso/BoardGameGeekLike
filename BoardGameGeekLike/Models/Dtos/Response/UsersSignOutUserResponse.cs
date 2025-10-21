@@ -1,6 +1,6 @@
 ﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class UsersSignOutResponse
+    public class UsersSignOutUserResponse
     {
         public bool? IsUserSignOut { get; set; }
     }

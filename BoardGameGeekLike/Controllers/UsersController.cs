@@ -88,9 +88,9 @@ namespace BoardGameGeekLike.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public IActionResult ValidateStatus()
+        public async Task<IActionResult> ValidateStatus(UsersValidateStatusRequest? request)
         {
-            var (content, message) = this._usersService.ValidateStatus();
+            var (content, message) = await this._usersService.ValidateStatus(request);
 
             var response = new Response<UsersValidateStatusResponse>
             {
@@ -101,27 +101,13 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetRole()
-        {
-            var (content, message) = await this._usersService.GetRole();
-
-            var response = new Response<UsersGetRoleResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> SignOut()
+        public async Task<IActionResult> SignOutUser(UsersSignOutUserRequest? request)
         {
-            var (content, message) = await this._usersService.SignOut();
+            var (content, message) = await this._usersService.SignOutUser(request);
 
-            var response = new Response<UsersSignOutResponse>
+            var response = new Response<UsersSignOutUserResponse>
             {
                 Content = content,
                 Message = message

@@ -2,6 +2,8 @@
 {
     public class UsersValidateStatusResponse
     {
-        public bool IsUserLoggedIn { get; set; }
+        public bool IsUserLoggedIn { get; set; } = false;
+
+        public string? Role { get; set; } = null;
     }
 }

@@ -1918,44 +1918,57 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public (UsersValidateStatusResponse?, string) ValidateStatus()
-        {         
-            if (this._httpContextAccessor.HttpContext?.User.Identity != null &&
-        this._httpContextAccessor.HttpContext.User.Identity.IsAuthenticated == true)
+        public async Task<(UsersValidateStatusResponse?, string)> ValidateStatus(UsersValidateStatusRequest? request = null)
+        {
+            var (isValid, message) = ValidateStatus_Validation(request);
+            if (isValid == false)
             {
-                return (new UsersValidateStatusResponse {IsUserLoggedIn = true  } , "User is authenticated.");
+                return (null, message);
+            }
+
+            var isAuthenticated = this._httpContextAccessor.HttpContext?.User.Identity != null &&
+                this._httpContextAccessor.HttpContext.User.Identity.IsAuthenticated == true;
+
+            if (isAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
+                if (user == null)
+                {
+                    return (null, "Error: User not found");
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var userRole = roles.FirstOrDefault(); // assuming 1 role per user
+
+                if (string.IsNullOrEmpty(userRole))
+                {
+                    return (null, "Error: User has no role assigned");
+                }
+                 
+
+                return (new UsersValidateStatusResponse {
+                    IsUserLoggedIn = true,
+                    Role = userRole
+                }, $"User is authenticated. Role: {userRole}");
             }
             else
             {
-                return (new UsersValidateStatusResponse { IsUserLoggedIn = false },  "User is not authenticated.");
+                return (new UsersValidateStatusResponse(),  "User is not authenticated.");
             }
         }
-
-
-        public async Task<(UsersGetRoleResponse?, string)> GetRole()
+        private static (bool, string) ValidateStatus_Validation(UsersValidateStatusRequest? request)
         {
-            var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
-            if (user == null)
+            if (request != null)
             {
-                return (null, "Error: User not found");
+                return (false, "Error: ValidateStatus_Validation failed! Request is NOT null, however it MUST be null!");
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
-            var userRole = roles.FirstOrDefault(); // assuming 1 role per user
-
-            if (string.IsNullOrEmpty(userRole))
-            {
-                return (null, "Error: User has no role assigned");
-            }
-
-            return (new UsersGetRoleResponse
-            {
-                Role = userRole
-            }, $"User role: {userRole}" );
+            return (true, string.Empty);
         }
 
 
-        public async Task<(UsersSignOutResponse?, string)> SignOut()
+        public async Task<(UsersSignOutUserResponse?, string)> SignOutUser(UsersSignOutUserRequest? request = null)
         {
             var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
             if (user == null)
@@ -1966,20 +1979,34 @@ namespace BoardGameGeekLike.Services
             if (user.IsDeleted == true)
             {
                 return (null, "Error: User has been deleted");
-            }   
+            }
+
+            var (isValid, message) = SignOutUser_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
 
             try
             {
                 await _signInManager.SignOutAsync();
 
-                return (new UsersSignOutResponse { IsUserSignOut = true }, "User signed out successfully");
+                return (new UsersSignOutUserResponse { IsUserSignOut = true }, "User signed out successfully");
             }
             catch (Exception ex)
             {               
-                return (new UsersSignOutResponse { IsUserSignOut = false }, $"Error: Failed to sign out user. {ex.Message}");
+                return (new UsersSignOutUserResponse { IsUserSignOut = false }, $"Error: SignOutUser Failed! Error message: {ex.Message}");
             }
         }
+        private static (bool, string) SignOutUser_Validation(UsersSignOutUserRequest? request)
+        {
+            if (request != null)
+            {
+                return (false, "Error: SignOutUser_Validation failed! Request is NOT null, however it MUST be null!");
+            }
 
+            return (true, string.Empty);
+        }
 
         public async Task<(UsersEditProfileResponse?, string)> EditProfile(UsersEditProfileRequest? request)
         {
@@ -2251,7 +2278,7 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.SaveChangesAsync();        
 
-            await this.SignOut();
+            await this.SignOutUser();
 
             return (new UsersDeleteProfileResponse(), "User's profile deleted successfully");
         }
@@ -2274,14 +2301,12 @@ namespace BoardGameGeekLike.Services
         public async Task<(UsersGetProfileDetailsResponse?, string)> GetProfileDetails(UsersGetProfileDetailsRequest? request)
         {
             var userId = this._httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
             if (string.IsNullOrEmpty(userId))
             {
                 return (null, "Error: User is not authenticated");
             }
 
             var (isValid, message) = GetProfileDetails_Validation(request);
-
             if (isValid == false)
             {
                 return (null, message);
