@@ -76,6 +76,8 @@ namespace BoardGameGeekLike.Controllers
         [HttpPost]
         public async Task<IActionResult> SignIn([FromBody] UsersSignInRequest? request)
         {
+            await Task.Delay(1000);
+
             try
             {
                 var content = await this._usersService.SignIn(request);
