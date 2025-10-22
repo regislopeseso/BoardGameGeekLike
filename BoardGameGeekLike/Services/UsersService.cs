@@ -1,3 +1,4 @@
+using BoardGameGeekLike.Exceptions;
 using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
@@ -1828,93 +1829,86 @@ namespace BoardGameGeekLike.Services
 
             return (remainingAttempts, string.Empty);
         }
-       
 
-        public async Task<(UsersSignInResponse?, string)> SignIn(UsersSignInRequest? request)
+
+        public async Task<UsersSignInResponse> SignIn(UsersSignInRequest? request)
         {
-            var (isValid, message) = SignIn_Validation(request);
+            // Validation
+            SignIn_Validation(request);
 
-            if (isValid == false)
-            {
-                return (null, message);
-            }
-
+            // Find user
             var userDB = await this._daoDbContext
                 .Users
-                .FirstOrDefaultAsync(a => a.Email == request!.Email);          
+                .FirstOrDefaultAsync(a => a.Email == request!.Email);
 
-            if(userDB == null)
+            if (userDB == null)
             {
-                return (null, "Requested user does not exist");
-            }
-            if(userDB.IsDeleted == true)
-            {
-                return (null, "Requested user has been deleted");
+                throw new NotFoundException("Requested user does not exist");
             }
 
+            if (userDB.IsDeleted == true)
+            {
+                throw new NotFoundException("Requested user has been deleted");
+            }
+
+            // Attempt sign in
             var result = await this._signInManager
                 .PasswordSignInAsync(request!.Email!, request.Password!, false, true);
 
             if (result.IsLockedOut == true)
             {
-                return (null, "Error: account temporarily locked due to multiple failed attempts");
+                throw new AccountLockedException("Account temporarily locked due to multiple failed attempts");
             }
 
             if (result.IsNotAllowed == true)
             {
-                return (null, "Error: account is not allowed to sign in (e.g. email not confirmed)");
+                throw new AccountNotAllowedException("Account is not allowed to sign in (e.g. email not confirmed)");
             }
 
+            // Check for failed attempts
             var countFailedAttempts = await this._userManager
                 .GetAccessFailedCountAsync(userDB);
-
             var maxAllowedAttempts = this._userManager
                 .Options
                 .Lockout
                 .MaxFailedAccessAttempts;
-
             var remainingAttempts = maxAllowedAttempts - countFailedAttempts;
-    
 
             if (result.Succeeded == false)
-            {               
-                var response = new UsersSignInResponse
-                {
-                    RemainingSignInAttempts = remainingAttempts
-                };
-
-                return (response, $"Error: email or password is incorrect. You have {remainingAttempts} attempts remaining");
+            {
+                throw new AuthenticationException(
+                    $"Email or password is incorrect. You have {remainingAttempts} attempts remaining",
+                    remainingAttempts
+                );
             }
 
+            // Success
             await this._userManager.ResetAccessFailedCountAsync(userDB);
 
-            return (new UsersSignInResponse(), $"User: {userDB.Name} signed in successfully");
+            return new UsersSignInResponse();
         }
-        private static (bool, string) SignIn_Validation(UsersSignInRequest? request)
+        private static void SignIn_Validation(UsersSignInRequest? request)
         {
             if (request == null)
             {
-                return (false, "Error: request is null");
-            }       
+                throw new ValidationException("Request is null");
+            }
 
             if (string.IsNullOrWhiteSpace(request.Email) == true)
             {
-                return (false, "Error: Email is missing");
+                throw new ValidationException("Email is missing");
             }
 
             string emailPattern = @"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,10})?$)";
-
             if (Regex.IsMatch(request.Email, emailPattern) == false)
             {
-                return (false, "Error: invalid email format");
+                throw new ValidationException("Invalid email format");
             }
 
             if (string.IsNullOrEmpty(request.Password) == true)
             {
-                return (false, "Error: UserPassword is missing");
+                throw new ValidationException("Password is missing");
             }
-
-            return (true, string.Empty);
         }
 
 

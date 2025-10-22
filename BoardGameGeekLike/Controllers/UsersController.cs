@@ -1,3 +1,4 @@
+using BoardGameGeekLike.Exceptions;
 using BoardGameGeekLike.Models.Dtos.Request;
 using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Services;
@@ -75,17 +76,77 @@ namespace BoardGameGeekLike.Controllers
         [HttpPost]
         public async Task<IActionResult> SignIn([FromBody] UsersSignInRequest? request)
         {
-            var (content, message) = await this._usersService.SignIn(request);
-
-            var response = new Response<UsersSignInResponse>
+            try
             {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
+                var content = await this._usersService.SignIn(request);
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = content,
+                    Message = $"User signed in successfully"
+                };
+                return Ok(response);
+            }
+            catch (ValidationException exception)
+            {
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = null,
+                    Message = exception.Message
+                };
+                return BadRequest(response);
+            }
+            catch (NotFoundException exception)
+            {
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = null,
+                    Message = exception.Message
+                };
+                return NotFound(response);
+            }
+            catch (AccountLockedException exception)
+            {
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = null,
+                    Message = exception.Message
+                };
+                return StatusCode(423, response); // 423 Locked
+            }
+            catch (AccountNotAllowedException exception)
+            {
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = null,
+                    Message = exception.Message
+                };
+                return StatusCode(403, response); // 403 Forbidden
+            }
+            catch (AuthenticationException exception)
+            {
+                var content = new UsersSignInResponse
+                {
+                    RemainingSignInAttempts = exception.RemainingAttempts
+                };
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = content,
+                    Message = exception.Message
+                };
+                return Unauthorized(response);
+            }
+            catch (Exception exception)
+            {
+                // Log the exception here
+                var response = new Response<UsersSignInResponse>
+                {
+                    Content = null,
+                    Message = $"An unexpected error occurred: {exception.Message}"
+                };
+                return StatusCode(500, response);
+            }
         }
-
+        
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> ValidateStatus(UsersValidateStatusRequest? request)
