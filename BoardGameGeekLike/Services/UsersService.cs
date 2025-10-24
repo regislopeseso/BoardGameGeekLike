@@ -1669,6 +1669,9 @@ namespace BoardGameGeekLike.Services
 
         public async Task<(UsersSignUpResponse?, string)> SignUp(UsersSignUpRequest? request, string? userRole)
         {
+            // Sign out any existing user before signup attempt
+            await _signInManager.SignOutAsync();
+
             var (isValid, message) = SignUp_Validation(request);
             
             if (isValid == false)
@@ -1833,6 +1836,9 @@ namespace BoardGameGeekLike.Services
 
         public async Task<UsersSignInResponse> SignIn(UsersSignInRequest? request)
         {
+            // Sign out any existing user before signin attempt
+            await _signInManager.SignOutAsync();
+
             // Validation
             SignIn_Validation(request);
 
@@ -1912,7 +1918,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersValidateStatusResponse?, string)> ValidateStatus(UsersValidateStatusRequest? request = null)
+        public async Task<(UsersValidateStatusResponse?, string)> ValidateStatus(UsersValidateStatusRequest? request)
         {
             var (isValid, message) = ValidateStatus_Validation(request);
             if (isValid == false)
@@ -1962,7 +1968,7 @@ namespace BoardGameGeekLike.Services
         }
 
 
-        public async Task<(UsersSignOutUserResponse?, string)> SignOutUser(UsersSignOutUserRequest? request = null)
+        public async Task<(UsersSignOutUserResponse?, string)> SignOutUser(UsersSignOutUserRequest? request)
         {
             var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
             if (user == null)
@@ -2001,6 +2007,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(UsersEditProfileResponse?, string)> EditProfile(UsersEditProfileRequest? request)
         {
@@ -2272,7 +2279,9 @@ namespace BoardGameGeekLike.Services
 
             await this._daoDbContext.SaveChangesAsync();        
 
-            await this.SignOutUser();
+            var signOutRequest = new UsersSignOutUserRequest();
+
+            await this.SignOutUser(signOutRequest);
 
             return (new UsersDeleteProfileResponse(), "User's profile deleted successfully");
         }

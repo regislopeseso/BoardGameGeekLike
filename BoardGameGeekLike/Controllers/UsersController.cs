@@ -69,6 +69,8 @@ namespace BoardGameGeekLike.Controllers
                 Message = message
             };
 
+            await Task.Delay(1000);
+
             return new JsonResult(response);
         }
 
@@ -151,7 +153,7 @@ namespace BoardGameGeekLike.Controllers
         
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> ValidateStatus(UsersValidateStatusRequest? request)
+        public async Task<IActionResult> ValidateStatus(UsersValidateStatusRequest? request = null)
         {
             var (content, message) = await this._usersService.ValidateStatus(request);
 
@@ -164,9 +166,9 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> SignOutUser(UsersSignOutUserRequest? request)
+        public async Task<IActionResult> SignOutUser(UsersSignOutUserRequest? request = null)
         {
             var (content, message) = await this._usersService.SignOutUser(request);
 
@@ -175,6 +177,8 @@ namespace BoardGameGeekLike.Controllers
                 Content = content,
                 Message = message
             };
+
+            await Task.Delay(1000);
 
             return new JsonResult(response);
         }
