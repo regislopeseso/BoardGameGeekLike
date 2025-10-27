@@ -1,4 +1,4 @@
-
+// This is the Program.cs file
 using BoardGameGeekLike.Models;
 using BoardGameGeekLike.Models.Entities;
 using BoardGameGeekLike.Services;
@@ -12,12 +12,21 @@ builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddHttpContextAccessor();  
+builder.Services.AddHttpContextAccessor();
+
+// Mailtrap email sending for resetting password
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 builder.Services.AddScoped<DevsService>();
 builder.Services.AddScoped<AdminsService>();
 builder.Services.AddScoped<UsersService>();
 builder.Services.AddScoped<ExploreService>();
+
+
+// Mailtrap email sending configuration
+builder.Services.Configure<MailtrapSettings>(builder.Configuration.GetSection("MailtrapSettings"));
+builder.Services.AddScoped<IEmailService, MailtrapEmailService>();
+
 
 
 

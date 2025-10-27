@@ -21,41 +21,7 @@ namespace BoardGameGeekLike.Controllers
             this._usersService = usersService;
         }
 
-
-        #region USER'S DATA
-
-        [HttpGet]
-        public async Task<IActionResult> GetProfileDetails([FromBody] UsersGetProfileDetailsRequest? request = null)
-        {
-            var (content, message) = await this._usersService.GetProfileDetails(request);
-
-            var response = new Response<UsersGetProfileDetailsResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ImportUserData(UsersImportUserDataRequest? request)
-        {
-            var (content, message) = await this._usersService.ImportUserData(request);
-
-            var response = new Response<UsersImportUserDataResponse>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-
-
-        #endregion
-
-        #region USER'S PROFILE
+        #region USER'S AUTHENTICATION
 
         [AllowAnonymous]
         [HttpPost]
@@ -150,7 +116,41 @@ namespace BoardGameGeekLike.Controllers
                 return StatusCode(500, response);
             }
         }
-        
+
+        [AllowAnonymous]
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword([FromBody] UsersForgotPasswordRequest? request)
+        {
+            var (content, message) = await this._usersService.ForgotPassword(request);
+
+            var response = new Response<UsersForgotPasswordResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(1000);
+
+            return new JsonResult(response);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword([FromBody] UsersResetPasswordRequest? request)
+        {
+            var (content, message) = await this._usersService.ResetPassword(request);
+
+            var response = new Response<UsersResetPasswordResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            await Task.Delay(1000);
+
+            return new JsonResult(response);
+        }
+
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> ValidateStatus(UsersValidateStatusRequest? request = null)
@@ -182,6 +182,43 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
+
+        #endregion
+
+        #region USER'S DATA
+
+        [HttpGet]
+        public async Task<IActionResult> GetProfileDetails([FromBody] UsersGetProfileDetailsRequest? request = null)
+        {
+            var (content, message) = await this._usersService.GetProfileDetails(request);
+
+            var response = new Response<UsersGetProfileDetailsResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ImportUserData(UsersImportUserDataRequest? request)
+        {
+            var (content, message) = await this._usersService.ImportUserData(request);
+
+            var response = new Response<UsersImportUserDataResponse>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        #endregion
+
+        #region USER'S PROFILE
 
         [HttpPut]
         public async Task<IActionResult> EditProfile([FromBody] UsersEditProfileRequest? request)

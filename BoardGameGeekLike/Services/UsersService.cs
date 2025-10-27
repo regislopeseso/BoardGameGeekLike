@@ -7,6 +7,7 @@ using BoardGameGeekLike.Models.Enums;
 using BoardGameGeekLike.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.VisualBasic;
@@ -34,12 +35,26 @@ namespace BoardGameGeekLike.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private static readonly Random random = new Random();
 
-        public UsersService(ApplicationDbContext daoDbContext, UserManager<User> userManager, SignInManager<User> signInManager, IHttpContextAccessor httpContextAccessor)
+        // Brevo email sending for resetting password
+        private readonly IEmailService _emailService;
+        private readonly string _frontendBaseUrl;
+
+        public UsersService(
+            ApplicationDbContext daoDbContext, 
+            UserManager<User> userManager, 
+            SignInManager<User> signInManager, 
+            IHttpContextAccessor httpContextAccessor,
+            IEmailService emailService, 
+            IConfiguration config)
         {
             this._daoDbContext = daoDbContext;
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._httpContextAccessor = httpContextAccessor;
+
+            // Brevo email sending for resetting password
+            _emailService = emailService;
+            _frontendBaseUrl = config["FrontendBaseUrl"] ?? "https://localhost:5173";
         }
 
             #region USER'S DATA
@@ -1665,7 +1680,7 @@ namespace BoardGameGeekLike.Services
             #endregion
 
 
-        #region USER'S PROFILE
+        #region USER'S AUTHENTICATION
 
         public async Task<(UsersSignUpResponse?, string)> SignUp(UsersSignUpRequest? request, string? userRole)
         {
@@ -1673,7 +1688,6 @@ namespace BoardGameGeekLike.Services
             await _signInManager.SignOutAsync();
 
             var (isValid, message) = SignUp_Validation(request);
-            
             if (isValid == false)
             {
                 return (null, message);
@@ -1917,7 +1931,6 @@ namespace BoardGameGeekLike.Services
             }
         }
 
-
         public async Task<(UsersValidateStatusResponse?, string)> ValidateStatus(UsersValidateStatusRequest? request)
         {
             var (isValid, message) = ValidateStatus_Validation(request);
@@ -1945,16 +1958,17 @@ namespace BoardGameGeekLike.Services
                 {
                     return (null, "Error: User has no role assigned");
                 }
-                 
 
-                return (new UsersValidateStatusResponse {
+
+                return (new UsersValidateStatusResponse
+                {
                     IsUserLoggedIn = true,
                     Role = userRole
                 }, $"User is authenticated. Role: {userRole}");
             }
             else
             {
-                return (new UsersValidateStatusResponse(),  "User is not authenticated.");
+                return (new UsersValidateStatusResponse(), "User is not authenticated.");
             }
         }
         private static (bool, string) ValidateStatus_Validation(UsersValidateStatusRequest? request)
@@ -1962,6 +1976,121 @@ namespace BoardGameGeekLike.Services
             if (request != null)
             {
                 return (false, "Error: ValidateStatus_Validation failed! Request is NOT null, however it MUST be null!");
+            }
+
+            return (true, string.Empty);
+        }
+
+
+        public async Task<(UsersForgotPasswordResponse?, string)> ForgotPassword(UsersForgotPasswordRequest? request)
+        {
+            var (isValid, message) = ForgotPassword_Validation(request);
+            if (isValid == false)
+            {
+                return (null, message);
+            }
+
+            var user = await _userManager.FindByEmailAsync(request!.UserEmail!);
+            if (user == null)
+            {
+                return (new UsersForgotPasswordResponse(), "If that email is registered, a reset link has been sent.");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            Console.WriteLine($"Token: {token}");
+            var encodedToken = System.Web.HttpUtility.UrlEncode(token);
+            Console.WriteLine($"EncodedToken: {encodedToken}");
+
+            var resetLink = $"{_frontendBaseUrl}/resetpassword?email={user.Email}&token={encodedToken}";
+
+            var gender = user.Gender == 0 ? "Mr." : "Mrs.";
+
+            // Updated call with proper parameters
+            await _emailService.SendPasswordResetEmailAsync(user.Email!, resetLink, user.Name, gender);
+
+            return (new UsersForgotPasswordResponse(), "If that email is registered, a reset link has been sent.");
+        }
+
+        private static (bool, string) ForgotPassword_Validation(UsersForgotPasswordRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: ForgetPassword_Validation failed! Request is NULL!");
+            }
+
+            if (String.IsNullOrWhiteSpace(request.UserEmail) == true)
+            {
+                return (false, "Error: ForgetPassword_Validation failed! UserEmail is invalid! Is either null, empty or white space!");
+            }
+
+            return (true, string.Empty);
+        }
+
+        public async Task<(UsersResetPasswordResponse?, string)> ResetPassword(UsersResetPasswordRequest? request)
+        {
+            var response = new UsersResetPasswordResponse();
+
+            var (isValid, message) = ResetPassword_Validation(request);
+            if (isValid == false)
+            {
+                return (response, message);
+            }
+
+            var user = await _userManager.FindByEmailAsync(request!.UserEmail!);
+            if (user == null)
+            {
+                return (response, "ResetPassword failed! Invalid request");
+            }
+
+            try
+            {
+                Console.WriteLine($"Received Token: {request.Token}");
+                var decodedToken = System.Web.HttpUtility.UrlDecode(request.Token!);
+                Console.WriteLine($"DecodedToken: {decodedToken}");
+
+                var result = await _userManager.ResetPasswordAsync(user, request.Token, request!.NewPassword!);
+
+                if (result == null)
+                {
+                    return (response, "ResetPassword failed! result null");
+                }
+
+                if (result.Succeeded == false)
+                {
+                    // Extract actual error descriptions
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    return (response, $"Password reset failed: {errors}");
+                }
+
+                response.IsPasswordResetSuccessfull = true;
+
+                return (response, "Password has been reset successfully.");
+            }
+            catch (Exception ex)
+            {
+                return (response, $"ResetPassword failed! Error: {ex.Message}");
+            }
+        }
+        private static (bool, string) ResetPassword_Validation(UsersResetPasswordRequest? request)
+        {
+            if (request == null)
+            {
+                return (false, "Error: ForgetPassword_Validation failed! Request is NULL!");
+            }
+
+            if (String.IsNullOrWhiteSpace(request.UserEmail) == true)
+            {
+                return (false, "Error: ForgetPassword_Validation failed! UserEmail is invalid! Is either null, empty or white space!");
+            }
+
+            if (String.IsNullOrWhiteSpace(request.NewPassword) == true)
+            {
+                return (false, "Error: ForgetPassword_Validation failed! NewPassword is invalid! Is either null, empty or white space!");
+            }
+
+            if (String.IsNullOrWhiteSpace(request.Token) == true)
+            {
+                return (false, "Error: ForgetPassword_Validation failed! Token is invalid! Is either null, empty or white space!");
             }
 
             return (true, string.Empty);
@@ -2008,6 +2137,9 @@ namespace BoardGameGeekLike.Services
             return (true, string.Empty);
         }
 
+        #endregion
+
+        #region USER'S PROFILE
 
         public async Task<(UsersEditProfileResponse?, string)> EditProfile(UsersEditProfileRequest? request)
         {
