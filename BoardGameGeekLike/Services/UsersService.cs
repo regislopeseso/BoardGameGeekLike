@@ -2004,10 +2004,20 @@ namespace BoardGameGeekLike.Services
 
             var gender = user.Gender == 0 ? "Mr." : "Mrs.";
 
-            // Updated call with proper parameters
-            await _emailService.SendPasswordResetEmailAsync(user.Email!, resetLink, user.Name!, gender);
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(user.Email!, resetLink, user.Name!, gender);
+                return (new UsersForgotPasswordResponse(), "If that email is registered, a reset link has been sent.");
+            }
+            catch (Exception ex)
+            {
+                // Log the actual error for debugging
+                Console.WriteLine($"Email sending failed: {ex.Message}");
 
-            return (new UsersForgotPasswordResponse(), "If that email is registered, a reset link has been sent.");
+                // Return user-friendly message
+                return (null, ex.Message);
+            }
+
         }
         private static (bool, string) ForgotPassword_Validation(UsersForgotPasswordRequest? request)
         {
