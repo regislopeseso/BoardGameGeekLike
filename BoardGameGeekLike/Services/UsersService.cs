@@ -1996,21 +1996,19 @@ namespace BoardGameGeekLike.Services
                 return (new UsersForgotPasswordResponse(), "If that email is registered, a reset link has been sent.");
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            Console.WriteLine($"Token: {token}");
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);          
             var encodedToken = System.Web.HttpUtility.UrlEncode(token);
-            Console.WriteLine($"EncodedToken: {encodedToken}");
+           
 
             var resetLink = $"{_frontendBaseUrl}/resetpassword?email={user.Email}&token={encodedToken}";
 
             var gender = user.Gender == 0 ? "Mr." : "Mrs.";
 
             // Updated call with proper parameters
-            await _emailService.SendPasswordResetEmailAsync(user.Email!, resetLink, user.Name, gender);
+            await _emailService.SendPasswordResetEmailAsync(user.Email!, resetLink, user.Name!, gender);
 
             return (new UsersForgotPasswordResponse(), "If that email is registered, a reset link has been sent.");
         }
-
         private static (bool, string) ForgotPassword_Validation(UsersForgotPasswordRequest? request)
         {
             if (request == null)
@@ -2025,6 +2023,7 @@ namespace BoardGameGeekLike.Services
 
             return (true, string.Empty);
         }
+
 
         public async Task<(UsersResetPasswordResponse?, string)> ResetPassword(UsersResetPasswordRequest? request)
         {
