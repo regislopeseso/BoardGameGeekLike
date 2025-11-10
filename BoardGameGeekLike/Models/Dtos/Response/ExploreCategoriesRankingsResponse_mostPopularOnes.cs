@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class ExploreCategoriesRankingResponse_mostPopularOnes
+    public class ExploreCategoriesRankingsResponse_mostPopularOnes
     {
         public string? CategoryName {get; set;}
 

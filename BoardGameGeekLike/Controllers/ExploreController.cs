@@ -19,20 +19,6 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FindBoardGame([FromQuery] ExploreFindBoardGameRequest? request)
-        {
-            var (content, message) = await this._exploreService.FindBoardGame(request);
-
-            var response = new Response<List<ExploreFindBoardGameResponse>>
-            {
-                Content = content,
-                Message = message
-            };
-
-            return new JsonResult(response);
-        }
-        
-        [HttpGet]
         public async Task<IActionResult> ListBoardGames(ExploreListBoardGamesRequest? request)
         {
             var (content, message) = await this._exploreService.ListBoardGames(request);
@@ -46,6 +32,20 @@ namespace BoardGameGeekLike.Controllers
             return new JsonResult(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> FindBoardGame([FromQuery] ExploreFindBoardGameRequest? request)
+        {
+            var (content, message) = await this._exploreService.FindBoardGame(request);
+
+            var response = new Response<List<ExploreFindBoardGameResponse>>
+            {
+                Content = content,
+                Message = message
+            };
+
+            return new JsonResult(response);
+        }
+          
         [HttpGet]
         public async Task<IActionResult> ShowBoardGameDetails([FromQuery] ExploreShowBoardGameDetailsRequest? request)
         {
@@ -75,9 +75,9 @@ namespace BoardGameGeekLike.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CategoriesRanking(ExploreCategoriesRankingRequest? request)
+        public async Task<IActionResult> CategoriesRankings(ExploreCategoriesRankingsRequest? request)
         {
-            var (content, message) = await this._exploreService.CategoriesRanking(request);
+            var (content, message) = await this._exploreService.CategoriesRankings(request);
 
             var response = new Response<ExploreCategoriesRankingResponse>
             {
@@ -101,7 +101,5 @@ namespace BoardGameGeekLike.Controllers
 
             return new JsonResult(response);
         }
-
-
     }
 }

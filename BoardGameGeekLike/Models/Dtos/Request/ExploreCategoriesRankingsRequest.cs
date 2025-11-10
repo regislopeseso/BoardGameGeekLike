@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BoardGameGeekLike.Models.Dtos.Request
 {
-    public class ExploreCategoriesRankingRequest
+    public class ExploreCategoriesRankingsRequest
     {
 
     }

@@ -9,7 +9,7 @@ namespace BoardGameGeekLike.Models.Dtos.Response
     {
         public List<ExploreCategoriesRankingResponse_mostPlayedOnes>? MostPlayedCategories {get; set;}
 
-        public List<ExploreCategoriesRankingResponse_mostPopularOnes>? MostPopularCategories {get; set;}
+        public List<ExploreCategoriesRankingsResponse_mostPopularOnes>? MostPopularCategories {get; set;}
 
         public List<ExploreCategoriesRankingResponse_bestRatedOnes>? BestRatedCategories {get; set;}
 
