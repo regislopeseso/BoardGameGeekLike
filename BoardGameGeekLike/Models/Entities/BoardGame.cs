@@ -26,20 +26,24 @@ namespace BoardGameGeekLike.Models.Entities
         public Category? Category { get; set; }
 
         public List<Mechanic>? Mechanics { get; set; }
-      
+
+        // Denormilzed: remover
         [Column(TypeName = "decimal(2,1)")]
         public decimal AverageRating {get; set;}
 
         [InverseProperty("BoardGame")]
         public List<Rating>? Ratings { get; set; }
 
+        // Denormilzed: remover
         public int RatingsCount {get; set;}
 
+        // Denormilzed: remover
         public int AvgDuration_minutes { get; set; }
 
         [InverseProperty("BoardGame")]
         public List<Session>? Sessions {get; set;}
 
+        // Denormilzed: remover
         public int SessionsCount { get; set; }
 
         public bool IsDeleted { get; set; } = false;

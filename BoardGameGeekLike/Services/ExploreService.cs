@@ -4,6 +4,7 @@ using BoardGameGeekLike.Models.Dtos.Response;
 using BoardGameGeekLike.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Security.Claims;
 
 namespace BoardGameGeekLike.Services
@@ -291,71 +292,127 @@ namespace BoardGameGeekLike.Services
             {
                 return (null, message);
             }
-
-            #region SESSIONS QUERIES
-            var sessionsDB = await this._daoDbContext
-                .Sessions
-                .AsNoTracking()
-                .Include(a => a.BoardGame)
-                .ToListAsync();
-
-            if (sessionsDB == null || sessionsDB.Count < 1)
-            {
-                return (null, "Error: no board games sessions found for the rankings");
-            }
-
-            var theMostPlayed = sessionsDB.GroupBy(a => a.BoardGameId)
-                .OrderByDescending(a => a.Count())
-                .Take(3)
-                .Select(a => a.First().BoardGame!.Name)
-                .ToList();         
-
-            var theShortest = sessionsDB.GroupBy(a => a.Duration_minutes)
-                .OrderBy(a => a.Key)
-                .SelectMany(a => a.GroupBy(b => b.BoardGameId).OrderByDescending(b => b.Count()).ToList())                
-                .Take(3)
-                .Select(a => a.First().BoardGame!.Name)
-                .ToList();
-        
-
-            var theLongest = sessionsDB.GroupBy(a => a.Duration_minutes)
-                .OrderByDescending(a => a.Key)
-                .SelectMany(a => a.GroupBy(b => b.BoardGameId).OrderByDescending(b => b.Count()).ToList())
-                .Take(3)
-                .Select(a => a.First().BoardGame!.Name)
-                .ToList();
-
-            var adultsFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge >= 18)
-                .GroupBy(a => a.BoardGameId)
-                .OrderByDescending(a => a.Count())
-                .Take(3)
-                .Select(a => a.First().BoardGame!.Name)
-                .ToList();
-
-            var teensFavorites = sessionsDB.Where(a => a.BoardGame!.MinAge < 18)
-                .GroupBy(a => a.BoardGameId)
-                .OrderByDescending(a => a.Count())
-                .Take(3)
-                .Select(a => a.First().BoardGame!.Name)
-                .ToList();
-            #endregion
-
-            #region BOARD GAMES QUERIES
+           
             var boardGamesDB = await this._daoDbContext
-                                         .BoardGames
-                                         .AsNoTracking()
-                                         .ToListAsync();
+                .BoardGames
+                .Select(a => new
+                {                
+                    a.Name,
+                    AvgRating = a.Ratings != null? (decimal)a.Ratings.Average(b => b.Rate) : 0,
+                    RatingsCount = a.Ratings != null ? (int)a.Ratings.Count: 0,
+                    SessionsCount = a.Sessions != null ? (int)a.Sessions.Count : 0,
+                    AvgDuration = a.Sessions != null ? (int)a.Sessions.Average(b => b.Duration_minutes) : 0,
+                    a.MinAge,
+                })              
+                .AsNoTracking()
+                .AsSplitQuery()
+                .ToListAsync();
 
             if (boardGamesDB == null || boardGamesDB.Count < 1)
             {
                 return (null, "Error: no board games found for the ranking");
             }
 
-            var theBestRated = boardGamesDB.OrderByDescending(a => a.AverageRating)
-                                           .Take(3)
-                                           .Select(a => a.Name)
-                                           .ToList();
-            #endregion
+            var theMostPlayed = boardGamesDB
+                .Where(a => a.SessionsCount > 0)
+                .OrderByDescending(a => a.SessionsCount)
+                .ThenByDescending(a => a.AvgRating)
+                .ThenByDescending(a => a.RatingsCount)
+                .Select(a => new ExploreBoardGamesRankingsResponse_mostPlayed
+                {
+                    BoardGame_Name = a.Name,
+                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
+                    BoardGame_RatingsCount = a.RatingsCount,
+                    BoardGame_SessionsCount = a.SessionsCount,
+                    BoardGame_AvgDuration = a.AvgDuration,
+                    BoarGame_MinAge = a.MinAge,
+                })
+                .Take(3)
+                .ToList();
+
+            var theBestRated = boardGamesDB
+                .Where(a => a.SessionsCount > 0)
+                .OrderByDescending(a => a.AvgRating)
+                .ThenByDescending(a => a.SessionsCount)
+                .Select(a => new ExploreBoardGamesRankingsResponse_bestRated
+                {
+                    BoardGame_Name = a.Name,
+                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
+                    BoardGame_RatingsCount = a.RatingsCount,
+                    BoardGame_SessionsCount = a.SessionsCount,
+                    BoardGame_AvgDuration = a.AvgDuration,
+                    BoarGame_MinAge = a.MinAge,
+                })
+                .Take(3)
+                .ToList();
+
+            var adultsFavorites = boardGamesDB
+                .Where(a => a.SessionsCount > 0 && a.MinAge >= 18)
+                .OrderByDescending(a => a.AvgRating)
+                .ThenByDescending(a => a.RatingsCount)
+                .ThenByDescending(a => a.SessionsCount)
+                .Select(a => new ExploreBoardGamesRankingsResponse_adultsFavorites
+                {
+                    BoardGame_Name = a.Name,
+                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
+                    BoardGame_RatingsCount = a.RatingsCount,
+                    BoardGame_SessionsCount = a.SessionsCount,
+                    BoardGame_AvgDuration = a.AvgDuration,
+                    BoarGame_MinAge = a.MinAge,
+                })
+                .Take(3)
+                .ToList();
+
+            var teensFavorites = boardGamesDB
+                .Where(a => a.SessionsCount > 0 && a.MinAge < 18)
+                .OrderByDescending(a => a.AvgRating)           
+                .ThenByDescending(a => a.SessionsCount)
+                .Select(a => new ExploreBoardGamesRankingsResponse_teensFavorites
+                {
+                    BoardGame_Name = a.Name,
+                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
+                    BoardGame_RatingsCount = a.RatingsCount,
+                    BoardGame_SessionsCount = a.SessionsCount,
+                    BoardGame_AvgDuration = a.AvgDuration,
+                    BoarGame_MinAge = a.MinAge,
+                })
+                .Take(3)
+                .ToList();
+
+
+            var theShortest = boardGamesDB
+              .Where(a => a.SessionsCount > 0)
+              .OrderBy(a => a.AvgDuration)
+              .ThenByDescending(a => a.AvgRating)
+              .ThenByDescending(a => a.SessionsCount)
+              .Select(a => new ExploreBoardGamesRankingsResponse_theShortest
+              {
+                  BoardGame_Name = a.Name,
+                  BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
+                  BoardGame_RatingsCount = a.RatingsCount,
+                  BoardGame_SessionsCount = a.SessionsCount,
+                  BoardGame_AvgDuration = a.AvgDuration,
+                  BoarGame_MinAge = a.MinAge,
+              })              
+              .Take(3)
+              .ToList();
+
+            var theLongest = boardGamesDB
+                .Where(a => a.SessionsCount > 0)
+                .OrderByDescending(a => a.AvgDuration)
+                .ThenByDescending(a => a.AvgRating)
+                .ThenByDescending(a => a.SessionsCount)
+                .Select(a => new ExploreBoardGamesRankingsResponse_theLongest
+                {
+                    BoardGame_Name = a.Name,
+                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
+                    BoardGame_RatingsCount = a.RatingsCount,
+                    BoardGame_SessionsCount = a.SessionsCount,
+                    BoardGame_AvgDuration = a.AvgDuration,
+                    BoarGame_MinAge = a.MinAge,
+                })
+                .Take(3)
+                .ToList();   
 
             var content = new ExploreBoardGamesRankingsResponse
             {
