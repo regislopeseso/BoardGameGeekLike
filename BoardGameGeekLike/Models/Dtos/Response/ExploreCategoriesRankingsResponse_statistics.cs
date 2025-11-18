@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace BoardGameGeekLike.Models.Dtos.Response
+﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class ExploreCategoriesRankingsResponse_mostPopularOnes
+    public class ExploreCategoriesRankingsResponse_statistics
     {
         public string? Category_Name { get; set; }
 

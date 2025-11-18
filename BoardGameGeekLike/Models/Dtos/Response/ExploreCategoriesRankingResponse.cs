@@ -7,14 +7,14 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class ExploreCategoriesRankingResponse
     {
-        public List<ExploreCategoriesRankingResponse_mostPlayedOnes>? MostPlayedCategories {get; set;}
+        public List<ExploreCategoriesRankingsResponse_statistics>? MostPlayedCategories {get; set;}
 
-        public List<ExploreCategoriesRankingsResponse_mostPopularOnes>? MostPopularCategories {get; set;}
+        public List<ExploreCategoriesRankingsResponse_statistics>? MostPopularCategories {get; set;}
 
-        public List<ExploreCategoriesRankingResponse_bestRatedOnes>? BestRatedCategories {get; set;}
+        public List<ExploreCategoriesRankingsResponse_statistics>? BestRatedCategories {get; set;}
 
-        public List<ExploreCategoriesRankingResponse_longestOnes>? LongestCategories {get; set;}
+        public List<ExploreCategoriesRankingsResponse_statistics>? LongestCategories {get; set;}
 
-        public List<ExploreCategoriesRankingResponse_shortestOnes>? ShortestCategories {get; set;}
+        public List<ExploreCategoriesRankingsResponse_statistics>? ShortestCategories {get; set;}
     }
 }

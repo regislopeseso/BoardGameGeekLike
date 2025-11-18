@@ -295,6 +295,7 @@ namespace BoardGameGeekLike.Services
            
             var boardGamesDB = await this._daoDbContext
                 .BoardGames
+                .Where(a => a.IsDeleted == false)
                 .Select(a => new
                 {                
                     a.Name,
@@ -435,7 +436,7 @@ namespace BoardGameGeekLike.Services
         {
             if (request != null)
             {
-                return (false, "Error: no parameter should be passed for the ranking of the board games");
+                return (false, "BoardGamesRankings_Validation failed! Request is NOT null, however it MUST be null");
             }
 
             return (true, String.Empty);
@@ -451,40 +452,42 @@ namespace BoardGameGeekLike.Services
                 return (null, message);
             }
 
-            var boardgamesDB_exist = await this._daoDbContext
-                                               .BoardGames
-                                               .AsNoTracking()
-                                               .AnyAsync(a => a.IsDeleted == false);
-            if (boardgamesDB_exist == false)
-            {
-                return (null, "Error: no board game found for the categories ranking");
-            }
-
-            var categorizedBoardgames_exist = await this._daoDbContext
-                                             .Categories
-                                             .AsNoTracking()
-                                             .AnyAsync(a => a.BoardGames!.Any());
-
-            if (categorizedBoardgames_exist == false)
-            {
-                return (null, "Error: no board game having a category found");
-            }
-
-            var sessionsDB_exist = await this._daoDbContext
-                                             .Sessions
-                                             .AsNoTracking()
-                                             .AnyAsync();
-
-            if (sessionsDB_exist == false)
-            {
-                return (null, "Error: board games session found for the categories ranking");
-            }
-
             var categoriesDB = await this._daoDbContext
                 .Categories
-                .Include(a => a.BoardGames!)
-                .ThenInclude(a => a.Sessions!)
+                .Include(category => category.BoardGames!)
+                    .ThenInclude(boardgame => boardgame.Ratings!)
+                .Include(category => category.BoardGames!)
+                    .ThenInclude(boardgame => boardgame.Sessions!)
+                .Select(category => new ExploreCategoriesRankingsResponse_statistics
+                {
+                    Category_Name = category.Name,
+
+                    Category_AvgRating = category.BoardGames != null &&
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Any() ?
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Select(ratings => ratings.Rate).Average() :
+                                         0,
+
+                    Category_RatingsCount = category.BoardGames != null &&
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Any() ?
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Count() :
+                                         0,
+
+                    Category_SessionsCount = category.BoardGames != null &&
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Sessions!).Any() ?
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Sessions!).Count() :
+                                         0,
+
+                    Category_BoardGamesCount = category.BoardGames != null ?
+                                         category.BoardGames.Count() :
+                                         0,
+
+                    Category_AvgDuration = category.BoardGames != null &&
+                                         category.BoardGames.SelectMany(boardgame => boardgame.Sessions!).Any() ?
+                                         (int)category.BoardGames.SelectMany(boardgame => boardgame.Sessions!).Select(sessions => sessions.Duration_minutes).Average() :
+                                         0,
+                })
                 .AsNoTracking()
+                .AsSplitQuery()
                 .ToListAsync();
 
             if (categoriesDB == null)
@@ -492,61 +495,41 @@ namespace BoardGameGeekLike.Services
                 return (null, "Error: no categories found for the ranking");
             }
 
-            var theMostPlayed = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_mostPlayedOnes
-                {
-                    CategoryName = a.Name,
-                    SessionsCount = a.BoardGames!.Sum(b => b.Sessions!.Count)
-                })
-                .OrderByDescending(a => a.SessionsCount)
+            var theMostPlayed = categoriesDB
+                .OrderByDescending(a => a.Category_SessionsCount)
+                .Take(3)                           
+                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_BoardGamesCount)
+                .ToList();
+
+            var theMostPopular = categoriesDB
+                .OrderByDescending(a => a.Category_BoardGamesCount)
+                .Take(3)               
+                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_SessionsCount)         
+                .ToList();
+
+            var theBestRated = categoriesDB           
+                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_BoardGamesCount)
+                .ThenByDescending(a => a.Category_SessionsCount)
                 .Take(3)
                 .ToList();
 
-            var theMostPopular = categoriesDB.Select(a => new ExploreCategoriesRankingsResponse_mostPopularOnes
-                {
-                    CategoryName = a.Name,
-                    BoardGamesCount = a.BoardGames!.Count,
-                    SessionsCount = a.BoardGames.Select(b => b.SessionsCount).Sum()
-                })
-                .OrderByDescending(a => a.BoardGamesCount)
-                .ThenByDescending(a => a.SessionsCount)
+            var theLongest = categoriesDB
+                .OrderByDescending(a => a.Category_AvgDuration)
                 .Take(3)
+                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_BoardGamesCount)
+                .ThenByDescending(a => a.Category_SessionsCount)
                 .ToList();
 
-            var theBestRated = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_bestRatedOnes
-            {
-                CategoryName = a.Name,
-                AvgRating = a.BoardGames!.Count != 0 ?
-                    Math.Round(a.BoardGames!.Average(b => b.AverageRating),2) : 0,
-                RatingsCount = a.BoardGames.Select(b => b.RatingsCount).Sum()
-            })
-                .OrderByDescending(a => a.AvgRating)
-                .ThenByDescending(a => a.RatingsCount)
+            var theShortest = categoriesDB
+                .OrderBy(a => a.Category_AvgDuration)
                 .Take(3)
-                .ToList();
-
-            var theLongest = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_longestOnes
-                {
-                    CategoryName = a.Name,
-                    Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
-                        (int)a.BoardGames!.SelectMany(b => b.Sessions!).Max(c => c.Duration_minutes) : 0,
-                    SessionsCount = a.BoardGames!.Select(a => a.SessionsCount).Sum()
-                })
-                .OrderByDescending(a => a.Duration)
-                .ThenByDescending(a => a.SessionsCount)
-                .Take(3)
-                .ToList();
-
-            var theShortest = categoriesDB.Select(a => new ExploreCategoriesRankingResponse_shortestOnes
-            {
-                CategoryName = a.Name,
-                Duration = a.BoardGames!.SelectMany(b => b.Sessions!).Any() == true ?
-                        (int)a.BoardGames!.SelectMany(b => b.Sessions!).Min(c => c.Duration_minutes) : 0,
-                SessionsCount = a.BoardGames!.Select(a => a.SessionsCount).Sum()
-            })
-                .Where(a => a.Duration > 0)
-                .OrderBy(a => a.Duration)
-                .ThenByDescending(a => a.SessionsCount)
-                .Take(3)
+                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_BoardGamesCount)
+                .ThenByDescending(a => a.Category_SessionsCount)
                 .ToList();
 
             var content = new ExploreCategoriesRankingResponse
@@ -564,7 +547,7 @@ namespace BoardGameGeekLike.Services
         {
             if (request != null)
             {
-                return (false, "Error: no parameter should be passed for the ranking of the board games");
+                return (false, "ExploreCategoriesRankingsRequest failed! Request is NOT null, however it MUST be null");
             }
 
             return (true, String.Empty);

@@ -8,10 +8,16 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 {
     public class ExploreCategoriesRankingResponse_bestRatedOnes
     {
-        public string? CategoryName {get; set;}
+        public string? Category_Name { get; set; }
 
-        public decimal? AvgRating {get; set;}
+        public decimal? Category_AvgRating { get; set; }
 
-        public int? RatingsCount { get; set; }
+        public int? Category_RatingsCount { get; set; }
+
+        public int? Category_SessionsCount { get; set; }
+
+        public int? Category_BoardGamesCount { get; set; }
+
+        public int? Category_AvgDuration { get; set; }
     }
 }
