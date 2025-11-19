@@ -497,16 +497,16 @@ namespace BoardGameGeekLike.Services
 
             var theMostPlayed = categoriesDB
                 .OrderByDescending(a => a.Category_SessionsCount)
-                .Take(3)                           
-                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_AvgRating)
                 .ThenByDescending(a => a.Category_BoardGamesCount)
+                .Take(3)                           
                 .ToList();
 
             var theMostPopular = categoriesDB
                 .OrderByDescending(a => a.Category_BoardGamesCount)
-                .Take(3)               
-                .OrderByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_AvgRating)
                 .ThenByDescending(a => a.Category_SessionsCount)         
+                .Take(3)               
                 .ToList();
 
             var theBestRated = categoriesDB           
@@ -516,20 +516,29 @@ namespace BoardGameGeekLike.Services
                 .Take(3)
                 .ToList();
 
-            var theLongest = categoriesDB
-                .OrderByDescending(a => a.Category_AvgDuration)
+            // Testar bechmark com a query de cima.
+            var theBestRated2 = categoriesDB
+                .OrderByDescending(a => a.Category_AvgRating)                
                 .Take(3)
                 .OrderByDescending(a => a.Category_AvgRating)
                 .ThenByDescending(a => a.Category_BoardGamesCount)
                 .ThenByDescending(a => a.Category_SessionsCount)
                 .ToList();
 
-            var theShortest = categoriesDB
-                .OrderBy(a => a.Category_AvgDuration)
-                .Take(3)
-                .OrderByDescending(a => a.Category_AvgRating)
+            var theLongest = categoriesDB
+                .OrderByDescending(a => a.Category_AvgDuration)
+                .ThenByDescending(a => a.Category_AvgRating)
                 .ThenByDescending(a => a.Category_BoardGamesCount)
                 .ThenByDescending(a => a.Category_SessionsCount)
+                .Take(3)
+                .ToList();
+
+            var theShortest = categoriesDB
+                .OrderBy(a => a.Category_AvgDuration)
+                .ThenByDescending(a => a.Category_AvgRating)
+                .ThenByDescending(a => a.Category_BoardGamesCount)
+                .ThenByDescending(a => a.Category_SessionsCount)
+                .Take(3)
                 .ToList();
 
             var content = new ExploreCategoriesRankingResponse
