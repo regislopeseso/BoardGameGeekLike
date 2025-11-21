@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace BoardGameGeekLike.Models.Dtos.Response
+﻿namespace BoardGameGeekLike.Models.Dtos.Response
 {
-    public class ExploreBoardGamesRankingsResponse_mostPlayed
+    public class ExploreBoardGamesRankingsResponse_statistics
     {
         public string? BoardGame_Name { get; set; }
-       
+
         public decimal? BoardGame_AvgRating { get; set; }
 
         public int? BoardGame_RatingsCount { get; set; }
@@ -14,6 +12,6 @@ namespace BoardGameGeekLike.Models.Dtos.Response
 
         public int? BoardGame_AvgDuration { get; set; }
 
-        public int? BoarGame_MinAge { get; set; }
+        public int? BoardGame_MinAge { get; set; }
     }
 }

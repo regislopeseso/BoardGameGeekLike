@@ -296,14 +296,14 @@ namespace BoardGameGeekLike.Services
             var boardGamesDB = await this._daoDbContext
                 .BoardGames
                 .Where(a => a.IsDeleted == false)
-                .Select(a => new
-                {                
-                    a.Name,
-                    AvgRating = a.Ratings != null? (decimal)a.Ratings.Average(b => b.Rate) : 0,
-                    RatingsCount = a.Ratings != null ? (int)a.Ratings.Count: 0,
-                    SessionsCount = a.Sessions != null ? (int)a.Sessions.Count : 0,
-                    AvgDuration = a.Sessions != null ? (int)a.Sessions.Average(b => b.Duration_minutes) : 0,
-                    a.MinAge,
+                .Select(a => new ExploreBoardGamesRankingsResponse_statistics
+                {
+                    BoardGame_Name = a.Name,
+                    BoardGame_AvgRating = a.Ratings != null? (decimal)a.Ratings.Average(b => b.Rate) : 0,
+                    BoardGame_RatingsCount = a.Ratings != null ? (int)a.Ratings.Count: 0,
+                    BoardGame_SessionsCount = a.Sessions != null ? (int)a.Sessions.Count : 0,
+                    BoardGame_AvgDuration = a.Sessions != null ? (int)a.Sessions.Average(b => b.Duration_minutes) : 0,
+                    BoardGame_MinAge = a.MinAge,
                 })              
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -315,103 +315,49 @@ namespace BoardGameGeekLike.Services
             }
 
             var theMostPlayed = boardGamesDB
-                .Where(a => a.SessionsCount > 0)
-                .OrderByDescending(a => a.SessionsCount)
-                .ThenByDescending(a => a.AvgRating)
-                .ThenByDescending(a => a.RatingsCount)
-                .Select(a => new ExploreBoardGamesRankingsResponse_mostPlayed
-                {
-                    BoardGame_Name = a.Name,
-                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
-                    BoardGame_RatingsCount = a.RatingsCount,
-                    BoardGame_SessionsCount = a.SessionsCount,
-                    BoardGame_AvgDuration = a.AvgDuration,
-                    BoarGame_MinAge = a.MinAge,
-                })
+                .Where(a => a.BoardGame_SessionsCount > 0)
+                .OrderByDescending(a => a.BoardGame_SessionsCount)
+                .ThenByDescending(a => a.BoardGame_AvgRating)
+                .ThenByDescending(a => a.BoardGame_RatingsCount)           
                 .Take(3)
                 .ToList();
 
             var theBestRated = boardGamesDB
-                .Where(a => a.SessionsCount > 0)
-                .OrderByDescending(a => a.AvgRating)
-                .ThenByDescending(a => a.SessionsCount)
-                .Select(a => new ExploreBoardGamesRankingsResponse_bestRated
-                {
-                    BoardGame_Name = a.Name,
-                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
-                    BoardGame_RatingsCount = a.RatingsCount,
-                    BoardGame_SessionsCount = a.SessionsCount,
-                    BoardGame_AvgDuration = a.AvgDuration,
-                    BoarGame_MinAge = a.MinAge,
-                })
+                .Where(a => a.BoardGame_SessionsCount > 0)
+                .OrderByDescending(a => a.BoardGame_AvgRating)
+                .ThenByDescending(a => a.BoardGame_SessionsCount)           
                 .Take(3)
                 .ToList();
 
             var adultsFavorites = boardGamesDB
-                .Where(a => a.SessionsCount > 0 && a.MinAge >= 18)
-                .OrderByDescending(a => a.AvgRating)
-                .ThenByDescending(a => a.RatingsCount)
-                .ThenByDescending(a => a.SessionsCount)
-                .Select(a => new ExploreBoardGamesRankingsResponse_adultsFavorites
-                {
-                    BoardGame_Name = a.Name,
-                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
-                    BoardGame_RatingsCount = a.RatingsCount,
-                    BoardGame_SessionsCount = a.SessionsCount,
-                    BoardGame_AvgDuration = a.AvgDuration,
-                    BoarGame_MinAge = a.MinAge,
-                })
+                .Where(a => a.BoardGame_SessionsCount > 0 && a.BoardGame_MinAge >= 18)
+                .OrderByDescending(a => a.BoardGame_AvgRating)
+                .ThenByDescending(a => a.BoardGame_RatingsCount)
+                .ThenByDescending(a => a.BoardGame_SessionsCount)               
                 .Take(3)
                 .ToList();
 
             var teensFavorites = boardGamesDB
-                .Where(a => a.SessionsCount > 0 && a.MinAge < 18)
-                .OrderByDescending(a => a.AvgRating)           
-                .ThenByDescending(a => a.SessionsCount)
-                .Select(a => new ExploreBoardGamesRankingsResponse_teensFavorites
-                {
-                    BoardGame_Name = a.Name,
-                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
-                    BoardGame_RatingsCount = a.RatingsCount,
-                    BoardGame_SessionsCount = a.SessionsCount,
-                    BoardGame_AvgDuration = a.AvgDuration,
-                    BoarGame_MinAge = a.MinAge,
-                })
+                .Where(a => a.BoardGame_SessionsCount > 0 && a.BoardGame_MinAge < 18)
+                .OrderByDescending(a => a.BoardGame_AvgRating)           
+                .ThenByDescending(a => a.BoardGame_SessionsCount)               
                 .Take(3)
                 .ToList();
 
 
             var theShortest = boardGamesDB
-              .Where(a => a.SessionsCount > 0)
-              .OrderBy(a => a.AvgDuration)
-              .ThenByDescending(a => a.AvgRating)
-              .ThenByDescending(a => a.SessionsCount)
-              .Select(a => new ExploreBoardGamesRankingsResponse_theShortest
-              {
-                  BoardGame_Name = a.Name,
-                  BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
-                  BoardGame_RatingsCount = a.RatingsCount,
-                  BoardGame_SessionsCount = a.SessionsCount,
-                  BoardGame_AvgDuration = a.AvgDuration,
-                  BoarGame_MinAge = a.MinAge,
-              })              
+              .Where(a => a.BoardGame_SessionsCount > 0)
+              .OrderBy(a => a.BoardGame_AvgDuration)
+              .ThenByDescending(a => a.BoardGame_AvgRating)
+              .ThenByDescending(a => a.BoardGame_SessionsCount)                       
               .Take(3)
               .ToList();
 
             var theLongest = boardGamesDB
-                .Where(a => a.SessionsCount > 0)
-                .OrderByDescending(a => a.AvgDuration)
-                .ThenByDescending(a => a.AvgRating)
-                .ThenByDescending(a => a.SessionsCount)
-                .Select(a => new ExploreBoardGamesRankingsResponse_theLongest
-                {
-                    BoardGame_Name = a.Name,
-                    BoardGame_AvgRating = Math.Round(a.AvgRating, 1),
-                    BoardGame_RatingsCount = a.RatingsCount,
-                    BoardGame_SessionsCount = a.SessionsCount,
-                    BoardGame_AvgDuration = a.AvgDuration,
-                    BoarGame_MinAge = a.MinAge,
-                })
+                .Where(a => a.BoardGame_SessionsCount > 0)
+                .OrderByDescending(a => a.BoardGame_AvgDuration)
+                .ThenByDescending(a => a.BoardGame_AvgRating)
+                .ThenByDescending(a => a.BoardGame_SessionsCount)              
                 .Take(3)
                 .ToList();   
 
@@ -464,7 +410,7 @@ namespace BoardGameGeekLike.Services
 
                     Category_AvgRating = category.BoardGames != null &&
                                          category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Any() ?
-                                         category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Select(ratings => ratings.Rate).Average() :
+                                         Math.Round(category.BoardGames.SelectMany(boardgame => boardgame.Ratings!).Select(ratings => ratings.Rate).Average(), 1) :
                                          0,
 
                     Category_RatingsCount = category.BoardGames != null &&
